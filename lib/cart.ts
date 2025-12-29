@@ -93,9 +93,11 @@ export const createCartFormData = (
     formData.append('image_url', options.imageUrl);
   }
   
-  // Venue logo
+  // Venue logo or text
   if (data?.eventDetails?.venueLogo) {
     formData.append('venue_logo', data.eventDetails.venueLogo);
+  } else if (data?.eventDetails?.venueText) {
+    formData.append('venue_text', data.eventDetails.venueText);
   }
 
   // Host files
@@ -109,16 +111,16 @@ export const createCartFormData = (
     }
   });
 
-  // DJ files (up to 2)
+  // DJ files (up to 4)
   djs.forEach((dj, index) => {
-    if (dj?.image && index <= 1) {
+    if (dj?.image && index <= 3) {
       formData.append(`dj_${index}`, dj.image);
     }
   });
 
   // Sponsor files (up to 3) - Handle object structure
   if (sponsors.sponsor1) {
-    formData.append('sponsor_0 ', sponsors.sponsor1);
+    formData.append('sponsor_0', sponsors.sponsor1);
   }
   if (sponsors.sponsor2) {
     formData.append('sponsor_1', sponsors.sponsor2);
@@ -127,8 +129,8 @@ export const createCartFormData = (
     formData.append('sponsor_2', sponsors.sponsor3);
   }
 
-  // JSON data for DJs, Host, and Sponsors (simplified to reduce length)
-  const djData = djs.slice(0, 2).map(dj => ({ name: dj.name || '' }));
+  // JSON data for DJs, Host, and Sponsors
+  const djData = djs.map(dj => ({ name: dj.name || '' }));
   const sponsorData = [
     { name: "" },
     { name: "" },
