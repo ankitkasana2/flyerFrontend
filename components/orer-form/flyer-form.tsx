@@ -38,6 +38,7 @@ import { toast } from "sonner"
 import { useSearchParams, useParams } from "next/navigation";
 import { getApiUrl } from "@/config/api";
 import type { FlyerFormDetails } from "@/stores/FlyerFormStore";
+import { saveToLibrary, saveToTemp } from "@/lib/uploads";
 import { createCartFormData, setUserIdInFormData } from "@/lib/cart";
 
 // Cart fetching function
@@ -606,15 +607,129 @@ const EventBookingForm = () => {
       // Debug: Log the actual form store data
       console.log('🔍 DEBUG - Raw form store data:', toJS(flyerFormStore.flyerFormDetail));
 
-      const apiBody = mapToApiRequest(flyerFormStore.flyerFormDetail, {
-        userId: authStore.user.id,
-        flyerId: flyer?.id ?? flyerFormStore.flyerFormDetail.flyerId,
-        categoryId:
-          (flyer as any)?.category_id ??
-          flyer?.category ??
-          flyerFormStore.flyerFormDetail.categoryId,
+      toast.info("Uploading images to temp storage...");
+
+      // Track temp files to send to backend later
+      const tempFiles: Record<string, string> = {};
+
+      // 1. Upload Venue Logo to TEMP
+      let venueLogoUrl = "";
+      if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo) {
+        const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo");
+        if (res) {
+          tempFiles['venue_logo'] = res.filepath;
+          venueLogoUrl = res.filepath;
+        }
+      }
+
+      // 2. Upload DJs to TEMP
+      const djsWithUrls = await Promise.all(flyerFormStore.flyerFormDetail.djsOrArtists.map(async (dj, idx) => {
+        let imageUrl = "";
+        if (dj.image) {
+          const res = await saveToTemp(dj.image, `dj_${idx}`);
+          if (res) {
+            tempFiles[`dj_${idx}`] = res.filepath;
+            imageUrl = res.filepath;
+          }
+        }
+        return { name: dj.name, image_url: imageUrl };
+      }));
+
+      // 3. Upload Hosts to TEMP
+      const hostsWithUrls = await Promise.all((flyerFormStore.flyerFormDetail.host || []).map(async (h, idx) => {
+        let imageUrl = "";
+        if (h.image) {
+          const res = await saveToTemp(h.image, `host_${idx}`);
+          if (res) {
+            tempFiles[`host_${idx}`] = res.filepath;
+            imageUrl = res.filepath;
+          }
+        }
+        return { name: h.name, image_url: imageUrl };
+      }));
+
+      // 4. Upload Sponsors to TEMP
+      const sponsors = flyerFormStore.flyerFormDetail.sponsors;
+      const sponsorData: Array<{ name: string; image_url: string }> = [];
+
+      if (sponsors.sponsor1) {
+        const res = await saveToTemp(sponsors.sponsor1, "sponsor_0");
+        if (res) {
+          tempFiles['sponsor_0'] = res.filepath;
+          sponsorData.push({ name: sponsors.sponsor1.name || "Sponsor 1", image_url: res.filepath });
+        }
+      } else {
+        sponsorData.push({ name: "", image_url: "" });
+      }
+
+      if (sponsors.sponsor2) {
+        const res = await saveToTemp(sponsors.sponsor2, "sponsor_1");
+        if (res) {
+          tempFiles['sponsor_1'] = res.filepath;
+          sponsorData.push({ name: sponsors.sponsor2.name || "Sponsor 2", image_url: res.filepath });
+        }
+      } else {
+        sponsorData.push({ name: "", image_url: "" });
+      }
+
+      if (sponsors.sponsor3) {
+        const res = await saveToTemp(sponsors.sponsor3, "sponsor_2");
+        if (res) {
+          tempFiles['sponsor_2'] = res.filepath;
+          sponsorData.push({ name: sponsors.sponsor3.name || "Sponsor 3", image_url: res.filepath });
+        }
+      } else {
+        sponsorData.push({ name: "", image_url: "" });
+      }
+
+      console.log('🔍 DEBUG - Host data from store:', toJS(flyerFormStore.flyerFormDetail.host));
+      console.log('🔍 DEBUG - Sponsors from store:', {
+        sponsor1: sponsors.sponsor1?.name,
+        sponsor2: sponsors.sponsor2?.name,
+        sponsor3: sponsors.sponsor3?.name
+      });
+      console.log('🔍 DEBUG - Processed sponsor data:', sponsorData);
+      console.log('🔍 DEBUG - Hosts with URLs:', hostsWithUrls);
+
+      const apiBody = {
+        presenting: flyerFormStore.flyerFormDetail.eventDetails.presenting,
+        event_title: flyerFormStore.flyerFormDetail.eventDetails.mainTitle,
+        event_date: flyerFormStore.flyerFormDetail.eventDetails.date
+          ? new Date(flyerFormStore.flyerFormDetail.eventDetails.date).toISOString().split("T")[0]
+          : "",
+        flyer_info: flyerFormStore.flyerFormDetail.eventDetails.flyerInfo,
+        address_phone: flyerFormStore.flyerFormDetail.eventDetails.addressAndPhone,
+
+        djs: djsWithUrls,
+        host: hostsWithUrls,
+        sponsors: sponsorData,
+        venue_logo_url: venueLogoUrl,
+        venue_text: flyerFormStore.flyerFormDetail.eventDetails.venueText,
+
+        story_size_version: flyerFormStore.flyerFormDetail.extras.storySizeVersion,
+        custom_flyer: flyerFormStore.flyerFormDetail.extras.customFlyer,
+        animated_flyer: flyerFormStore.flyerFormDetail.extras.animatedFlyer,
+        instagram_post_size: flyerFormStore.flyerFormDetail.extras.instagramPostSize,
+
+        custom_notes: flyerFormStore.flyerFormDetail.customNote,
+        flyer_id: flyer?.id ?? flyerFormStore.flyerFormDetail.flyerId ?? "",
+        category_id: (flyer as any)?.category_id ?? flyer?.category ?? flyerFormStore.flyerFormDetail.categoryId,
+        user_id: authStore.user.id,
+
+        delivery_time: flyerFormStore.flyerFormDetail.deliveryTime,
+        total_price: totalDisplay,
         subtotal: totalDisplay,
-        image_url: flyerImage
+        image_url: flyerImage,
+
+        // IMPORTANT: Pass the temp file mapping so success handler can pick them up
+        temp_files: tempFiles
+      };
+
+      console.log('🔍 DEBUG - Complete API Body:', {
+        ...apiBody,
+        host: apiBody.host,
+        sponsors: apiBody.sponsors,
+        djs: apiBody.djs
       });
 
       console.log('🔍 Order data prepared:', {
@@ -623,7 +738,8 @@ const EventBookingForm = () => {
         total_price: apiBody.total_price,
         user_id: authStore.user.id,
         image_url: apiBody.image_url,
-        flyer_id: apiBody.flyer_id
+        flyer_id: apiBody.flyer_id,
+        temp_files_count: Object.keys(tempFiles).length
       });
 
       // Create Stripe checkout session with order data
@@ -662,7 +778,7 @@ const EventBookingForm = () => {
       }
 
       // Get the Stripe Checkout URL from the session
-      console.log('� Getting Stripe checkout URL...');
+      console.log('🔗 Getting Stripe checkout URL...');
       const stripeSession = await fetch(`/api/checkout/get-session-url?sessionId=${data.sessionId}`);
 
       if (!stripeSession.ok) {

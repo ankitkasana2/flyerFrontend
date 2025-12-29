@@ -10,6 +10,7 @@ import { Upload, Check, X } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
 import { toast } from "sonner";
+import { saveToLibrary, saveToTemp } from "@/lib/uploads";
 
 import ExtrasBlock from "./extra-block";
 import DeliveryTimeBlock from "./delivery-time-block";
@@ -53,9 +54,20 @@ const formatCurrency = (value: number | string | null | undefined) => {
 const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
     const { flyerFormStore, cartStore, authStore } = useStore();
 
-    const [birthdayPersonPhoto, setBirthdayPersonPhoto] = useState<File | null>(null);
-    const [birthdayPhotoPreview, setBirthdayPhotoPreview] = useState<string | null>(null);
-    const [hostList, setHostList] = useState<{ name: string }[]>([{ name: "" }]);
+    const [birthdayPersonPhoto, setBirthdayPersonPhoto] = useState<File | null>(() => {
+        return flyerFormStore.flyerFormDetail.eventDetails.venueLogo || null;
+    });
+
+    const [birthdayPhotoPreview, setBirthdayPhotoPreview] = useState<string | null>(() => {
+        const file = flyerFormStore.flyerFormDetail.eventDetails.venueLogo;
+        return file ? URL.createObjectURL(file) : null;
+    });
+
+    const [hostList, setHostList] = useState<{ name: string }[]>(() => {
+        const storeHosts = flyerFormStore.flyerFormDetail.host || [];
+        if (storeHosts.length === 0) return [{ name: "" }];
+        return storeHosts.map(h => ({ name: h.name }));
+    });
     const [note, setNote] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -189,9 +201,85 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
         setIsSubmitting(true);
 
         try {
-            // Implement checkout logic here
-            toast.success("Proceeding to checkout...");
-            // Redirect to checkout page or create Stripe session
+            toast.info("Uploading images to temp storage...");
+
+            // Track temp files to send to backend later
+            const tempFiles: Record<string, string> = {};
+
+            // 1. Upload Birthday Person Photo (stored in venueLogo) to TEMP
+            let venueLogoUrl = "";
+            if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo) {
+                const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo");
+                if (res) {
+                    tempFiles['venue_logo'] = res.filepath;
+                    venueLogoUrl = res.filepath;
+                }
+            }
+
+            // Construct API Body
+            const apiBody = {
+                presenting: flyerFormStore.flyerFormDetail.eventDetails.presenting,
+                event_title: flyerFormStore.flyerFormDetail.eventDetails.mainTitle,
+                event_date: flyerFormStore.flyerFormDetail.eventDetails.date
+                    ? new Date(flyerFormStore.flyerFormDetail.eventDetails.date).toISOString().split("T")[0]
+                    : "",
+                flyer_info: flyerFormStore.flyerFormDetail.eventDetails.flyerInfo,
+                address_phone: flyerFormStore.flyerFormDetail.eventDetails.addressAndPhone,
+
+                // Birthday form has no DJ photos or Host photos, just names
+                djs: [],
+                host: (flyerFormStore.flyerFormDetail.host || []).map(h => ({ name: h.name })),
+                sponsors: [], // Birthday form has no sponsors
+                venue_logo_url: venueLogoUrl,
+                venue_text: flyerFormStore.flyerFormDetail.eventDetails.venueText,
+
+                story_size_version: flyerFormStore.flyerFormDetail.extras.storySizeVersion,
+                custom_flyer: flyerFormStore.flyerFormDetail.extras.customFlyer,
+                animated_flyer: flyerFormStore.flyerFormDetail.extras.animatedFlyer,
+                instagram_post_size: flyerFormStore.flyerFormDetail.extras.instagramPostSize,
+
+                custom_notes: flyerFormStore.flyerFormDetail.customNote,
+                flyer_is: flyer?.id ?? flyerFormStore.flyerFormDetail.flyerId ?? "Birthday",
+                category_id: flyer?.category_id ?? flyerFormStore.flyerFormDetail.categoryId,
+                user_id: authStore.user.id,
+
+                delivery_time: flyerFormStore.flyerFormDetail.deliveryTime,
+                total_price: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_BIRTHDAY_PRICE,
+                subtotal: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_BIRTHDAY_PRICE,
+                image_url: flyer?.image_url || flyer?.imageUrl || "",
+
+                // IMPORTANT: Pass the temp file mapping so success handler can pick them up
+                temp_files: tempFiles
+            };
+
+            // Create Stripe Session
+            const res = await fetch("/api/checkout/create-session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    amount: apiBody.total_price,
+                    orderData: {
+                        userId: authStore.user.id,
+                        userEmail: authStore.user.email || authStore.user.name || 'unknown@example.com',
+                        formData: apiBody
+                    }
+                })
+            });
+
+            if (!res.ok) throw new Error("Failed to create checkout session");
+
+            const data = await res.json();
+            if (!data.sessionId) throw new Error("No session ID returned");
+
+            const stripeSession = await fetch(`/api/checkout/get-session-url?sessionId=${data.sessionId}`);
+            const { url } = await stripeSession.json();
+
+            if (url) {
+                window.location.href = url;
+            } else {
+                throw new Error("No checkout URL");
+            }
+
         } catch (error) {
             console.error("Checkout error:", error);
             toast.error("An error occurred during checkout. Please try again.");

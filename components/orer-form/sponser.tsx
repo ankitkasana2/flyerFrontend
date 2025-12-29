@@ -92,6 +92,7 @@ const SponsorsBlock = observer(() => {
             {/* Show upload button only if no image */}
             {!sponsorImages[index] && (
               <Button
+                type="button"
                 variant="outline"
                 size="lg"
                 className="flex items-center gap-2 border-primary text-primary hover:!bg-gray-950 hover:text-primary"

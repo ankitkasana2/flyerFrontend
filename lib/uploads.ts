@@ -99,7 +99,7 @@ export async function listLibrary(userId: string, type?: LibraryItem["type"]): P
 }
 
 // 1. Upload Media
-export async function saveToLibrary(userId: string, file: File): Promise<boolean> {
+export async function saveToLibrary(userId: string, file: File): Promise<string | null> {
     const formData = new FormData()
     formData.append("web_user_id", userId)
     formData.append("file", file)
@@ -116,19 +116,51 @@ export async function saveToLibrary(userId: string, file: File): Promise<boolean
         if (!res.ok) {
             const text = await res.text()
             console.error(`[API] Upload failed status: ${res.status} ${res.statusText}`, text)
-            return false
+            return null
         }
 
         const data = await res.json()
         if (!data.success) {
             console.error("[API] Upload API returned false success:", data)
-            return false
+            return null
         }
-        console.log("[API] Upload successful")
-        return true
+        console.log("[API] Upload successful", data)
+        return data.file_url || data.media?.file_url || data.url || null
     } catch (error) {
         console.error("[API] Error saving to library:", error)
-        return false
+        return null
+    }
+}
+
+// 1.1 Upload to Local Temp
+export async function saveToTemp(file: File, fieldName: string = "file"): Promise<{ filepath: string, filename: string } | null> {
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("field", fieldName)
+    // Create a semi-unique ID for this batch if needed, or let route handle it
+    const uploadId = "checkout_" + Date.now(); 
+    formData.append("uploadId", uploadId);
+
+    try {
+        const res = await fetch(`/api/tmp-upload`, {
+            method: "POST",
+            body: formData,
+        })
+
+        if (!res.ok) {
+            console.error(`[Temp] Upload failed: ${res.status}`)
+            return null
+        }
+
+        const data = await res.json()
+        if (!data.success) {
+            console.error("[Temp] API returned error:", data.error)
+            return null
+        }
+        return { filepath: data.filepath, filename: data.filename }
+    } catch (error) {
+        console.error("[Temp] Error saving:", error)
+        return null
     }
 }
 

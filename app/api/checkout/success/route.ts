@@ -91,6 +91,7 @@ export async function GET(request: NextRequest) {
     console.log('🚀 Creating REAL order with actual form data...')
 
     // Create FormData for the backend API with REAL data
+    // Create FormData for the backend API with REAL data
     const formData = new FormData()
 
     // Add all fields from the actual order data
@@ -119,18 +120,86 @@ export async function GET(request: NextRequest) {
     formData.append('subtotal', (formDataObj.subtotal || 0).toString())
     formData.append('image_url', formDataObj.image_url || '')
 
+    // 🔍 DEBUG: Log what we're about to send
+    console.log('🔍 DEBUG - formDataObj.host:', formDataObj.host);
+    console.log('🔍 DEBUG - formDataObj.sponsors:', formDataObj.sponsors);
+    console.log('🔍 DEBUG - formDataObj.djs:', formDataObj.djs);
+
     // Add JSON fields with actual data
     formData.append('djs', JSON.stringify(formDataObj.djs || []))
-    formData.append('host', JSON.stringify(formDataObj.host || {}))
+    formData.append('host', JSON.stringify(formDataObj.host || []))  // Should be array, not object
     formData.append('sponsors', JSON.stringify(formDataObj.sponsors || []))
+
+    console.log('🔍 DEBUG - JSON stringified host:', JSON.stringify(formDataObj.host || []));
+    console.log('🔍 DEBUG - JSON stringified sponsors:', JSON.stringify(formDataObj.sponsors || []));
+
+    // Add venue_text if present
+    formData.append('venue_text', formDataObj.venue_text || '')
+    formData.append('venue_logo_url', formDataObj.venue_logo_url || '')
+
+    // Handle TEMP FILES upload (Server-Side File Reading)
+    // If we have temp_files mapping, read them and append as Files efficiently
+    const tempFilesToCleanup: string[] = [];
+    
+    if (formDataObj.temp_files) {
+      console.log('📂 Processing temp files:', Object.keys(formDataObj.temp_files));
+      const { readFile } = await import('fs/promises');
+      const { existsSync } = await import('fs');
+
+      for (const [fieldName, filepath] of Object.entries(formDataObj.temp_files as Record<string, string>)) {
+        if (filepath && existsSync(filepath)) {
+           try {
+              const buffer = await readFile(filepath);
+              const blob = new Blob([buffer]); // Fetch formData needs Blob
+              
+              // Map field names to what backend expects
+              let backendFieldName = fieldName;
+              
+              // Host mapping: host_0 → host, host_1 → host_1, host_2 → host_2
+              if (fieldName === 'host_0') {
+                backendFieldName = 'host';
+              }
+              // Sponsor mapping: sponsor_0 → sponsor_sponsor1, sponsor_1 → sponsor_sponsor2, etc.
+              else if (fieldName.startsWith('sponsor_')) {
+                const sponsorIndex = parseInt(fieldName.split('_')[1]);
+                backendFieldName = `sponsor_sponsor${sponsorIndex + 1}`;
+              }
+              // DJ and venue_logo stay as is: dj_0, dj_1, venue_logo
+              
+              formData.append(backendFieldName, blob as any, filepath.split(/[\\\/]/).pop());
+              console.log(`✅ Attached file ${fieldName} → ${backendFieldName} from ${filepath}`);
+              
+              // Track for cleanup after successful submission
+              tempFilesToCleanup.push(filepath);
+           } catch(err) {
+              console.error(`❌ Failed to read temp file ${filepath}:`, err);
+           }
+        } else {
+           console.warn(`⚠️ Temp file not found: ${filepath}`);
+        }
+      }
+    }
 
     console.log('📤 Submitting REAL order to backend API...')
     console.log('📋 Order details:', {
       presenting: formDataObj.presenting,
       event_title: formDataObj.event_title,
       total_price: formDataObj.total_price,
-      user_id: formDataObj.user_id
+      user_id: formDataObj.user_id,
+      host_count: (formDataObj.host || []).length,
+      dj_count: (formDataObj.djs || []).length,
+      temp_files_count: tempFilesToCleanup.length
     })
+
+    // 🔍 DEBUG: Log all FormData keys AND values
+    console.log('🔍 DEBUG - FormData contents:');
+    for (const [key, value] of formData.entries()) {
+      if (key === 'host' || key === 'sponsors' || key === 'djs') {
+        console.log(`  - ${key}: ${typeof value === 'string' ? value : '[File]'}`);
+      } else if (key.startsWith('host_') || key.startsWith('sponsor_') || key.startsWith('dj_')) {
+        console.log(`  - ${key}: [File - ${value instanceof Blob ? (value as any).name || 'unnamed' : 'not a blob'}]`);
+      }
+    }
 
     // Submit to backend API - THIS IS THE ONLY PLACE WHERE ORDER IS CREATED
     const response = await fetch(`${BACKEND_API_URL}/api/orders`, {
@@ -151,6 +220,34 @@ export async function GET(request: NextRequest) {
 
     const responseData = await response.json()
     console.log('🎉 Order created successfully:', responseData)
+
+    // ✅ CLEANUP TEMP FILES AFTER SUCCESSFUL ORDER CREATION
+    if (tempFilesToCleanup.length > 0) {
+      console.log('🧹 Cleaning up temp files...');
+      const { unlink, rmdir } = await import('fs/promises');
+      const { dirname } = await import('path');
+      
+      for (const filepath of tempFilesToCleanup) {
+        try {
+          await unlink(filepath);
+          console.log(`✅ Deleted temp file: ${filepath}`);
+        } catch (err) {
+          console.warn(`⚠️ Could not delete temp file ${filepath}:`, err);
+        }
+      }
+      
+      // Try to delete the upload directory if it's empty
+      if (tempFilesToCleanup.length > 0) {
+        try {
+          const uploadDir = dirname(tempFilesToCleanup[0]);
+          await rmdir(uploadDir);
+          console.log(`✅ Deleted empty temp directory: ${uploadDir}`);
+        } catch (err) {
+          // Directory not empty or other error - this is fine
+          console.log('ℹ️ Temp directory not deleted (may contain other files)');
+        }
+      }
+    }
 
     // Get order ID from response
     const orderId = responseData.orderId || responseData.id || responseData._id

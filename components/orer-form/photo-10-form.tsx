@@ -10,6 +10,7 @@ import { Upload, Music, Check, X } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
 import { toast } from "sonner";
+import { saveToLibrary, saveToTemp } from "@/lib/uploads";
 import SponsorsBlock from "./sponser";
 import ExtrasBlock from "./extra-block";
 import DeliveryTimeBlock from "./delivery-time-block";
@@ -57,18 +58,24 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
     const FIXED_PRICE = 10; // $10 With Photo
 
     // DJ List: First 2 with photo, Last 2 text-only
-    const [djList, setDjList] = useState<{ name: string; image: string | null; hasPhoto: boolean }[]>([
-        { name: "", image: null, hasPhoto: true },  // DJ 1 - with photo
-        { name: "", image: null, hasPhoto: true },  // DJ 2 - with photo
-        { name: "", image: null, hasPhoto: false }, // DJ 3 - text only
-        { name: "", image: null, hasPhoto: false }, // DJ 4 - text only
-    ]);
+    const [djList, setDjList] = useState<{ name: string; image: string | null; hasPhoto: boolean }[]>(() => {
+        const storeDJs = flyerFormStore.flyerFormDetail.djsOrArtists;
+        return [0, 1, 2, 3].map((i) => ({
+            name: storeDJs[i]?.name || "",
+            image: storeDJs[i]?.image ? URL.createObjectURL(storeDJs[i].image!) : null,
+            hasPhoto: i < 2, // First 2 have photo
+        }));
+    });
 
     // Host List: First with photo, Second text-only
-    const [hostList, setHostList] = useState<{ name: string; image: string | null; hasPhoto: boolean }[]>([
-        { name: "", image: null, hasPhoto: true },  // Host 1 - with photo
-        { name: "", image: null, hasPhoto: false }, // Host 2 - text only
-    ]);
+    const [hostList, setHostList] = useState<{ name: string; image: string | null; hasPhoto: boolean }[]>(() => {
+        const storeHosts = flyerFormStore.flyerFormDetail.host || [];
+        return [0, 1].map((i) => ({
+            name: storeHosts[i]?.name || "",
+            image: storeHosts[i]?.image ? URL.createObjectURL(storeHosts[i].image!) : null,
+            hasPhoto: i === 0, // First 1 has photo
+        }));
+    });
 
     const [note, setNote] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,8 +117,14 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
         });
     };
 
-    // Ensure store has enough hosts for this form (2 hosts)
+    // Ensure store has enough DJs (4) and Hosts (2)
     useEffect(() => {
+        // Expand DJs to 4
+        while (flyerFormStore.flyerFormDetail.djsOrArtists.length < 4) {
+            flyerFormStore.addDJ();
+        }
+
+        // Expand Hosts to 2
         if (!flyerFormStore.flyerFormDetail.host) {
             flyerFormStore.addHost(); // 1st
             flyerFormStore.addHost(); // 2nd
@@ -211,8 +224,146 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
         setIsSubmitting(true);
 
         try {
-            toast.success("Proceeding to checkout...");
-            // Implement checkout logic here
+            toast.info("Uploading images to temp storage...");
+
+            // Track temp files to send to backend later
+            const tempFiles: Record<string, string> = {};
+
+            // 1. Upload Venue Logo
+            let venueLogoUrl = "";
+            if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo) {
+                // Determine if we should use saveToLibrary (permanent) or saveToTemp (checkout only)
+                // User asked for "temp folder". Let's use saveToTemp.
+                const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo");
+                if (res) {
+                    tempFiles['venue_logo'] = res.filepath;
+                    venueLogoUrl = res.filepath; // Just storing path for now
+                }
+            }
+
+            // 2. Upload DJs
+            const djsWithUrls = await Promise.all(flyerFormStore.flyerFormDetail.djsOrArtists.map(async (dj, idx) => {
+                let imageUrl = "";
+                if (dj.image) {
+                    const res = await saveToTemp(dj.image, `dj_${idx}`);
+                    if (res) {
+                        tempFiles[`dj_${idx}`] = res.filepath;
+                        imageUrl = res.filepath;
+                    }
+                }
+                return { name: dj.name, image_url: imageUrl };
+            }));
+
+            // 3. Upload Hosts
+            const hostsWithUrls = await Promise.all((flyerFormStore.flyerFormDetail.host || []).map(async (h, idx) => {
+                let imageUrl = "";
+                if (h.image) {
+                    const res = await saveToTemp(h.image, `host_${idx}`);
+                    if (res) {
+                        tempFiles[`host_${idx}`] = res.filepath;
+                        imageUrl = res.filepath;
+                    }
+                }
+                return { name: h.name, image_url: imageUrl };
+            }));
+
+            // 4. Upload Sponsors
+            const sponsors = flyerFormStore.flyerFormDetail.sponsors;
+            const sponsorData: Array<{ name: string; image_url: string }> = [];
+
+            if (sponsors.sponsor1) {
+                const res = await saveToTemp(sponsors.sponsor1, "sponsor_0");
+                if (res) {
+                    tempFiles['sponsor_0'] = res.filepath;
+                    sponsorData.push({ name: sponsors.sponsor1.name || "Sponsor 1", image_url: res.filepath });
+                }
+            } else {
+                sponsorData.push({ name: "", image_url: "" });
+            }
+
+            if (sponsors.sponsor2) {
+                const res = await saveToTemp(sponsors.sponsor2, "sponsor_1");
+                if (res) {
+                    tempFiles['sponsor_1'] = res.filepath;
+                    sponsorData.push({ name: sponsors.sponsor2.name || "Sponsor 2", image_url: res.filepath });
+                }
+            } else {
+                sponsorData.push({ name: "", image_url: "" });
+            }
+
+            if (sponsors.sponsor3) {
+                const res = await saveToTemp(sponsors.sponsor3, "sponsor_2");
+                if (res) {
+                    tempFiles['sponsor_2'] = res.filepath;
+                    sponsorData.push({ name: sponsors.sponsor3.name || "Sponsor 3", image_url: res.filepath });
+                }
+            } else {
+                sponsorData.push({ name: "", image_url: "" });
+            }
+
+            // Construct API Body
+            const apiBody = {
+                presenting: flyerFormStore.flyerFormDetail.eventDetails.presenting,
+                event_title: flyerFormStore.flyerFormDetail.eventDetails.mainTitle,
+                event_date: flyerFormStore.flyerFormDetail.eventDetails.date
+                    ? new Date(flyerFormStore.flyerFormDetail.eventDetails.date).toISOString().split("T")[0]
+                    : "",
+                flyer_info: flyerFormStore.flyerFormDetail.eventDetails.flyerInfo,
+                address_phone: flyerFormStore.flyerFormDetail.eventDetails.addressAndPhone,
+
+                djs: djsWithUrls,
+                host: hostsWithUrls,
+                sponsors: sponsorData,
+                venue_logo_url: venueLogoUrl,
+                venue_text: flyerFormStore.flyerFormDetail.eventDetails.venueText,
+
+                story_size_version: flyerFormStore.flyerFormDetail.extras.storySizeVersion,
+                custom_flyer: flyerFormStore.flyerFormDetail.extras.customFlyer,
+                animated_flyer: flyerFormStore.flyerFormDetail.extras.animatedFlyer,
+                instagram_post_size: flyerFormStore.flyerFormDetail.extras.instagramPostSize,
+
+                custom_notes: flyerFormStore.flyerFormDetail.customNote,
+                flyer_is: flyer?.id ?? flyerFormStore.flyerFormDetail.flyerId ?? "10",
+                category_id: flyer?.category_id ?? flyerFormStore.flyerFormDetail.categoryId,
+                user_id: authStore.user.id,
+
+                delivery_time: flyerFormStore.flyerFormDetail.deliveryTime,
+                total_price: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_PRICE,
+                subtotal: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_PRICE,
+                image_url: flyer?.image_url || flyer?.imageUrl || "",
+
+                // IMPORTANT: Pass the temp file mapping so success handler can pick them up
+                temp_files: tempFiles
+            };
+
+            // Create Stripe Session
+            const res = await fetch("/api/checkout/create-session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    amount: apiBody.total_price,
+                    orderData: {
+                        userId: authStore.user.id,
+                        userEmail: authStore.user.email || authStore.user.name || 'unknown@example.com',
+                        formData: apiBody
+                    }
+                })
+            });
+
+            if (!res.ok) throw new Error("Failed to create checkout session");
+
+            const data = await res.json();
+            if (!data.sessionId) throw new Error("No session ID returned");
+
+            const stripeSession = await fetch(`/api/checkout/get-session-url?sessionId=${data.sessionId}`);
+            const { url } = await stripeSession.json();
+
+            if (url) {
+                window.location.href = url;
+            } else {
+                throw new Error("No checkout URL");
+            }
+
         } catch (error) {
             console.error("Checkout error:", error);
             toast.error("An error occurred during checkout. Please try again.");
