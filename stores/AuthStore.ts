@@ -21,6 +21,8 @@ import {
   type AuthUser as AWSAuthUser
 } from 'aws-amplify/auth'
 import { awsConfig } from "@/config/aws-config"
+import { CookieStorage } from 'aws-amplify/utils';
+import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
 
 // Configure AWS Amplify
 const amplifyConfig = {
@@ -41,6 +43,18 @@ const amplifyConfig = {
 }
 
 Amplify.configure(amplifyConfig, { ssr: true })
+
+// FIX: Configure CookieStorage to allow insecure cookies on HTTP (for IP address access)
+if (typeof window !== 'undefined') {
+  const isHttp = window.location.protocol === 'http:';
+  // If we are on HTTP, disable secure cookies to prevent rejection
+  cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage({
+    secure: !isHttp,
+    sameSite: 'lax',
+    path: '/',
+    domain: window.location.hostname
+  }));
+}
 
 export interface AuthUser {
   id: string
