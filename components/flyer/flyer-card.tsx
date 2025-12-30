@@ -167,16 +167,7 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
 
   return (
     <Link
-      href={{
-        pathname: `/flyer/${flyer.id}`,
-        query: {
-          image: flyer.image_url,
-          name: flyer.name,
-          // price: flyer.price,
-          price: 10,
-          category: flyer.category,
-        },
-      }}
+      href={`/flyer/${flyer.id}`}
     >
       {CardContent}
     </Link>
