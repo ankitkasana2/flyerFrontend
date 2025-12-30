@@ -12,7 +12,7 @@ const ExtrasBlock = (props: ExtrasBlockProps) => {
 
   const extrasList = [
     { id: "story", label: "Story Size Version", price: 10, key: "storySizeVersion" },
-    { id: "custom", label: "Make Flyer Different/Custom", price: 10, key: "customFlyer" },
+    { id: "custom", label: "Make Flyer Different", price: 10, key: "customFlyer" },
     { id: "animated", label: "Animated Flyer", price: 25, key: "animatedFlyer" },
     { id: "insta", label: "Instagram Post Size", price: 0, key: "instagramPostSize" },
   ];

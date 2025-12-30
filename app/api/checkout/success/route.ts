@@ -126,12 +126,17 @@ export async function GET(request: NextRequest) {
     console.log('🔍 DEBUG - formDataObj.djs:', formDataObj.djs);
 
     // Add JSON fields with actual data
-    formData.append('djs', JSON.stringify(formDataObj.djs || []))
-    formData.append('host', JSON.stringify(formDataObj.host || []))  // Should be array, not object
-    formData.append('sponsors', JSON.stringify(formDataObj.sponsors || []))
+    // Add JSON fields with actual data - Sanitize to only send names (stripping temp image_urls) to match backend expectation
+    const djsSanitized = Array.isArray(formDataObj.djs) ? formDataObj.djs.map((d: any) => ({ name: d.name || '' })) : [];
+    const hostsSanitized = Array.isArray(formDataObj.host) ? formDataObj.host.map((h: any) => ({ name: h.name || '' })) : [];
+    const sponsorsSanitized = Array.isArray(formDataObj.sponsors) ? formDataObj.sponsors.map((s: any) => ({ name: s.name || '' })) : [];
 
-    console.log('🔍 DEBUG - JSON stringified host:', JSON.stringify(formDataObj.host || []));
-    console.log('🔍 DEBUG - JSON stringified sponsors:', JSON.stringify(formDataObj.sponsors || []));
+    formData.append('djs', JSON.stringify(djsSanitized))
+    formData.append('host', JSON.stringify(hostsSanitized)) 
+    formData.append('sponsors', JSON.stringify(sponsorsSanitized))
+
+    console.log('🔍 DEBUG - JSON stringified host (sanitized):', JSON.stringify(hostsSanitized));
+    console.log('🔍 DEBUG - JSON stringified sponsors (sanitized):', JSON.stringify(sponsorsSanitized));
 
     // Add venue_text if present
     formData.append('venue_text', formDataObj.venue_text || '')
@@ -150,19 +155,31 @@ export async function GET(request: NextRequest) {
         if (filepath && existsSync(filepath)) {
            try {
               const buffer = await readFile(filepath);
-              const blob = new Blob([buffer]); // Fetch formData needs Blob
+              // Determine MIME type
+              const ext = filepath.split('.').pop()?.toLowerCase();
+              let mimeType = 'application/octet-stream';
+              if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
+              else if (ext === 'png') mimeType = 'image/png';
+              else if (ext === 'webp') mimeType = 'image/webp';
+              
+              const blob = new Blob([buffer], { type: mimeType }); // Fetch formData needs Blob with type
               
               // Map field names to what backend expects
               let backendFieldName = fieldName;
               
-              // Host mapping: host_0 → host, host_1 → host_1, host_2 → host_2
-              if (fieldName === 'host_0') {
-                backendFieldName = 'host';
+              // Host mapping: host_0 → host_file, host_1 → host_file_1
+              if (fieldName.startsWith('host_')) {
+                const hostIndex = parseInt(fieldName.split('_')[1]);
+                if (hostIndex === 0) {
+                  backendFieldName = 'host_file';
+                } else {
+                  backendFieldName = `host_file_${hostIndex}`;
+                }
               }
-              // Sponsor mapping: sponsor_0 → sponsor_sponsor1, sponsor_1 → sponsor_sponsor2, etc.
+              // Sponsor mapping: sponsor_0 → sponsor_0, sponsor_1 → sponsor_1
               else if (fieldName.startsWith('sponsor_')) {
-                const sponsorIndex = parseInt(fieldName.split('_')[1]);
-                backendFieldName = `sponsor_sponsor${sponsorIndex + 1}`;
+                // Keep the original field name (sponsor_0, sponsor_1, etc.) as it matches cart.ts
+                backendFieldName = fieldName;
               }
               // DJ and venue_logo stay as is: dj_0, dj_1, venue_logo
               

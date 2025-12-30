@@ -420,7 +420,7 @@ export function OrderForm({ selectedFlyer, onCancel }: OrderFormProps) {
                     onCheckedChange={(checked) => setExtras({ ...extras, makeDifferent: !!checked })}
                   />
                   <Label htmlFor="makeDifferent" className="cursor-pointer">
-                    Make Flyer Different/Custom
+                    Make Flyer Different
                   </Label>
                 </div>
                 <Badge variant="outline">+$10</Badge>

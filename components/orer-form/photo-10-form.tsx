@@ -380,28 +380,27 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             <div className="grid lg:grid-cols-2 gap-8 p-3 md:p-5 max-w-[1600px] mx-auto">
                 {/* Left: Flyer Preview */}
                 <div className="space-y-4">
-                    {/* Header: Title & Price */}
+                    {/* Header: Title & Price - Restored to match screenshot */}
                     <div className="flex justify-between items-start gap-4">
-                        <h1 className="text-3xl font-bold text-white leading-tight max-w-[70%]">{flyerName}</h1>
+                        <h1 className="text-2xl font-bold text-white leading-tight max-w-[70%]">{flyerName}</h1>
 
-                        <div className="flex flex-col items-end shrink-0 bg-gray-900/50 px-4 py-2 rounded-xl border border-gray-800">
-                            <span className="text-primary font-bold text-xl leading-none">
+                        <div className="flex flex-col items-end shrink-0 bg-black px-3 py-1.5 rounded-lg border border-red-600">
+                            <span className="text-white font-bold text-lg leading-none">
                                 {formatCurrency(FIXED_PRICE)}
                             </span>
-                            {/* <span className="text-[10px] uppercase tracking-wider text-gray-300 font-medium mt-1">
-                                $10 With Photo
-                            </span> */}
                         </div>
                     </div>
 
-                    <div className="relative h-[400px] lg:h-[600px] rounded-2xl overflow-hidden border border-gray-800 shadow-2xl bg-gray-900/50">
+                    <div className="aspect-[4/5] relative rounded-xl flex items-center justify-center overflow-hidden transition-all duration-300 hover:border-primary hover:scale-[1.02] border border-gray-800 shadow-2xl bg-gray-900/50">
                         <img
                             src={flyerImage}
                             alt={flyerName}
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-cover"
                         />
                         {/* Dynamic Ribbon */}
-                        <FlyerRibbon flyer={flyer} />
+                        <div className="absolute top-0 left-0 w-10 h-10 overflow-visible pointer-events-none z-20">
+                            <FlyerRibbon flyer={flyer} />
+                        </div>
                     </div>
                 </div>
 
