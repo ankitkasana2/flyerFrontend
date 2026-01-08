@@ -132,10 +132,18 @@ const FilterBar = () => {
     }, [flyersStore])
 
     const flyerSource = flyersStore.flyers.length ? flyersStore.flyers : SAMPLE_FLYERS
-    const availableCategories = useMemo(
-        () => getCategoriesWithFlyers(flyerSource),
-        [flyerSource]
-    )
+    const availableCategories = useMemo(() => {
+        if (categoryStore.categories.length > 0) {
+            return categoryStore.categories.map((c: any) => ({
+                id: String(c.id),
+                name: c.name,
+                slug: c.name.toLowerCase().replace(/\s+/g, '-'),
+                homePage: true
+            }));
+        }
+        return getCategoriesWithFlyers(flyerSource)
+    }, [categoryStore.categories, flyerSource])
+
     const categoryCounts = useMemo(
         () => getCategoryCounts(flyerSource),
         [flyerSource]

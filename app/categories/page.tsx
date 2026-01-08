@@ -42,6 +42,11 @@ const CategoriesPage = () => {
     }
   }, [authStore.user?.id, favoritesStore])
 
+  // Fetch categories on mount
+  useEffect(() => {
+    categoryStore.fetchCategories();
+  }, [categoryStore]);
+
   // Handle search query from URL
   useEffect(() => {
     const search = searchParams.get('search')
