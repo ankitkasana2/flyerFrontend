@@ -106,7 +106,7 @@ const HeroSection = observer(() => {
       : `${process.env.NEXT_PUBLIC_API_URL || 'http://193.203.161.174:3007'}/uploads/banners/${currentBanner.image}`);
 
   return (
-    <section className="relative px-4 min-h-[60vh] sm:min-h-[60vh] flex items-center">
+    <section className="relative w-full aspect-[2/1] sm:aspect-auto sm:min-h-[60vh] flex items-center bg-black">
       <div className="absolute inset-0 w-full h-full">
         {/* Banner Image with Click Handler */}
         <div
@@ -118,33 +118,44 @@ const HeroSection = observer(() => {
             alt={currentBanner.title || 'Banner'}
             fill
             className="object-cover"
+            style={{
+              objectPosition: 'center center',
+            }}
             priority
           />
-          {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-black/50" />
+          {/* Dark Overlay - Stronger at bottom for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent sm:from-black/70 sm:via-black/40 sm:to-transparent" />
         </div>
 
-        {/* Banner Content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center md:items-start md:text-left sm:left-[10%]">
-          <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-6 leading-snug tracking-wider flex flex-col">
-            {currentBanner.title || 'Special Offer'}
-            {currentBanner.description && (
-              <span className="text-sm md:text-lg mt-2 text-muted-foreground">
-                {currentBanner.description}
-              </span>
-            )}
-          </h1>
+        {/* Banner Content - Bottom on mobile, positioned on desktop */}
+        <div className="absolute inset-0 flex items-end pb-2 sm:items-center sm:pb-0 sm:left-[10%]">
+          {/* Mobile: Two-column compact layout | Desktop: Vertical stack */}
+          <div className="w-full grid grid-cols-2 gap-1 items-center px-2 sm:gap-4 sm:px-4 sm:flex sm:flex-col sm:items-start sm:px-0">
+            {/* Left side: Title & Description */}
+            <div className="col-span-1 text-left sm:text-center md:text-left">
+              <h1 className="text-base sm:text-2xl md:text-4xl font-bold text-foreground mb-1 sm:mb-6 leading-tight sm:leading-snug tracking-normal sm:tracking-wider">
+                {currentBanner.title || 'Special Offer'}
+                {currentBanner.description && (
+                  <span className="block text-[10px] sm:text-sm md:text-lg mt-0.5 sm:mt-2 text-muted-foreground font-normal leading-tight">
+                    {currentBanner.description}
+                  </span>
+                )}
+              </h1>
+            </div>
 
-          {/* Conditionally render button only if button_enabled is true */}
-          {currentBanner.button_enabled && (
-            <Button
-              size="sm"
-              onClick={handleButtonClick}
-              className="hover:cursor-pointer hover:scale-105 duration-300 min-w-[100px] sm:min-w-[120px] px-6 tracking-[.1000rem] bg-primary shadow-lg shadow-black/50 z-10"
-            >
-              {currentBanner.button_text || 'GET IT'}
-            </Button>
-          )}
+            {/* Right side: Button */}
+            {currentBanner.button_enabled && (
+              <div className="col-span-1 flex justify-end sm:justify-start">
+                <Button
+                  size="sm"
+                  onClick={handleButtonClick}
+                  className="hover:cursor-pointer hover:scale-105 duration-300 min-w-[75px] sm:min-w-[120px] px-3 sm:px-6 py-1.5 sm:py-3 text-[10px] sm:text-base tracking-wider sm:tracking-[.1000rem] bg-primary shadow-lg shadow-black/50 z-10 font-semibold"
+                >
+                  {currentBanner.button_text || 'GET IT'}
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Navigation Arrows */}
