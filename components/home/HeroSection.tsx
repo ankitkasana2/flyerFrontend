@@ -133,10 +133,10 @@ const HeroSection = observer(() => {
           <div className="w-full grid grid-cols-2 gap-1 items-center px-2 sm:gap-4 sm:px-4 sm:flex sm:flex-col sm:items-start sm:px-0">
             {/* Left side: Title & Description */}
             <div className="col-span-1 text-left sm:text-center md:text-left">
-              <h1 className="text-base sm:text-2xl md:text-4xl font-bold text-foreground mb-1 sm:mb-6 leading-tight sm:leading-snug tracking-normal sm:tracking-wider">
+              <h1 className="text-sm sm:text-2xl md:text-4xl font-bold text-foreground mb-1 sm:mb-6 leading-tight sm:leading-snug tracking-normal sm:tracking-wider">
                 {currentBanner.title || 'Special Offer'}
                 {currentBanner.description && (
-                  <span className="block text-[10px] sm:text-sm md:text-lg mt-0.5 sm:mt-2 text-muted-foreground font-normal leading-tight">
+                  <span className="block text-[8px] sm:text-sm md:text-lg mt-0.5 sm:mt-2 text-muted-foreground font-normal leading-tight">
                     {currentBanner.description}
                   </span>
                 )}
@@ -149,7 +149,7 @@ const HeroSection = observer(() => {
                 <Button
                   size="sm"
                   onClick={handleButtonClick}
-                  className="hover:cursor-pointer hover:scale-105 duration-300 min-w-[75px] sm:min-w-[120px] px-3 sm:px-6 py-1.5 sm:py-3 text-[10px] sm:text-base tracking-wider sm:tracking-[.1000rem] bg-primary shadow-lg shadow-black/50 z-10 font-semibold"
+                  className="hover:cursor-pointer hover:scale-105 duration-300 min-w-[60px] sm:min-w-[120px] px-2 sm:px-6 py-1 sm:py-3 text-[8px] sm:text-base tracking-wider sm:tracking-[.1000rem] bg-primary shadow-lg shadow-black/50 z-10 font-semibold"
                 >
                   {currentBanner.button_text || 'GET IT'}
                 </Button>
