@@ -75,7 +75,25 @@ export class CategoryStore {
             })
         } else {
             // For other categories, check if flyer has this category in its categories array
-            const categoryName = FLYER_CATEGORIES.find(categ => categ.slug == cat)?.name || cat
+            // First try to find in API-fetched categories, then fall back to static list
+            let categoryName = cat;
+            
+            // Try to find in API categories first
+            const apiCategory = this.categories.find((c: any) => {
+                const apiSlug = c.name.toLowerCase().replace(/\s+/g, '-');
+                return apiSlug === cat || c.name === cat;
+            });
+            
+            if (apiCategory) {
+                categoryName = apiCategory.name;
+            } else {
+                // Fall back to static FLYER_CATEGORIES
+                const staticCategory = FLYER_CATEGORIES.find(categ => categ.slug === cat);
+                if (staticCategory) {
+                    categoryName = staticCategory.name;
+                }
+            }
+            
             this.category = categoryName
 
             this.flyers = allFlyers.filter((fly: any) => {
@@ -137,7 +155,23 @@ export class CategoryStore {
                 return price === 10
             });
         } else {
-            const catName = FLYER_CATEGORIES.find(c => c.slug === cat)?.name || cat;
+            // Try to find in API categories first, then fall back to static list
+            let catName = cat;
+            
+            const apiCategory = this.categories.find((c: any) => {
+                const apiSlug = c.name.toLowerCase().replace(/\s+/g, '-');
+                return apiSlug === cat || c.name === cat;
+            });
+            
+            if (apiCategory) {
+                catName = apiCategory.name;
+            } else {
+                const staticCategory = FLYER_CATEGORIES.find(c => c.slug === cat);
+                if (staticCategory) {
+                    catName = staticCategory.name;
+                }
+            }
+            
             return allFlyers.filter((fly: any) => {
                 // Check if flyer has categories array (API format)
                 if (Array.isArray(fly.categories)) {
