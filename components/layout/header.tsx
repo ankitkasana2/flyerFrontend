@@ -105,7 +105,7 @@ export const Header = observer(() => {
                 onChange={handleSearchChange}
                 onKeyPress={handleKeyPress}
                 placeholder="Search flyers..."
-                className="pl-10 bg-card border-border text-input-text shadow-md
+                className="pl-10 bg-card border-border text-white shadow-md
                 focus-visible:!ring-0 focus-visible:!outline-none
                 focus-visible:!shadow-[0_0_15px_rgba(185,32,37,0.8)]
                 transition-all duration-300"
@@ -185,7 +185,7 @@ export const Header = observer(() => {
             onChange={handleSearchChange}
             onKeyPress={handleKeyPress}
             placeholder="Search flyers..."
-            className="pl-10 bg-card border-border text-input-text shadow-md
+            className="pl-10 bg-card border-border text-white shadow-md
             focus-visible:!ring-0 focus-visible:!outline-none
             focus-visible:!shadow-[0_0_15px_rgba(185,32,37,0.8)]
             transition-all duration-300"

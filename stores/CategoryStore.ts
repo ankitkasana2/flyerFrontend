@@ -105,6 +105,14 @@ export class CategoryStore {
                 return fly.category === categoryName
             })
         }
+        
+        // Filter out birthday form type flyers if this.category is not Birthday Flyers
+        this.flyers = this.flyers.filter((f: any) => {
+            if (f.form_type === 'Birthday') {
+                return this.category === 'Birthday Flyers';
+            }
+            return true;
+        })
     }
 
 
@@ -141,19 +149,24 @@ export class CategoryStore {
     // get flyers according to category
     getFlyersByCategory(cat: string) {
         const allFlyers = this.allFlyers
+        let result = [];
+        let resolvedCategoryName = cat;
 
         if (cat === 'Recently Added' || cat === 'recently-added') {
-            return allFlyers.filter((fly: any) => fly.isRecentlyAdded || fly.recently_added || fly.recentlyAdded);
+            result = allFlyers.filter((fly: any) => fly.isRecentlyAdded || fly.recently_added || fly.recentlyAdded);
+            resolvedCategoryName = 'Recently Added';
         } else if (cat === 'premium-flyers' || cat === 'Premium Flyers') {
-            return allFlyers.filter((fly: any) => {
+            result = allFlyers.filter((fly: any) => {
                 const price = typeof fly.price === 'string' ? parseFloat(fly.price.replace('$', '')) : fly.price
                 return price === 40
             });
+            resolvedCategoryName = 'Premium Flyers';
         } else if (cat === 'basic-flyers' || cat === 'Basic Flyers') {
-            return allFlyers.filter((fly: any) => {
+            result = allFlyers.filter((fly: any) => {
                 const price = typeof fly.price === 'string' ? parseFloat(fly.price.replace('$', '')) : fly.price
                 return price === 10
             });
+            resolvedCategoryName = 'Basic Flyers';
         } else {
             // Try to find in API categories first, then fall back to static list
             let catName = cat;
@@ -171,8 +184,9 @@ export class CategoryStore {
                     catName = staticCategory.name;
                 }
             }
+            resolvedCategoryName = catName;
             
-            return allFlyers.filter((fly: any) => {
+            result = allFlyers.filter((fly: any) => {
                 // Check if flyer has categories array (API format)
                 if (Array.isArray(fly.categories)) {
                     return fly.categories.includes(catName)
@@ -181,6 +195,14 @@ export class CategoryStore {
                 return fly.category === catName
             });
         }
+        
+        // Filter out birthday form type flyers if resolved category is not Birthday Flyers
+        return result.filter((f: any) => {
+            if (f.form_type === 'Birthday') {
+                return resolvedCategoryName === 'Birthday Flyers';
+            }
+            return true;
+        });
     }
 
     // Search flyers by query

@@ -63,7 +63,12 @@ const FlyersSection: React.FC<FlyersSectionProps> = ({ type }) => {
             data = flyersStore.flyersByCategory(type.name);
         }
 
-        setFlyers(toJS(data));
+        setFlyers(toJS(data.filter((f: any) => {
+            if (f.form_type === 'Birthday') {
+                return type.name === 'Birthday Flyers';
+            }
+            return true;
+        })));
 
     }, [flyersStore.flyers, type.name, searchParams]);
 
