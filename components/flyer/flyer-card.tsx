@@ -30,44 +30,40 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
   // Use authStore.user instead of useAuth() to work with AWS Cognito
   const user = authStore.user
 
-  const [isFavorited, setIsFavorited] = useState(favoritesStore.isFavorited(flyer.id))
+  // Optimistic UI state
+  const [optimisticFavorite, setOptimisticFavorite] = useState<boolean | null>(null)
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false)
 
-  // Update isFavorited when favoritesStore changes
-  useEffect(() => {
-    setIsFavorited(favoritesStore.isFavorited(flyer.id))
-  }, [favoritesStore.favorites, flyer.id])
+  // Derived state: Use optimistic value if set, otherwise source of truth
+  const isFavorited = optimisticFavorite !== null
+    ? optimisticFavorite
+    : favoritesStore.isFavorited(flyer.id)
 
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
-    console.log("❤️ Heart button clicked!", { flyerId: flyer.id, user: user?.id })
-
     e.preventDefault() // ⛔ prevent Link navigation
     e.stopPropagation() // ⛔ stop event bubbling
 
     if (!user) {
-      console.log("⚠️ No user logged in, showing auth modal")
       authStore.handleAuthModal()
       return
     }
 
-    if (isTogglingFavorite) {
-      console.log("⚠️ Already toggling, skipping")
-      return // Prevent double-click
-    }
+    if (isTogglingFavorite) return
 
     setIsTogglingFavorite(true)
 
-    // 🚀 OPTIMISTIC UI UPDATE - Toggle immediately for instant feedback
-    const wasAlreadyFavorited = isFavorited
-    setIsFavorited(!wasAlreadyFavorited)
-    console.log("⚡ Optimistic update: setting favorited to", !wasAlreadyFavorited)
+    // 🚀 OPTIMISTIC UI UPDATE
+    const newState = !isFavorited
+    setOptimisticFavorite(newState)
 
     try {
-      console.log("🔄 Toggling favorite for flyer:", flyer.id)
       await favoritesStore.toggleFavorite(user.id, Number(flyer.id))
 
-      // Show success toast
+      // On success, clear optimistic state (store will be updated)
+      // Slight delay to ensure store has caught up or just let it sync
+      setOptimisticFavorite(null)
+
       if (favoritesStore.isFavorited(flyer.id)) {
         toast.success("Added to favorites!")
       } else {
@@ -76,12 +72,8 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
 
       onToggleFavorite?.(flyer)
     } catch (error: any) {
-      console.error("❌ Error toggling favorite:", error)
-
-      // 🔄 REVERT OPTIMISTIC UPDATE on error
-      setIsFavorited(wasAlreadyFavorited)
-      console.log("🔄 Reverted optimistic update due to error")
-
+      // 🔄 REVERT on error
+      setOptimisticFavorite(null)
       toast.error(error.message || "Failed to update favorites")
     } finally {
       setIsTogglingFavorite(false)
@@ -120,6 +112,8 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
           src={flyer.image_url || "/placeholder.svg"}
           alt={flyer.name}
           fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          loading="lazy"
           className="object-cover transition-transform duration-300 group-hover:scale-102"
         />
 

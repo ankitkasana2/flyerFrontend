@@ -253,6 +253,10 @@ export class CartStore {
 
   // Add item to cart with FormData
   async addToCart(formData: FormData) {
+    if (this.cartItems.length >= 15) {
+      throw new Error("You cannot add more than 15 items to the cart.")
+    }
+
     this.isAdding = true
     this.addError = null
 

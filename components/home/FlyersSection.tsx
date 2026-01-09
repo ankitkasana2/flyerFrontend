@@ -29,15 +29,8 @@ type Filter = {
 
 const FlyersSection: React.FC<FlyersSectionProps> = ({ type }) => {
 
-    const { flyersStore, filterBarStore } = useStore();
+    const { flyersStore } = useStore();
     const searchParams = useSearchParams();
-
-    const [Flyers, setFlyers] = useState([]);
-    const [filter, setFilter] = useState<Filter>({
-        price: [],
-        category: [],
-        type: []
-    });
 
     // Fetch flyers from backend once
     useEffect(() => {
@@ -46,39 +39,29 @@ const FlyersSection: React.FC<FlyersSectionProps> = ({ type }) => {
         }
     }, [flyersStore]);
 
-    // Watch MobX store flyers and update UI
-    useEffect(() => {
-        let data = flyersStore.flyers;
+    // Derive flyers from store directly
+    let data = flyersStore.flyers;
 
-        if (type.name === 'Recently Added') {
-            data = flyersStore.recentlyAdded;
-        }
-        else if (type.name === 'Premium Flyers') {
-            data = flyersStore.premiumFlyers;
-        }
-        else if (type.name === 'Basic Flyers') {
-            data = flyersStore.basicFlyers;
-        }
-        else {
-            data = flyersStore.flyersByCategory(type.name);
-        }
+    if (type.name === 'Recently Added') {
+        data = flyersStore.recentlyAdded;
+    }
+    else if (type.name === 'Premium Flyers') {
+        data = flyersStore.premiumFlyers;
+    }
+    else if (type.name === 'Basic Flyers') {
+        data = flyersStore.basicFlyers;
+    }
+    else {
+        data = flyersStore.flyersByCategory(type.name);
+    }
 
-        setFlyers(toJS(data.filter((f: any) => {
-            if (f.form_type === 'Birthday') {
-                return type.name === 'Birthday Flyers';
-            }
-            return true;
-        })));
-
-    }, [flyersStore.flyers, type.name, searchParams]);
-
-    // Update filter based on MobX store
-    useEffect(() => {
-        setFilter(prev => ({
-            ...prev,
-            price: toJS(filterBarStore.price)
-        }));
-    }, [filterBarStore.price]);
+    // Apply specific filtering (Birthday form type)
+    const Flyers = data.filter((f: any) => {
+        if (f.form_type === 'Birthday') {
+            return type.name === 'Birthday Flyers';
+        }
+        return true;
+    });
 
     if (!Flyers.length) {
         if (flyersStore.loading) {

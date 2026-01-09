@@ -210,9 +210,9 @@ const Photo15Form: React.FC<Photo15FormProps> = ({ flyer }) => {
         try {
             await cartStore.addToCart(finalFormData);
             toast.success("Added to cart. You can keep shopping.");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Cart save error", error);
-            toast.error("Unable to add to cart. Please try again.");
+            toast.error(error.message || "Unable to add to cart. Please try again.");
         }
     };
 
