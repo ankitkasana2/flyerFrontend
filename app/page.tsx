@@ -53,16 +53,64 @@ const HomePage: React.FC<HomeSectionProps> = () => {
     }
   }, [authStore.user?.id, favoritesStore])
 
-  // Update categories from store
+  // Update categories from store and specific ordering
   useEffect(() => {
+    // Expected order of categories
+    const ORDERED_SLUGS = [
+      'premium-flyers',
+      'basic-flyers',
+      'dj-image-and-artist',
+      'ladies-night',
+      'brunch',
+      'summer',
+      'hookah-flyers',
+      'clean-flyers',
+      'drink-flyers',
+      'birthday-flyers'
+    ];
+
     if (categoryStore.categories.length > 0) {
+      // 1. Map API categories to our format
       const mappedCategories = categoryStore.categories.map((cat: any) => ({
         id: String(cat.id),
         name: cat.name,
         slug: cat.name.toLowerCase().replace(/\s+/g, '-'),
         homePage: true
       }));
-      setCategories(mappedCategories);
+
+      // 2. Sort categories based on the fixed list
+      const sortedCategories: any[] = [];
+      const remainingCategories = [...mappedCategories];
+
+      ORDERED_SLUGS.forEach(slug => {
+        const index = remainingCategories.findIndex(c =>
+          (c.slug === slug ||
+            c.name.toLowerCase() === slug.replace(/-/g, ' ') || // Handle space vs dash
+            (slug === 'dj-image-and-artist' && c.name.toLowerCase().includes('artist'))) &&
+          c.slug !== 'recently-added' && c.name !== 'Recently Added'
+        );
+
+        if (index !== -1) {
+          sortedCategories.push(remainingCategories[index]);
+          remainingCategories.splice(index, 1);
+        }
+      });
+
+      // Add any remaining categories at the end (fallback), EXCLUDING "Recently Added" if it exists
+      sortedCategories.push(...remainingCategories.filter(c =>
+        c.slug !== 'recently-added' && c.name.toLowerCase() !== 'recently added'
+      ));
+
+      // 3. Prepend "Recently Added" as the very first item
+      // It's not a real category in DB, so we construct it manually
+      const recentlyAddedSection = {
+        id: 'recent',
+        name: 'Recently Added',
+        slug: 'recently-added',
+        homePage: true
+      };
+
+      setCategories([recentlyAddedSection, ...sortedCategories]);
     }
   }, [categoryStore.categories]);
 

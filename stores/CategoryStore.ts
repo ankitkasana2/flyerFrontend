@@ -54,36 +54,64 @@ export class CategoryStore {
             : SAMPLE_FLYERS
     }
 
+    // Helper to shuffle an array (Fisher-Yates)
+    shuffleArray(array: any[]) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
     // set initial flyer 
     setFlyer(cat: string) {
         const allFlyers = this.allFlyers
 
         if (cat == 'Recently Added' || cat == 'recently-added') {
+            // Recently Added: KEEP ORDER (Newest to Oldest)
+            // Assuming the source 'allFlyers' or 'recentlyAdded' filter returns them 
+            // in some reasonable order, or we sort by ID/date here.
+            // For now, we trust the filter/source order for "Recently Added".
             this.flyers = allFlyers.filter((fly: any) => fly.isRecentlyAdded || fly.recently_added || fly.recentlyAdded)
+
+            // Explicitly sort by ID descending (proxy for date) if needed, 
+            // but usually recently added specific list is already sorted.
+            // If we have created_at, we could sort by that.
+            this.flyers.sort((a: any, b: any) => {
+                const idA = parseInt(a.id) || 0
+                const idB = parseInt(b.id) || 0
+                return idB - idA
+            })
+
             this.category = 'Recently Added'
         } else if (cat == 'premium-flyers' || cat == 'Premium Flyers') {
             this.category = 'Premium Flyers'
-            this.flyers = allFlyers.filter((fly: any) => {
+            let filtered = allFlyers.filter((fly: any) => {
                 const price = typeof fly.price === 'string' ? parseFloat(fly.price.replace('$', '')) : fly.price
                 return price === 40
             })
+            // RANDOMIZE
+            this.flyers = this.shuffleArray(filtered)
         } else if (cat == 'basic-flyers' || cat == 'Basic Flyers') {
             this.category = 'Basic Flyers'
-            this.flyers = allFlyers.filter((fly: any) => {
+            let filtered = allFlyers.filter((fly: any) => {
                 const price = typeof fly.price === 'string' ? parseFloat(fly.price.replace('$', '')) : fly.price
                 return price === 10
             })
+            // RANDOMIZE
+            this.flyers = this.shuffleArray(filtered)
         } else {
             // For other categories, check if flyer has this category in its categories array
             // First try to find in API-fetched categories, then fall back to static list
             let categoryName = cat;
-            
+
             // Try to find in API categories first
             const apiCategory = this.categories.find((c: any) => {
                 const apiSlug = c.name.toLowerCase().replace(/\s+/g, '-');
                 return apiSlug === cat || c.name === cat;
             });
-            
+
             if (apiCategory) {
                 categoryName = apiCategory.name;
             } else {
@@ -93,10 +121,10 @@ export class CategoryStore {
                     categoryName = staticCategory.name;
                 }
             }
-            
+
             this.category = categoryName
 
-            this.flyers = allFlyers.filter((fly: any) => {
+            let filtered = allFlyers.filter((fly: any) => {
                 // Check if flyer has categories array (API format)
                 if (Array.isArray(fly.categories)) {
                     return fly.categories.includes(categoryName)
@@ -104,8 +132,11 @@ export class CategoryStore {
                 // Fallback to old format
                 return fly.category === categoryName
             })
+
+            // RANDOMIZE
+            this.flyers = this.shuffleArray(filtered)
         }
-        
+
         // Filter out birthday form type flyers if this.category is not Birthday Flyers
         this.flyers = this.flyers.filter((f: any) => {
             if (f.form_type === 'Birthday') {
@@ -170,12 +201,12 @@ export class CategoryStore {
         } else {
             // Try to find in API categories first, then fall back to static list
             let catName = cat;
-            
+
             const apiCategory = this.categories.find((c: any) => {
                 const apiSlug = c.name.toLowerCase().replace(/\s+/g, '-');
                 return apiSlug === cat || c.name === cat;
             });
-            
+
             if (apiCategory) {
                 catName = apiCategory.name;
             } else {
@@ -185,7 +216,7 @@ export class CategoryStore {
                 }
             }
             resolvedCategoryName = catName;
-            
+
             result = allFlyers.filter((fly: any) => {
                 // Check if flyer has categories array (API format)
                 if (Array.isArray(fly.categories)) {
@@ -195,7 +226,7 @@ export class CategoryStore {
                 return fly.category === catName
             });
         }
-        
+
         // Filter out birthday form type flyers if resolved category is not Birthday Flyers
         return result.filter((f: any) => {
             if (f.form_type === 'Birthday') {
