@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Heart, Check } from "lucide-react"
+import { Heart, Check, Image as ImageIcon } from "lucide-react"
 import type { Flyer } from "@/lib/types"
 import Link from "next/link"
 import { observer } from "mobx-react-lite";
@@ -13,6 +13,7 @@ import { useStore } from "@/stores/StoreProvider";
 import { toast } from "sonner"
 import { toJS } from "mobx"
 import { FlyerRibbon } from "../orer-form/flyer-ribbon"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface FlyerCardProps {
   flyer: Flyer
@@ -24,6 +25,7 @@ interface FlyerCardProps {
 
 const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleFavorite }: FlyerCardProps) => {
 
+  const [isLoading, setIsLoading] = useState(true)
   const [isHovered, setIsHovered] = useState(false)
   const { authStore, favoritesStore } = useStore()
 
@@ -99,6 +101,10 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
   const price = getPrice(flyer);
   const isPremium = price === 40;
 
+  useEffect(() => {
+    setIsLoading(true)
+  }, [flyer.image_url])
+
   const CardContent = (
     <div
       className={`group bg-card border rounded-xl overflow-hidden transition-all duration-300 
@@ -108,13 +114,21 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
       onClick={onPreview ? () => onPreview(flyer) : undefined}
     >
       <div className="relative aspect-[3/4] overflow-hidden">
+        {isLoading && (
+          <Skeleton className="absolute inset-0 z-10 w-full h-full rounded-none bg-gray-200 flex items-center justify-center">
+            <ImageIcon className="w-12 h-12 text-gray-400/50" />
+          </Skeleton>
+        )}
         <Image
+          key={flyer.image_url}
           src={flyer.image_url || "/placeholder.svg"}
           alt={flyer.name}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           loading="lazy"
-          className="object-cover transition-transform duration-300 group-hover:scale-102"
+          onLoad={() => setIsLoading(false)}
+          onError={() => setIsLoading(false)}
+          className={`object-cover transition-transform duration-300 group-hover:scale-102 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
         />
 
         {/* Selected Overlay */}

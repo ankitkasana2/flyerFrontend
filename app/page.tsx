@@ -71,19 +71,7 @@ const HomePage: React.FC<HomeSectionProps> = () => {
       {/* Hero Section */}
       <HeroSection />
 
-      {/* Loading state */}
-      {flyersStore.loading && (
-        <section className="py-8 px-5">
-          <div className="flex flex-col gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex flex-col gap-3">
-                <div className="h-6 w-40 rounded bg-gray-800/30 animate-pulse" />
-                <div className="h-48 w-full rounded-xl bg-gray-900/40 animate-pulse" />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Loading state removed */}
 
       {/* Error state */}
       {flyersStore.error && (
