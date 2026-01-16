@@ -158,6 +158,7 @@ const EventDetails = observer(() => {
                                 const date = new Date(e.target.value)
                                 if (isValidDate(date)) flyerFormStore.updateEventDetails("date", date)
                             }}
+                            onClick={() => setOpen(true)}
                             onKeyDown={(e) => {
                                 if (e.key === "ArrowDown") {
                                     e.preventDefault()
