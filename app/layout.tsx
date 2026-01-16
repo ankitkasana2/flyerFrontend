@@ -32,7 +32,7 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <StoreProvider>
               <FavoritesSync />
-              <PageTransitionLoader />
+              {/* <PageTransitionLoader /> */}
               <Header />
               {children}
               <Footer />

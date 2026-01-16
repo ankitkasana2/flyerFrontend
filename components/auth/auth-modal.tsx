@@ -905,7 +905,7 @@ const AuthModal = observer(({
   onClose,
   defaultMode = "signin",
 }: AuthModalProps) => {
-  const [mode, setMode] = useState<"signin" | "signup">(defaultMode)
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">(defaultMode)
   const [showPassword, setShowPassword] = useState(false)
   const [showOtp, setShowOtp] = useState(false)
   const [userEmail, setUserEmail] = useState("")
@@ -1399,8 +1399,8 @@ const AuthModal = observer(({
                       required
                       disabled={isLoading}
                       className={`pr-10 ${formData.password && formData.password.length > 0 && formData.password.length < 8
-                          ? "border-red-500/50"
-                          : ""
+                        ? "border-red-500/50"
+                        : ""
                         }`}
                     />
                     <button
@@ -1464,10 +1464,10 @@ const AuthModal = observer(({
                   disabled={isLoading}
                 >
                   {isLoading
-                    ? "Processing..."
-                    : mode === "signin"
+                    ? (mode === "signin" ? "Signing In..." : "Creating Account...")
+                    : (mode === "signin"
                       ? "Sign In"
-                      : "Create Account"}
+                      : "Create Account")}
                 </Button>
               </form>
 

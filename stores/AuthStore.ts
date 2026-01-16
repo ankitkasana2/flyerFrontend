@@ -241,7 +241,11 @@ export class AuthStore {
         throw new Error('Additional authentication steps required. Please try again.')
       }
 
-      return await this.updateUserFromAmplify()
+      const user = await this.updateUserFromAmplify()
+      if (!user) {
+        throw new Error('Login succeeded but failed to load user profile. Please try again.')
+      }
+      return user
     } catch (error: any) {
       let errorMessage = "Login failed"
 
@@ -452,7 +456,7 @@ export class AuthStore {
 
       // Register user in backend database immediately after Cognito registration
       try {
-        const formattedUserId = formatCognitoUserId(userId, 'cognito')
+        const formattedUserId = formatCognitoUserId(userId ?? '', 'cognito')
         console.log('Registering user in database with ID:', formattedUserId);
 
         const result = await registerUserInDatabase({

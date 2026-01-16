@@ -44,7 +44,7 @@ const FlyersCategorysection = () => {
         const disposer = reaction(
             () => toJS(filterBarStore.price),  // observe this value
             (price) => {
-                
+
                 categoryStore.setFlyerByFilter(price); // or any function you want to run
             }
         );
@@ -63,7 +63,7 @@ const FlyersCategorysection = () => {
 
             {/* flyers  */}
             <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
-                {flyers.map(flyer => { return <FlyerCard flyer={flyer} /> })}
+                {flyers.map((flyer: any) => { return <FlyerCard key={flyer.id} flyer={flyer} /> })}
             </div>
         </div>
     )

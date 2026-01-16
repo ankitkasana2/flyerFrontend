@@ -55,13 +55,28 @@ const FlyersSection: React.FC<FlyersSectionProps> = ({ type }) => {
         data = flyersStore.flyersByCategory(type.name);
     }
 
+    // Helper to shuffle an array (Fisher-Yates) - Move to utility if needed, duplicating here for now to ensure scope
+    const shuffleArray = (array: any[]): any[] => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    };
+
     // Apply specific filtering (Birthday form type)
-    const Flyers = data.filter((f: any) => {
+    let Flyers: any[] = data.filter((f: any) => {
         if (f.form_type === 'Birthday') {
             return type.name === 'Birthday Flyers';
         }
         return true;
     });
+
+    // RANDOMIZE ORDER for everything EXCEPT "Recently Added"
+    if (type.name !== 'Recently Added') {
+        Flyers = shuffleArray(Flyers);
+    }
 
     if (!Flyers.length) {
         if (flyersStore.loading) {

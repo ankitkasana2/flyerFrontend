@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
-import { IOSLoader } from "@/components/ui/ios-loader";
+import { BannerSkeleton } from './BannerSkeleton';
 
 const HeroSection = observer(() => {
   const router = useRouter();
@@ -66,35 +66,23 @@ const HeroSection = observer(() => {
     }
   };
 
-  // Loading state - only small red loader like Apple devices
+  // Loading state - skeleton
   if (bannerStore.loading) {
     console.log('🔄 Banners are loading...');
-    return (
-      <section className="relative px-4 min-h-[60vh] sm:min-h-[60vh] flex items-center justify-center bg-black">
-        <IOSLoader size="sm" color="text-red-500" />
-      </section>
-    );
+    return <BannerSkeleton />;
   }
 
-  // Error state - only small red loader like Apple devices
+  // Error state - show skeleton as fallback
   if (bannerStore.error) {
     console.error('❌ Banner error:', bannerStore.error);
-    return (
-      <section className="relative px-4 min-h-[60vh] sm:min-h-[60vh] flex items-center justify-center bg-black">
-        <IOSLoader size="sm" color="text-red-500" />
-      </section>
-    );
+    return <BannerSkeleton />;
   }
 
-  // No banners state - only small red loader like Apple devices
+  // No banners state - show skeleton as placeholder
   if (bannerStore.activeBanners.length === 0) {
     console.warn('⚠️ No active banners found. Total banners:', bannerStore.banners.length);
     console.log('All banners:', bannerStore.banners);
-    return (
-      <section className="relative px-4 min-h-[60vh] sm:min-h-[60vh] flex items-center justify-center bg-black">
-        <IOSLoader size="sm" color="text-red-500" />
-      </section>
-    );
+    return <BannerSkeleton />;
   }
 
   console.log('✅ Showing banner:', currentImageIndex + 1, 'of', bannerStore.activeBanners.length);

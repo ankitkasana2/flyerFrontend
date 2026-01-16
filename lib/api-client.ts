@@ -22,13 +22,19 @@ export const registerUserInDatabase = async (
     payload: RegisterUserPayload
 ): Promise<RegisterUserResponse> => {
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
         const response = await fetch(getApiUrl("/api/web/auth/register"), {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(payload),
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         const data = await response.json();
 

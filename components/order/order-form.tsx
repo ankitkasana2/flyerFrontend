@@ -227,6 +227,7 @@ export function OrderForm({ selectedFlyer, onCancel }: OrderFormProps) {
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    onClick={(e) => e.currentTarget.showPicker()}
                     className="pl-10 bg-input border-border"
                     required
                   />
