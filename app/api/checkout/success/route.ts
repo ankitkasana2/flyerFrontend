@@ -287,6 +287,36 @@ export async function GET(request: NextRequest) {
     const orderId = responseData.orderId || responseData.id || responseData._id
     console.log('📋 Order ID:', orderId)
 
+    // Send confirmation email
+    try {
+      // Dynamically import the email function to avoid top-level import issues if not used elsewhere
+      const { sendOrderConfirmationEmail } = await import('@/lib/email');
+      
+      const extras = [];
+      if (formDataObj.story_size_version) extras.push("Story Size Version");
+      if (formDataObj.custom_flyer) extras.push("Custom Flyer Design");
+      if (formDataObj.animated_flyer) extras.push("Animated Flyer");
+      
+      console.log('📧 Sending confirmation email to:', formDataObj.email);
+      
+      await sendOrderConfirmationEmail({
+        orderId: orderId.toString(),
+        customerName: formDataObj.email ? formDataObj.email.split('@')[0] : "Valued Customer",
+        customerEmail: formDataObj.email || orderData.userEmail,
+        flyerName: formDataObj.event_title || `Flyer Order #${orderId}`,
+        details: {
+          price: Number(formDataObj.total_price),
+          extras: extras,
+          deliveryTime: formDataObj.delivery_time
+        },
+        totalPrice: Number(formDataObj.total_price),
+        imageUrl: formDataObj.image_url
+      });
+    } catch (emailError) {
+      console.error('⚠️ Failed to send confirmation email:', emailError);
+      // We continue to redirect even if email fails
+    }
+
     // Redirect to thank you page with order ID and session ID
     return NextResponse.redirect(
       new URL(`/thank-you?orderId=${orderId || ''}&session_id=${sessionId}&order_created=true`, request.url)
