@@ -166,7 +166,7 @@ const FilterBar = () => {
                                 />
                                 <Label className='font-light cursor-pointer' htmlFor={cat.name}>
                                     {cat.name}
-                                    {categoryCounts[cat.name] ? ` (${categoryCounts[cat.name]})` : ""}
+                                    {/* {categoryCounts[cat.name] ? `(${categoryCounts[cat.name]})` : ''} */}
                                 </Label>
                             </li>
                         ))}

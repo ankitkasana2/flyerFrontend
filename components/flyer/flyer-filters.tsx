@@ -129,7 +129,8 @@ export function FlyerFilters({ filters, onFiltersChange, onClearFilters }: Flyer
                       onCheckedChange={() => toggleCategory(category.slug)}
                     />
                     <Label htmlFor={category.slug} className="text-sm cursor-pointer">
-                      {category.name} ({categoryCounts[category.name] ?? 0})
+                      {category.name}
+                      {/* // {category.name} ({categoryCounts[category.name] ?? 0}) */}
                     </Label>
                   </div>
                 ))}
