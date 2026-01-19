@@ -12,6 +12,7 @@ import {
   Music,
   Check,
   TestTube,
+  ImageIcon,
 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
@@ -38,8 +39,12 @@ import { toast } from "sonner"
 import { useSearchParams, useParams } from "next/navigation";
 import { getApiUrl } from "@/config/api";
 import type { FlyerFormDetails } from "@/stores/FlyerFormStore";
-import { saveToLibrary, saveToTemp } from "@/lib/uploads";
+import { saveToTemp } from "@/lib/uploads";
 import { createCartFormData, setUserIdInFormData } from "@/lib/cart";
+import { MediaLibraryDialog } from "../upload/media-library-dialog";
+import { LibraryItem } from "@/lib/uploads";
+import { saveRecentItem } from "@/lib/autofill";
+import { RecentSuggestions } from "@/components/ui/recent-suggestions";
 
 // Cart fetching function
 const fetchCartByUserId = async (userId: string) => {
@@ -126,8 +131,8 @@ const mapToApiRequest = (
   };
 
   const sponsors = data?.sponsors ?? {};
-  const normalizeSponsor = (file?: File | null) => ({
-    name: file?.name ?? ""
+  const normalizeSponsor = (file?: File | string | null) => ({
+    name: (file instanceof File) ? file.name : (typeof file === 'string' ? "Sponsor" : "")
   });
 
   // Use REAL form data without fallbacks - only use fallbacks if data is truly empty
@@ -144,20 +149,31 @@ const mapToApiRequest = (
 
     djs: Array.isArray(data?.djsOrArtists)
       ? data.djsOrArtists.map((dj: any) => ({
-        name: dj?.name || ""
+        name: dj?.name || "",
+        image_url: typeof dj.image === 'string' ? dj.image : ""
       }))
       : [],
 
     host: Array.isArray(data?.host)
       ? data.host.map((h) => ({
-        name: h.name || ""
+        name: h.name || "",
+        image_url: typeof h.image === 'string' ? h.image : ""
       }))
       : [],
 
     sponsors: [
-      normalizeSponsor(sponsors.sponsor1),
-      normalizeSponsor(sponsors.sponsor2),
-      normalizeSponsor(sponsors.sponsor3)
+      { 
+        name: normalizeSponsor(sponsors.sponsor1).name, 
+        image_url: typeof sponsors.sponsor1 === 'string' ? sponsors.sponsor1 : "" 
+      },
+      { 
+        name: normalizeSponsor(sponsors.sponsor2).name, 
+        image_url: typeof sponsors.sponsor2 === 'string' ? sponsors.sponsor2 : "" 
+      },
+      { 
+        name: normalizeSponsor(sponsors.sponsor3).name, 
+        image_url: typeof sponsors.sponsor3 === 'string' ? sponsors.sponsor3 : "" 
+      }
     ],
 
     story_size_version: extras.storySizeVersion ?? false,
@@ -227,7 +243,7 @@ const EventBookingForm = () => {
       setDjList(storeDJs.map((dj, index) => ({
         id: index + 1,
         name: dj.name,
-        image: (dj.image && typeof window !== 'undefined') ? URL.createObjectURL(dj.image) : null
+        image: (dj.image instanceof File) ? URL.createObjectURL(dj.image) : (typeof dj.image === 'string' ? dj.image : null)
       })));
       setDjListText(storeDJs.map((dj, index) => ({
         id: index + 1,
@@ -298,12 +314,12 @@ const EventBookingForm = () => {
   // ✅ Reset local state when flyer ID changes (for Default form)
   useEffect(() => {
     setDjList([
-      { name: "", image: null },
-      { name: "", image: null },
+      { id: 1, name: "", image: null },
+      { id: 2, name: "", image: null },
     ]);
     setDjListText([
-      { name: "" },
-      { name: "" },
+      { id: 1, name: "" },
+      { id: 2, name: "" },
     ]);
     setNote("");
   }, [routeFlyerId]);
@@ -356,13 +372,13 @@ const EventBookingForm = () => {
     if (isPhotoForm) {
       setDjList((prev) => {
         const newList = [...prev];
-        newList[index].name = e.target.value; // base64 preview
+        newList[index] = { ...newList[index], name: e.target.value };
         return newList;
       })
     } else {
       setDjListText((prev) => {
         const newList2 = [...prev];
-        newList2[index].name = e.target.value
+        newList2[index] = { ...newList2[index], name: e.target.value };
         return newList2;
       })
     }
@@ -381,11 +397,27 @@ const EventBookingForm = () => {
         // 3️⃣ Update local UI preview (if you’re using local state for preview)
         setDjList((prev) => {
           const newList = [...prev];
-          newList[index].image = reader.result as string; // base64 preview
+          newList[index] = { ...newList[index], image: reader.result as string };
           return newList;
         });
       };
       reader.readAsDataURL(file); // 4️⃣ Convert file → base64
+    }
+  };
+
+  // ✅ Handle library selection
+  const handleLibrarySelect = (items: LibraryItem[], index: number) => {
+    if (items.length > 0) {
+      const item = items[0];
+      // 1️⃣ Update the MobX store with the URL
+      flyerFormStore.updateDJ(index, "image", item.dataUrl);
+
+      // 2️⃣ Update local UI preview
+      setDjList((prev) => {
+        const newList = [...prev];
+        newList[index] = { ...newList[index], image: item.dataUrl };
+        return newList;
+      });
     }
   };
 
@@ -395,7 +427,7 @@ const EventBookingForm = () => {
     flyerFormStore.updateDJ(index, "image", null)
     setDjList((prev) => {
       const newList = [...prev];
-      newList[index].image = null;
+      newList[index] = { ...newList[index], image: null };
       return newList;
     });
   }
@@ -410,14 +442,14 @@ const EventBookingForm = () => {
         return;
       }
       flyerFormStore.addDJ()
-      setDjList(prev => [...prev, { name: "", image: null }])
+      setDjList(prev => [...prev, { id: prev.length + 1, name: "", image: null }])
     } else {
       if (djListText.length >= 4) {
         toast.error("Maximum 4 DJs allowed");
         return;
       }
       flyerFormStore.addDJ()
-      setDjListText(prev => [...prev, { name: '' }])
+      setDjListText(prev => [...prev, { id: prev.length + 1, name: '' }])
     }
   }
 
@@ -426,9 +458,9 @@ const EventBookingForm = () => {
     const isPhotoForm = flyer?.form_type === "With Photo" || flyer?.hasPhotos;
 
     if (isPhotoForm) {
-      setDjList(prev => prev.filter((_, i) => i !== index));
+      setDjList(prev => prev.filter((_, i) => i !== index).map((dj, i) => ({ ...dj, id: i + 1 })));
     } else {
-      setDjListText(prev => prev.filter((_, i) => i !== index));
+      setDjListText(prev => prev.filter((_, i) => i !== index).map((dj, i) => ({ ...dj, id: i + 1 })));
     }
   };
 
@@ -632,7 +664,9 @@ const EventBookingForm = () => {
 
       // 1. Upload Venue Logo to TEMP
       let venueLogoUrl = "";
-      if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo) {
+      if (typeof flyerFormStore.flyerFormDetail.eventDetails.venueLogo === 'string') {
+        venueLogoUrl = flyerFormStore.flyerFormDetail.eventDetails.venueLogo;
+      } else if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo instanceof File) {
         const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo");
         if (res) {
           tempFiles['venue_logo'] = res.filepath;
@@ -643,7 +677,9 @@ const EventBookingForm = () => {
       // 2. Upload DJs to TEMP
       const djsWithUrls = await Promise.all(flyerFormStore.flyerFormDetail.djsOrArtists.map(async (dj, idx) => {
         let imageUrl = "";
-        if (dj.image) {
+        if (typeof dj.image === 'string') {
+          imageUrl = dj.image;
+        } else if (dj.image instanceof File) {
           const res = await saveToTemp(dj.image, `dj_${idx}`);
           if (res) {
             tempFiles[`dj_${idx}`] = res.filepath;
@@ -656,7 +692,9 @@ const EventBookingForm = () => {
       // 3. Upload Hosts to TEMP
       const hostsWithUrls = await Promise.all((flyerFormStore.flyerFormDetail.host || []).map(async (h, idx) => {
         let imageUrl = "";
-        if (h.image) {
+        if (typeof h.image === 'string') {
+          imageUrl = h.image;
+        } else if (h.image instanceof File) {
           const res = await saveToTemp(h.image, `host_${idx}`);
           if (res) {
             tempFiles[`host_${idx}`] = res.filepath;
@@ -670,41 +708,28 @@ const EventBookingForm = () => {
       const sponsors = flyerFormStore.flyerFormDetail.sponsors;
       const sponsorData: Array<{ name: string; image_url: string }> = [];
 
-      if (sponsors.sponsor1) {
-        const res = await saveToTemp(sponsors.sponsor1, "sponsor_0");
-        if (res) {
-          tempFiles['sponsor_0'] = res.filepath;
-          sponsorData.push({ name: sponsors.sponsor1.name || "Sponsor 1", image_url: res.filepath });
+      const processSponsor = async (sponsor: File | string | null | undefined, idx: number) => {
+        if (typeof sponsor === 'string') {
+          return { name: `Sponsor ${idx + 1}`, image_url: sponsor };
+        } else if (sponsor instanceof File) {
+          const res = await saveToTemp(sponsor, `sponsor_${idx}`);
+          if (res) {
+            tempFiles[`sponsor_${idx}`] = res.filepath;
+            return { name: sponsor.name || `Sponsor ${idx + 1}`, image_url: res.filepath };
+          }
         }
-      } else {
-        sponsorData.push({ name: "", image_url: "" });
-      }
+        return { name: "", image_url: "" };
+      };
 
-      if (sponsors.sponsor2) {
-        const res = await saveToTemp(sponsors.sponsor2, "sponsor_1");
-        if (res) {
-          tempFiles['sponsor_1'] = res.filepath;
-          sponsorData.push({ name: sponsors.sponsor2.name || "Sponsor 2", image_url: res.filepath });
-        }
-      } else {
-        sponsorData.push({ name: "", image_url: "" });
-      }
-
-      if (sponsors.sponsor3) {
-        const res = await saveToTemp(sponsors.sponsor3, "sponsor_2");
-        if (res) {
-          tempFiles['sponsor_2'] = res.filepath;
-          sponsorData.push({ name: sponsors.sponsor3.name || "Sponsor 3", image_url: res.filepath });
-        }
-      } else {
-        sponsorData.push({ name: "", image_url: "" });
-      }
+      sponsorData.push(await processSponsor(sponsors.sponsor1, 0));
+      sponsorData.push(await processSponsor(sponsors.sponsor2, 1));
+      sponsorData.push(await processSponsor(sponsors.sponsor3, 2));
 
       console.log('🔍 DEBUG - Host data from store:', toJS(flyerFormStore.flyerFormDetail.host));
       console.log('🔍 DEBUG - Sponsors from store:', {
-        sponsor1: sponsors.sponsor1?.name,
-        sponsor2: sponsors.sponsor2?.name,
-        sponsor3: sponsors.sponsor3?.name
+        sponsor1: (sponsors.sponsor1 instanceof File) ? sponsors.sponsor1.name : sponsors.sponsor1,
+        sponsor2: (sponsors.sponsor2 instanceof File) ? sponsors.sponsor2.name : sponsors.sponsor2,
+        sponsor3: (sponsors.sponsor3 instanceof File) ? sponsors.sponsor3.name : sponsors.sponsor3
       });
       console.log('🔍 DEBUG - Processed sponsor data:', sponsorData);
       console.log('🔍 DEBUG - Hosts with URLs:', hostsWithUrls);
@@ -758,6 +783,20 @@ const EventBookingForm = () => {
         image_url: apiBody.image_url,
         flyer_id: apiBody.flyer_id,
         temp_files_count: Object.keys(tempFiles).length
+      });
+
+      // Save recent data for autofill
+      if (apiBody.address_phone) {
+        saveRecentItem('address', apiBody.address_phone);
+      }
+      if (apiBody.presenting) {
+        saveRecentItem('presenting', apiBody.presenting);
+      }
+      djsWithUrls.forEach(dj => {
+        if (dj.name) saveRecentItem('dj', dj.name);
+      });
+      hostsWithUrls.forEach(h => {
+        if (h.name) saveRecentItem('host', h.name);
       });
 
       // Create Stripe checkout session with order data
@@ -918,39 +957,31 @@ const EventBookingForm = () => {
       // Removing dead code block.
 
       // Add venue logo if it exists
-      if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo) {
-        const venueLogo = flyerFormStore.flyerFormDetail.eventDetails.venueLogo;
-        if (typeof venueLogo === 'object' && venueLogo !== null && 'name' in venueLogo && 'size' in venueLogo) {
-          console.log('🏢 Adding venue logo:', venueLogo.name);
-          formData.append('venue_logo', venueLogo as File);
-        }
+      if (typeof flyerFormStore.flyerFormDetail.eventDetails.venueLogo === 'string') {
+        console.log('🏢 Adding venue logo (URL):', flyerFormStore.flyerFormDetail.eventDetails.venueLogo);
+        formData.append('venue_logo', flyerFormStore.flyerFormDetail.eventDetails.venueLogo);
+      } else if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo instanceof File) {
+        console.log('🏢 Adding venue logo (File):', flyerFormStore.flyerFormDetail.eventDetails.venueLogo.name);
+        formData.append('venue_logo', flyerFormStore.flyerFormDetail.eventDetails.venueLogo);
       }
 
       // Add DJ/Artist images
       flyerFormStore.flyerFormDetail.djsOrArtists.forEach((dj, index) => {
-        if (dj.image &&
-          typeof dj.image === 'object' &&
-          dj.image !== null &&
-          'name' in dj.image &&
-          'size' in dj.image) {
+        if (dj.image instanceof File) {
           console.log(`🎵 Adding DJ ${index} image:`, dj.image.name);
-          formData.append(`dj_${index}`, dj.image as File);
+          formData.append(`dj_${index}`, dj.image);
         }
       });
 
       // Add host images
       if (Array.isArray(flyerFormStore.flyerFormDetail.host)) {
         flyerFormStore.flyerFormDetail.host.forEach((h, index) => {
-          if (h.image &&
-            typeof h.image === 'object' &&
-            h.image !== null &&
-            'name' in h.image &&
-            'size' in h.image) {
+          if (h.image instanceof File) {
             console.log(`🎤 Adding host ${index} image:`, h.image.name);
             if (index === 0) {
-              formData.append('host', h.image as File);
+              formData.append('host', h.image);
             } else {
-              formData.append(`host_${index}`, h.image as File);
+              formData.append(`host_${index}`, h.image);
             }
           }
         });
@@ -958,13 +989,9 @@ const EventBookingForm = () => {
 
       // Add sponsor images
       Object.entries(flyerFormStore.flyerFormDetail.sponsors).forEach(([key, sponsor]) => {
-        if (sponsor &&
-          typeof sponsor === 'object' &&
-          sponsor !== null &&
-          'name' in sponsor &&
-          'size' in sponsor) {
+        if (sponsor instanceof File) {
           console.log(`🏷️ Adding sponsor ${key} image:`, sponsor.name);
-          formData.append(`sponsor_${key}`, sponsor as File);
+          formData.append(`sponsor_${key}`, sponsor);
         }
       });
 
@@ -972,6 +999,20 @@ const EventBookingForm = () => {
         dataKeys: Array.from(formData.keys()),
         hasFiles: formData.has('image') || formData.has('venue_logo'),
         userId: authStore.user.id
+      });
+
+      // Save recent data for autofill
+      if (apiBody.address_phone) {
+        saveRecentItem('address', apiBody.address_phone);
+      }
+      if (apiBody.presenting) {
+        saveRecentItem('presenting', apiBody.presenting);
+      }
+      apiBody.djs.forEach((dj: any) => {
+        if (dj.name) saveRecentItem('dj', dj.name);
+      });
+      apiBody.host.forEach((h: any) => {
+        if (h.name) saveRecentItem('host', h.name);
       });
 
       console.log('🌐 Calling /api/test-order endpoint...');
@@ -1041,7 +1082,7 @@ const EventBookingForm = () => {
     flyerFormStore.setUserId(authStore.user.id);
 
     // Create FormData for cart API - handle venueLogo null case
-    const formDetailForCart = {
+    const formDetailForCart: any = {
       ...flyerFormStore.flyerFormDetail,
       eventDetails: {
         ...flyerFormStore.flyerFormDetail.eventDetails,
@@ -1189,10 +1230,23 @@ const EventBookingForm = () => {
               {(flyer?.form_type === "With Photo" || flyer?.hasPhotos) ? djList.map((dj, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold flex items-center gap-2">
-                      <Music className="w-4 h-4 text-primary" />
-                      DJ/Artist {index + 1}
-                    </Label>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-semibold flex items-center gap-2">
+                        <Music className="w-4 h-4 text-primary" />
+                        DJ/Artist {index + 1}
+                      </Label>
+                      <RecentSuggestions 
+                        type="dj" 
+                        onSelect={(val) => {
+                          flyerFormStore.updateDJ(index, "name", val);
+                          setDjList((prev) => {
+                            const newList = [...prev];
+                            newList[index] = { ...newList[index], name: val };
+                            return newList;
+                          });
+                        }}
+                      />
+                    </div>
 
                     {djList.length > 1 && (
                       <button
@@ -1241,18 +1295,35 @@ const EventBookingForm = () => {
 
                       {/* Upload button on RIGHT (only show if NO image) */}
                       {!dj.image && (
-                        <label htmlFor={`dj-upload-${index}`} className="cursor-pointer flex-shrink-0 pointer-events-auto">
-                          <div className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all">
-                            <Upload className="w-4 h-4 text-primary" />
-                          </div>
-                          <input
-                            id={`dj-upload-${index}`}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleFileUpload(e, index)}
-                            className="hidden"
-                          />
-                        </label>
+                        <div className="flex items-center gap-1">
+                          {authStore.user?.id && (
+                            <MediaLibraryDialog
+                              userId={authStore.user.id}
+                              onSelect={(items) => handleLibrarySelect(items, index)}
+                              trigger={
+                                <button
+                                  type="button"
+                                  className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all text-primary"
+                                  title="Choose from library"
+                                >
+                                  <ImageIcon className="w-4 h-4" />
+                                </button>
+                              }
+                            />
+                          )}
+                          <label htmlFor={`dj-upload-${index}`} className="cursor-pointer flex-shrink-0 pointer-events-auto">
+                            <div className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all">
+                              <Upload className="w-4 h-4 text-primary" />
+                            </div>
+                            <input
+                              id={`dj-upload-${index}`}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleFileUpload(e, index)}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1262,10 +1333,23 @@ const EventBookingForm = () => {
                 djListText.map((dj, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold flex items-center gap-2">
-                        <Music className="w-4 h-4 text-primary" />
-                        DJ/Artist {index + 1}
-                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-semibold flex items-center gap-2">
+                          <Music className="w-4 h-4 text-primary" />
+                          DJ/Artist {index + 1}
+                        </Label>
+                        <RecentSuggestions 
+                          type="dj" 
+                          onSelect={(val) => {
+                            flyerFormStore.updateDJ(index, "name", val);
+                            setDjListText((prev) => {
+                              const newList2 = [...prev];
+                              newList2[index] = { ...newList2[index], name: val };
+                              return newList2;
+                            });
+                          }}
+                        />
+                      </div>
 
                       {/* Remove Field Button */}
                       {djListText.length > 1 && (

@@ -28,24 +28,24 @@ export type FlyerFormDetails = {
     date: Date | null
     flyerInfo?: string
     addressAndPhone?: string
-    venueLogo?: File | null
+    venueLogo?: File | string | null
     venueText: string
   }
 
   djsOrArtists: {
     name: string
-    image?: File | null
+    image?: File | string | null
   }[]
 
   host: {
     name: string
-    image?: File | null
+    image?: File | string | null
   }[]
 
   sponsors: {
-    sponsor1?: File | null
-    sponsor2?: File | null
-    sponsor3?: File | null
+    sponsor1?: File | string | null
+    sponsor2?: File | string | null
+    sponsor3?: File | string | null
   }
 
   extras: {
@@ -63,7 +63,7 @@ export type FlyerFormDetails = {
   subtotal?: number
 
   // Birthday-specific fields
-  birthdayPersonPhoto?: File | null
+  birthdayPersonPhoto?: File | string | null
   isBirthdayForm?: boolean
 }
 
@@ -321,7 +321,7 @@ export class FlyerFormStore {
   // -----------------------------
   updateSponsor(
     key: keyof FlyerFormDetails["sponsors"],
-    file: File | null
+    file: File | string | null
   ) {
     this.flyerFormDetail.sponsors[key] = file
   }

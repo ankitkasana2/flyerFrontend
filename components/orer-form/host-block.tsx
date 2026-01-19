@@ -1,18 +1,23 @@
 import React, { useState } from "react";
-import { Music, Upload } from "lucide-react";
+import { Music, Upload, ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
-import { toJS } from "mobx";
+import { MediaLibraryDialog } from "../upload/media-library-dialog";
+import { LibraryItem } from "@/lib/uploads";
+import { RecentSuggestions } from "@/components/ui/recent-suggestions";
+import { User } from "lucide-react";
 
 const HostSection = observer(() => {
-  const { flyerFormStore } = useStore();
+  const { flyerFormStore, authStore } = useStore();
   const hosts = flyerFormStore.flyerFormDetail.host || [{ name: "", image: null }];
 
   // For instant image preview (local) - array of previews
-  const [hostPreviews, setHostPreviews] = useState<(string | null)[]>([null]);
+  const [hostPreviews, setHostPreviews] = useState<(string | null)[]>([null, null]);
+
+  const userId = authStore.user?.id;
 
   // -----------------------------
   // ✅ Handle host name change
@@ -40,6 +45,24 @@ const HostSection = observer(() => {
       });
     };
     reader.readAsDataURL(file);
+  };
+
+  // -----------------------------
+  // ✅ Handle Media Library Selection
+  // -----------------------------
+  const handleLibrarySelect = (items: LibraryItem[], index: number) => {
+    if (items.length > 0) {
+      const item = items[0];
+      // Store the URL in the store
+      flyerFormStore.updateHost(index, "image", item.dataUrl);
+      
+      // Update preview
+      setHostPreviews(prev => {
+        const newPreviews = [...prev];
+        newPreviews[index] = item.dataUrl;
+        return newPreviews;
+      });
+    }
   };
 
   // -----------------------------
@@ -74,6 +97,12 @@ const HostSection = observer(() => {
     }
   };
 
+  const getPreviewSource = (index: number, host: any) => {
+    if (hostPreviews[index]) return hostPreviews[index];
+    if (typeof host?.image === 'string') return host.image;
+    return "";
+  };
+
   // -----------------------------
   // ✅ Render
   // -----------------------------
@@ -81,89 +110,116 @@ const HostSection = observer(() => {
     <div className="space-y-4 bg-gradient-to-br from-red-950/20 to-black p-4 rounded-2xl border border-gray-800">
       <h2 className="text-xl font-bold">Host</h2>
 
-      {hosts.map((host, index) => (
-        <div key={index} className="space-y-2">
-          <Label className="text-sm font-semibold flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Music className="w-4 h-4 text-primary" />
-              Host {index + 1}
-            </div>
-            {hosts.length > 1 && (
-              <button
-                type="button"
-                onClick={() => handleRemoveHost(index)}
-                className="text-primary text-xs hover:underline cursor-pointer"
-              >
-                Remove
-              </button>
-            )}
-          </Label>
-
-          {(flyerFormStore.flyer?.form_type === "With Photo" || flyerFormStore.flyer?.hasPhotos) ? (
-            <div className="relative">
-              <div className="flex items-center gap-2 bg-gray-950 border border-gray-800 rounded-lg shadow-md hover:border-primary hover:shadow-[0_0_15px_rgba(185,32,37,0.8)] transition-all duration-300 pr-3">
-                {/* Name input - takes full width */}
-                <Input
-                  value={host?.name || ""}
-                  onChange={(e) => handleHostNameChange(e, index)}
-                  placeholder="Enter host name..."
-                  className="bg-transparent border-none text-white placeholder:text-gray-600 
-                    focus-visible:ring-0 focus-visible:ring-offset-0 h-10 flex-1 pl-3 pointer-events-auto"
+      {hosts.map((host, index) => {
+        const previewUrl = getPreviewSource(index, host);
+        return (
+          <div key={index} className="space-y-2">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-semibold flex items-center gap-2 mb-0">
+                  <User className="w-4 h-4 text-primary" />
+                  Host {index + 1}
+                </Label>
+                <RecentSuggestions 
+                  type="host" 
+                  onSelect={(val) => flyerFormStore.updateHost(index, "name", val)}
                 />
-
-                {/* Image preview on RIGHT (if uploaded) */}
-                {(hostPreviews[index] || host?.image) && (
-                  <>
-                    <div className="flex-shrink-0">
-                      <img
-                        src={hostPreviews[index] || (host?.image ? URL.createObjectURL(host.image) : "")}
-                        alt="Host"
-                        className="w-8 h-8 rounded object-cover border border-primary"
-                      />
-                    </div>
-
-                    {/* Remove image button */}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(index)}
-                      className="text-primary text-xs hover:underline font-semibold flex-shrink-0"
-                    >
-                      Remove
-                    </button>
-                  </>
-                )}
-
-                {/* Upload button on RIGHT (only show if NO image) */}
-                {!hostPreviews[index] && !host?.image && (
-                  <label htmlFor={`host-upload-${index}`} className="cursor-pointer flex-shrink-0 pointer-events-auto">
-                    <div className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all">
-                      <Upload className="w-4 h-4 text-primary" />
-                    </div>
-                    <input
-                      id={`host-upload-${index}`}
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileUploadHost(e, index)}
-                      className="hidden"
-                    />
-                  </label>
-                )}
               </div>
+              {hosts.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveHost(index)}
+                  className="text-primary text-xs hover:underline cursor-pointer"
+                >
+                  Remove
+                </button>
+              )}
             </div>
-          ) : (
-            <Input
-              value={host?.name || ""}
-              onChange={(e) => handleHostNameChange(e, index)}
-              placeholder="Enter host name..."
-              className="bg-gray-950 border border-gray-800 text-white
-                placeholder:text-gray-600 rounded-lg h-10 shadow-md
-                focus-visible:!ring-0 focus-visible:!outline-none
-                focus-visible:!shadow-[0_0_15px_rgba(185,32,37,0.8)]
-                transition-all duration-300"
-            />
-          )}
-        </div>
-      ))}
+
+            {(flyerFormStore.flyer?.form_type === "With Photo" || flyerFormStore.flyer?.hasPhotos) ? (
+              <div className="relative">
+                <div className="flex items-center gap-2 bg-gray-950 border border-gray-800 rounded-lg shadow-md hover:border-primary hover:shadow-[0_0_15px_rgba(185,32,37,0.8)] transition-all duration-300 pr-3">
+                  {/* Name input - takes full width */}
+                  <Input
+                    value={host?.name || ""}
+                    onChange={(e) => handleHostNameChange(e, index)}
+                    placeholder="Enter host name..."
+                    className="bg-transparent border-none text-white placeholder:text-gray-600 
+                      focus-visible:ring-0 focus-visible:ring-offset-0 h-10 flex-1 pl-3 pointer-events-auto"
+                  />
+
+                  {/* Image preview on RIGHT (if uploaded or selected from library) */}
+                  {previewUrl && (
+                    <>
+                      <div className="flex-shrink-0">
+                        <img
+                          src={previewUrl}
+                          alt="Host"
+                          className="w-8 h-8 rounded object-cover border border-primary"
+                        />
+                      </div>
+
+                      {/* Remove image button */}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="text-primary text-xs hover:underline font-semibold flex-shrink-0"
+                      >
+                        Remove
+                      </button>
+                    </>
+                  )}
+
+                  {/* Upload button on RIGHT (only show if NO image) */}
+                  {!previewUrl && (
+                    <div className="flex items-center gap-1">
+                      {userId && (
+                        <MediaLibraryDialog
+                          userId={userId}
+                          onSelect={(items) => handleLibrarySelect(items, index)}
+                          trigger={
+                            <button
+                              type="button"
+                              className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all text-primary"
+                              title="Choose from library"
+                            >
+                              <ImageIcon className="w-4 h-4" />
+                            </button>
+                          }
+                        />
+                      )}
+                      
+                      <label htmlFor={`host-upload-${index}`} className="cursor-pointer flex-shrink-0 pointer-events-auto">
+                        <div className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all">
+                          <Upload className="w-4 h-4 text-primary" />
+                        </div>
+                        <input
+                          id={`host-upload-${index}`}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleFileUploadHost(e, index)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <Input
+                value={host?.name || ""}
+                onChange={(e) => handleHostNameChange(e, index)}
+                placeholder="Enter host name..."
+                className="bg-gray-950 border border-gray-800 text-white
+                  placeholder:text-gray-600 rounded-lg h-10 shadow-md
+                  focus-visible:!ring-0 focus-visible:!outline-none
+                  focus-visible:!shadow-[0_0_15px_rgba(185,32,37,0.8)]
+                  transition-all duration-300"
+              />
+            )}
+          </div>
+        )
+      })}
 
       {hosts.length < 2 && (
         <button

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useRef, useState, useEffect } from "react"
-import { CalendarIcon, Upload } from "lucide-react"
+import { CalendarIcon, Upload, ImageIcon } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -12,6 +12,9 @@ import { Calendar } from "@/components/ui/calendar"
 import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
 import { toJS } from "mobx"
+import { MediaLibraryDialog } from "../upload/media-library-dialog"
+import { LibraryItem } from "@/lib/uploads"
+import { RecentSuggestions } from "@/components/ui/recent-suggestions"
 
 
 // Format date display
@@ -34,14 +37,15 @@ const EventDetails = observer(() => {
 
 
 
-    const { flyerFormStore } = useStore()
+    const { flyerFormStore, authStore } = useStore()
     const inputRef = useRef<HTMLInputElement>(null)
     const [open, setOpen] = useState(false)
 
     // Venue Logo System State
-    const [venueLogo, setVenueLogo] = useState<File | null>(null)
     const [venueLogoPreview, setVenueLogoPreview] = useState<string | null>(null)
     const [showVenueText, setShowVenueText] = useState(false)
+
+    const userId = authStore.user?.id;
 
     const { eventDetails } = flyerFormStore.flyerFormDetail
 
@@ -49,7 +53,6 @@ const EventDetails = observer(() => {
     const handleVenueLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
-            setVenueLogo(file)
             setShowVenueText(false)
 
             const reader = new FileReader()
@@ -62,9 +65,18 @@ const EventDetails = observer(() => {
         }
     }
 
+    // Handle Media Library Selection
+    const handleLibrarySelectLogo = (items: LibraryItem[]) => {
+        if (items.length > 0) {
+            const item = items[0]
+            setShowVenueText(false)
+            setVenueLogoPreview(item.dataUrl)
+            flyerFormStore.updateEventDetails("venueLogo", item.dataUrl)
+        }
+    }
+
     // Remove Venue Logo
     const handleRemoveVenueLogo = () => {
-        setVenueLogo(null)
         setVenueLogoPreview(null)
         flyerFormStore.updateEventDetails("venueLogo", null)
     }
@@ -72,15 +84,24 @@ const EventDetails = observer(() => {
     // Toggle to text field if no logo
     const handleNoLogoClick = () => {
         setShowVenueText(true)
-        setVenueLogo(null)
         setVenueLogoPreview(null)
         flyerFormStore.updateEventDetails("venueLogo", null)
     }
 
 
     useEffect(() => {
-        console.log(toJS(flyerFormStore.flyerFormDetail))
-    }, [toJS(flyerFormStore.flyerFormDetail)])
+        if (eventDetails.venueLogo) {
+            if (eventDetails.venueLogo instanceof File) {
+                const reader = new FileReader()
+                reader.onload = () => setVenueLogoPreview(reader.result as string)
+                reader.readAsDataURL(eventDetails.venueLogo)
+            } else {
+                setVenueLogoPreview(eventDetails.venueLogo)
+            }
+        } else {
+            setVenueLogoPreview(null)
+        }
+    }, [eventDetails.venueLogo])
 
 
 
@@ -97,9 +118,15 @@ const EventDetails = observer(() => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Presenting */}
                 <div className="col-span-1">
-                    <Label htmlFor="presenting" className="text-sm mb-2 block font-semibold">
-                        Presenting
-                    </Label>
+                    <div className="flex items-center justify-between mb-2">
+                        <Label htmlFor="presenting" className="text-sm block font-semibold">
+                            Presenting
+                        </Label>
+                        <RecentSuggestions 
+                            type="presenting" 
+                            onSelect={(val) => flyerFormStore.updateEventDetails("presenting", val)}
+                        />
+                    </div>
                     <Input
                         id="presenting"
                         value={eventDetails.presenting}
@@ -217,9 +244,15 @@ const EventDetails = observer(() => {
 
                 {/* Address & Phone */}
                 <div className="col-span-1 md:col-span-2">
-                    <Label htmlFor="address" className="text-sm mb-2 block font-semibold">
-                        Address & Phone no.
-                    </Label>
+                    <div className="flex items-center justify-between mb-2">
+                        <Label htmlFor="address" className="text-sm block font-semibold">
+                            Address & Phone no.
+                        </Label>
+                        <RecentSuggestions 
+                            type="address" 
+                            onSelect={(val) => flyerFormStore.updateEventDetails("addressAndPhone", val)}
+                        />
+                    </div>
                     <Input
                         id="address"
                         value={eventDetails.addressAndPhone}
@@ -243,7 +276,7 @@ const EventDetails = observer(() => {
 
                     {!showVenueText ? (
                         <div className="space-y-3">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
                                 <label htmlFor="venue-logo-upload" className="cursor-pointer">
                                     <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary rounded-lg hover:bg-primary/20 transition-all">
                                         <Upload className="w-4 h-4 text-primary" />
@@ -257,6 +290,24 @@ const EventDetails = observer(() => {
                                         className="hidden"
                                     />
                                 </label>
+
+                                {userId && (
+                                    <MediaLibraryDialog
+                                        userId={userId}
+                                        type="logo"
+                                        onSelect={handleLibrarySelectLogo}
+                                        trigger={
+                                            <button
+                                                type="button"
+                                                className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary rounded-lg hover:bg-primary/20 transition-all text-primary"
+                                            >
+                                                <ImageIcon className="w-4 h-4" />
+                                                <span className="text-sm font-semibold">Choose from Library</span>
+                                            </button>
+                                        }
+                                    />
+                                )}
+
                                 <button
                                     type="button"
                                     onClick={handleNoLogoClick}
@@ -274,7 +325,7 @@ const EventDetails = observer(() => {
                                         className="w-16 h-16 rounded-lg object-cover border-2 border-primary"
                                     />
                                     <span className="text-sm text-gray-300 flex-1">
-                                        {venueLogo?.name || "Logo uploaded"}
+                                        {(eventDetails.venueLogo instanceof File) ? eventDetails.venueLogo.name : "Logo selected"}
                                     </span>
                                     <button
                                         type="button"

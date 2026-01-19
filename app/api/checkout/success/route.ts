@@ -127,9 +127,18 @@ export async function GET(request: NextRequest) {
 
     // Add JSON fields with actual data
     // Add JSON fields with actual data - Sanitize to only send names (stripping temp image_urls) to match backend expectation
-    const djsSanitized = Array.isArray(formDataObj.djs) ? formDataObj.djs.map((d: any) => ({ name: d.name || '' })) : [];
-    const hostsSanitized = Array.isArray(formDataObj.host) ? formDataObj.host.map((h: any) => ({ name: h.name || '' })) : [];
-    const sponsorsSanitized = Array.isArray(formDataObj.sponsors) ? formDataObj.sponsors.map((s: any) => ({ name: s.name || '' })) : [];
+    // But PRESERVE image_url if it is an external URL (from media library)
+    const sanitizeItem = (item: any) => {
+      const result: any = { name: item.name || '' };
+      if (item.image_url && typeof item.image_url === 'string' && item.image_url.startsWith('http')) {
+        result.image_url = item.image_url;
+      }
+      return result;
+    };
+
+    const djsSanitized = Array.isArray(formDataObj.djs) ? formDataObj.djs.map(sanitizeItem) : [];
+    const hostsSanitized = Array.isArray(formDataObj.host) ? formDataObj.host.map(sanitizeItem) : [];
+    const sponsorsSanitized = Array.isArray(formDataObj.sponsors) ? formDataObj.sponsors.map(sanitizeItem) : [];
 
     formData.append('djs', JSON.stringify(djsSanitized))
 
@@ -145,6 +154,10 @@ export async function GET(request: NextRequest) {
     // Add venue_text if present
     formData.append('venue_text', formDataObj.venue_text || '')
     formData.append('venue_logo_url', formDataObj.venue_logo_url || '')
+    // Also send as 'venue_logo' for backend compatibility when it's a URL
+    if (formDataObj.venue_logo_url) {
+      formData.append('venue_logo', formDataObj.venue_logo_url)
+    }
 
     // Handle TEMP FILES upload (Server-Side File Reading)
     // If we have temp_files mapping, read them and append as Files efficiently

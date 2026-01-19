@@ -1,8 +1,10 @@
 import { useRef, useState, useEffect } from "react";
-import { Upload, X } from "lucide-react";
+import { Upload, X, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
+import { MediaLibraryDialog } from "../upload/media-library-dialog";
+import { LibraryItem } from "@/lib/uploads";
 
 const SponsorsBlock = observer(() => {
   const { flyerFormStore } = useStore();
@@ -20,15 +22,49 @@ const SponsorsBlock = observer(() => {
   // -----------------------------
   // ✅ Load initial images from store
   // -----------------------------
+  const { authStore } = useStore();
+  const userId = authStore.user?.id;
+
   useEffect(() => {
     const sponsors = flyerFormStore.flyerFormDetail.sponsors;
+    
+    const getSponsorData = (sponsor: any) => {
+      if (sponsor instanceof File) return URL.createObjectURL(sponsor);
+      if (typeof sponsor === 'string') return sponsor;
+      return null;
+    };
+
     setSponsorImages([
-      sponsors.sponsor1 ? URL.createObjectURL(sponsors.sponsor1) : null,
-      sponsors.sponsor2 ? URL.createObjectURL(sponsors.sponsor2) : null,
-      sponsors.sponsor3 ? URL.createObjectURL(sponsors.sponsor3) : null,
+      getSponsorData(sponsors.sponsor1),
+      getSponsorData(sponsors.sponsor2),
+      getSponsorData(sponsors.sponsor3),
     ]);
-    setFileNames([sponsors.sponsor1?.name || null, sponsors.sponsor2?.name || null, sponsors.sponsor3?.name || null]);
+    setFileNames([
+      (sponsors.sponsor1 instanceof File) ? sponsors.sponsor1.name : (typeof sponsors.sponsor1 === 'string' ? 'Logo' : null), 
+      (sponsors.sponsor2 instanceof File) ? sponsors.sponsor2.name : (typeof sponsors.sponsor2 === 'string' ? 'Logo' : null), 
+      (sponsors.sponsor3 instanceof File) ? sponsors.sponsor3.name : (typeof sponsors.sponsor3 === 'string' ? 'Logo' : null)
+    ]);
   }, [flyerFormStore.flyerFormDetail.sponsors]);
+
+  // -----------------------------
+  // ✅ Handle Media Library selection
+  // -----------------------------
+  const handleLibrarySelect = (items: LibraryItem[], index: number) => {
+    if (items.length > 0) {
+      const item = items[0];
+      const fieldKey = index === 0 ? "sponsor1" : index === 1 ? "sponsor2" : "sponsor3";
+      
+      flyerFormStore.updateSponsor(fieldKey as any, item.dataUrl);
+
+      const newImages = [...sponsorImages];
+      newImages[index] = item.dataUrl;
+      setSponsorImages(newImages);
+
+      const newFileNames = [...fileNames];
+      newFileNames[index] = "Library Logo";
+      setFileNames(newFileNames);
+    }
+  };
 
   // -----------------------------
   // ✅ Handle file upload
@@ -91,16 +127,37 @@ const SponsorsBlock = observer(() => {
 
             {/* Show upload button only if no image */}
             {!sponsorImages[index] && (
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="flex items-center gap-2 border-primary text-primary hover:!bg-gray-950 hover:text-primary"
-                onClick={() => sponsorRefs[index].current?.click()}
-              >
-                <Upload className="h-4 w-4" />
-                {label} Upload
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="flex items-center gap-2 border-primary text-primary hover:!bg-gray-950 hover:text-primary"
+                  onClick={() => sponsorRefs[index].current?.click()}
+                >
+                  <Upload className="h-4 w-4" />
+                  {label} Upload
+                </Button>
+
+                {userId && (
+                  <MediaLibraryDialog
+                    userId={userId}
+                    type="logo"
+                    onSelect={(items) => handleLibrarySelect(items, index)}
+                    trigger={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 border-gray-700 text-gray-400 hover:!bg-gray-950 hover:text-white"
+                      >
+                        <ImageIcon className="h-3 w-3" />
+                        Library
+                      </Button>
+                    }
+                  />
+                )}
+              </div>
             )}
 
             {/* Show image with small cross button if image exists */}
