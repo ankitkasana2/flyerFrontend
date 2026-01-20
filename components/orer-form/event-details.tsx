@@ -276,9 +276,9 @@ const EventDetails = observer(() => {
 
                     {!showVenueText ? (
                         <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                                <label htmlFor="venue-logo-upload" className="cursor-pointer">
-                                    <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary rounded-lg hover:bg-primary/20 transition-all">
+                            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                                <label htmlFor="venue-logo-upload" className="cursor-pointer w-full sm:w-auto">
+                                    <div className="flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 border border-primary rounded-lg hover:bg-primary/20 transition-all w-full sm:w-auto">
                                         <Upload className="w-4 h-4 text-primary" />
                                         <span className="text-sm font-semibold text-primary">Upload Logo</span>
                                     </div>
@@ -299,7 +299,7 @@ const EventDetails = observer(() => {
                                         trigger={
                                             <button
                                                 type="button"
-                                                className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary rounded-lg hover:bg-primary/20 transition-all text-primary"
+                                                className="flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 border border-primary rounded-lg hover:bg-primary/20 transition-all text-primary w-full sm:w-auto"
                                             >
                                                 <ImageIcon className="w-4 h-4" />
                                                 <span className="text-sm font-semibold">Choose from Library</span>
@@ -311,7 +311,7 @@ const EventDetails = observer(() => {
                                 <button
                                     type="button"
                                     onClick={handleNoLogoClick}
-                                    className="text-xs text-primary hover:underline font-medium"
+                                    className="text-xs text-primary hover:underline font-medium text-center sm:text-left pt-1 sm:pt-0"
                                 >
                                     Don't have a logo?
                                 </button>
