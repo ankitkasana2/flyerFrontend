@@ -50,7 +50,7 @@ export default function SuccessPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => router.push('/checkout')}
+                onClick={() => router.push('/cart')}
                 className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
               >
                 Try Again

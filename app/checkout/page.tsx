@@ -27,10 +27,11 @@ const CheckoutPage = () => {
         setLoading(false)
       })
     } else {
-      // If no flyerId, maybe it's a cart checkout?
-      // For now, let's keep the existing logic or handle cart
-      setError('No flyer selected for direct purchase')
-      setLoading(false)
+      // If no flyerId, redirect to flyers page
+      import('next/navigation').then(({ redirect }) => {
+         window.location.href = '/flyers';
+      });
+      return;
     }
 
     const errorParam = searchParams.get('error')

@@ -325,6 +325,18 @@ const OrdersPage = observer(() => {
                             Reorder
                           </Button>
                         )}
+                        {order.status.toLowerCase() === 'pending' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs border-red-900/50 text-red-500 hover:bg-red-900/20"
+                            onClick={() => {
+                              toast.info('To cancel this order, please contact our support team at support@grodify.com.')
+                            }}
+                          >
+                            Cancel Order
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>

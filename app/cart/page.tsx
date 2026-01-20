@@ -40,10 +40,12 @@ const CartPage = observer(() => {
         try {
             // Map cart items to the format expected by the checkout session API
             const items = cartStore.cartItems.map(item => ({
+                ...item,
                 user_id: authStore.user?.id,
+                email: item.email || authStore.user?.email,
                 flyer_id: item.flyer_is,
-                event_title: item.event_title,
-                subtotal: item.total_price, // Use total_price as subtotal for the line item
+                address_phone: item.address_and_phone, // Map for backend compatibility
+                subtotal: item.total_price,
                 eventDetails: {
                     mainTitle: item.event_title,
                     presenting: item.presenting

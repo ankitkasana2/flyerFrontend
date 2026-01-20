@@ -18,11 +18,13 @@ export async function POST(req: NextRequest) {
     // Build metadata for the success handler (app/api/checkout/success/route.ts)
     const firstItem = itemsArray[0];
     const orderData = {
-      userId: firstItem.user_id,
-      userEmail: firstItem.email || firstItem.userEmail,
+      userId: firstItem.user_id || firstItem.userId,
+      userEmail: firstItem.email || firstItem.userEmail || firstItem.user_email,
       formData: {
         ...firstItem,
         flyer_id: firstItem.flyer_id || firstItem.flyer_is,
+        total_price: firstItem.total_price || firstItem.subtotal || 0,
+        address_phone: firstItem.address_phone || firstItem.address_and_phone || '',
       }
     };
 
@@ -53,16 +55,20 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      line_items: itemsArray.map((i: any) => ({
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: i?.eventDetails?.mainTitle || i?.event_title || "Flyer Order",
+      line_items: itemsArray.map((i: any) => {
+        const priceStr = String(i.subtotal || i.total_price || 0);
+        const amount = parseFloat(priceStr.replace(/[^0-9.]/g, '')) || 0;
+        return {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: i?.eventDetails?.mainTitle || i?.event_title || "Flyer Order",
+            },
+            unit_amount: Math.round(amount * 100),
           },
-          unit_amount: Math.round(Number(i.subtotal || i.total_price || 0) * 100),
-        },
-        quantity: 1,
-      })),
+          quantity: 1,
+        }
+      }),
       success_url: `${origin}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/cart`,
       metadata: metadata,
