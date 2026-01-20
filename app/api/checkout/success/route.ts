@@ -302,6 +302,22 @@ export async function GET(request: NextRequest) {
       // We continue to redirect even if email fails
     }
 
+    // Clear cart if this was a cart checkout
+    if (session.metadata?.source === 'cart' && orderData.userId) {
+      try {
+        const clearCartRes = await fetch(`${BACKEND_API_URL}/api/cart/clear/${orderData.userId}`, {
+          method: 'DELETE'
+        });
+        if (clearCartRes.ok) {
+           console.log(`✅ Cart successfully cleared on backend for user: ${orderData.userId}`);
+        } else {
+           console.warn(`⚠️ Backend failed to clear cart for user: ${orderData.userId}`);
+        }
+      } catch (cartError) {
+        console.error('⚠️ Error calling backend to clear cart:', cartError);
+      }
+    }
+
     // Redirect to thank you page with order ID and session ID
     return NextResponse.redirect(
       new URL(`/thank-you?orderId=${orderId || ''}&session_id=${sessionId}&order_created=true`, request.url)

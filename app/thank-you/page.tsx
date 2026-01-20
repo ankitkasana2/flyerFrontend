@@ -1,14 +1,22 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { useStore } from '@/stores/StoreProvider';
 
 function ThankYouContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
+  const { cartStore } = useStore();
+
+  useEffect(() => {
+    // Clear local cart store items on success
+    cartStore.cartItems = [];
+    console.log('✅ Local cart store cleared');
+  }, [cartStore]);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-black p-4 sm:p-6 lg:p-8 relative overflow-hidden">
@@ -59,7 +67,7 @@ function ThankYouContent() {
         <div className="mt-10 pt-6 border-t border-zinc-800">
           <p className="text-sm text-zinc-500">
             Need help?{' '}
-            <a href="mailto:support@example.com" className="font-medium text-red-500 hover:text-red-400 transition-colors">
+            <a href="mailto:support@grodify.com" className="font-medium text-red-500 hover:text-red-400 transition-colors">
               Contact Support
             </a>
           </p>

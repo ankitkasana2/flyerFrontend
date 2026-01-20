@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
       userId: orderData.userId || '',
       userEmail: orderData.userEmail || '',
       totalPrice: itemsArray.reduce((sum: number, i: any) => sum + Number(i.subtotal || i.total_price || 0), 0).toString(),
+      source: 'cart', // Identify this came from the cart
     };
 
     // Handle chunking if metadata is too large
