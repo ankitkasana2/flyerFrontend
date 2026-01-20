@@ -16,7 +16,7 @@ const HeroSection = observer(() => {
 
   // Fetch banners on component mount
   useEffect(() => {
-    console.log('🎬 HeroSection mounted, fetching banners...');
+
     bannerStore.fetchBanners();
   }, []);
 
@@ -68,7 +68,7 @@ const HeroSection = observer(() => {
 
   // Loading state - skeleton
   if (bannerStore.loading) {
-    console.log('🔄 Banners are loading...');
+
     return <BannerSkeleton />;
   }
 
@@ -80,12 +80,12 @@ const HeroSection = observer(() => {
 
   // No banners state - show skeleton as placeholder
   if (bannerStore.activeBanners.length === 0) {
-    console.warn('⚠️ No active banners found. Total banners:', bannerStore.banners.length);
-    console.log('All banners:', bannerStore.banners);
+
+
     return <BannerSkeleton />;
   }
 
-  console.log('✅ Showing banner:', currentImageIndex + 1, 'of', bannerStore.activeBanners.length);
+
 
   const currentBanner = bannerStore.activeBanners[currentImageIndex];
   const bannerImageUrl = currentBanner.image_url ||

@@ -6,11 +6,6 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const toEmail = searchParams.get('to') || process.env.AWS_SES_FROM_EMAIL || 'ankitoffice121@gmail.com';
 
-    console.log(`🧪 Testing Email...`);
-    console.log(`From: ${process.env.AWS_SES_FROM_EMAIL}`);
-    console.log(`To: ${toEmail}`);
-    console.log(`Region: ${process.env.AWS_REGION}`);
-    console.log(`Key ID: ${process.env.AWS_ACCESS_KEY_ID ? '***' + process.env.AWS_ACCESS_KEY_ID.slice(-4) : 'MISSING'}`);
 
     const result = await sendOrderConfirmationEmail({
       orderId: 'TEST-123456',

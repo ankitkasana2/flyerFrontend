@@ -17,16 +17,9 @@ export default function AuthGuard({ children }: any) {
     const isHttp = typeof window !== 'undefined' && window.location.protocol === 'http:';
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'server';
     
-    console.log('=== Amplify Configuration ===');
-    console.log('Protocol:', window.location.protocol);
-    console.log('Hostname:', hostname);
-    console.log('Is HTTP:', isHttp);
-    console.log('Cognito Config:', cognitoConfig);
-    console.log('================================');
     
     try {
       Amplify.configure(cognitoConfig);
-      console.log('✅ Amplify configured successfully');
     } catch (error) {
       console.error('❌ Amplify configuration failed:', error);
     }

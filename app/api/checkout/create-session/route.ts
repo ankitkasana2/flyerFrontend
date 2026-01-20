@@ -9,9 +9,6 @@ export async function POST(request: Request) {
   try {
     const { amount, orderData } = await request.json()
 
-    console.log('📋 Creating Stripe session with order data')
-    console.log('💰 Amount:', amount)
-    console.log('📦 Order data received:', {
       userId: orderData.userId,
       email: orderData.userEmail,
       presenting: orderData.formData?.presenting,
@@ -22,13 +19,10 @@ export async function POST(request: Request) {
     const orderDataString = JSON.stringify(orderData)
     const orderDataBase64 = Buffer.from(orderDataString).toString('base64')
 
-    console.log('📦 Order data size:', orderDataString.length, 'bytes')
-    console.log('📦 Base64 size:', orderDataBase64.length, 'bytes')
 
     // Check if metadata is too large (Stripe limit is 500 chars per field)
     if (orderDataBase64.length > 500) {
       console.error('❌ Order data too large for Stripe metadata:', orderDataBase64.length, 'bytes')
-      console.log('💡 Splitting into multiple metadata fields...')
 
       // Split into chunks of 500 characters
       const chunkSize = 500
@@ -37,7 +31,6 @@ export async function POST(request: Request) {
         chunks.push(orderDataBase64.substring(i, i + chunkSize))
       }
 
-      console.log(`📦 Split into ${chunks.length} chunks`)
 
       // Create metadata object with chunks
       const metadata: any = {
@@ -74,7 +67,6 @@ export async function POST(request: Request) {
         metadata: metadata,
       })
 
-      console.log('✅ Stripe session created with chunked metadata:', session.id)
       return NextResponse.json({ sessionId: session.id })
     }
 
@@ -105,7 +97,6 @@ export async function POST(request: Request) {
       },
     })
 
-    console.log('✅ Stripe session created:', session.id)
     return NextResponse.json({ sessionId: session.id })
 
   } catch (error: any) {

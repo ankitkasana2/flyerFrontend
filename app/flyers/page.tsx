@@ -109,17 +109,14 @@ export default function FlyersPage() {
   }
 
   const handlePreview = (flyer: Flyer) => {
-    console.log("Preview flyer:", flyer)
     // TODO: Open preview modal
   }
 
   const handleAddToCart = (flyer: Flyer) => {
-    console.log("Add to cart:", flyer)
     // TODO: Add to cart functionality
   }
 
   const handleToggleFavorite = (flyer: Flyer) => {
-    console.log("Toggle favorite:", flyer)
     // TODO: Toggle favorite functionality
   }
 

@@ -104,54 +104,16 @@ export class FlyerFormStore {
     makeAutoObservable(this)
   }
 
-  // -----------------------------
-  // 1️⃣ Fetch flyer and similar flyers
-  // -----------------------------
-  // fetchFlyer(id: string) {
-  //   this.flyer = SAMPLE_FLYERS.find((f) => f.id === id) ?? null
-  //   this.fetchSimilarFlyers()
-  // }
-
-  //   async fetchFlyer(id: string) {
-  //   try {
-  //     const res = await fetch(getApiUrl(`/api/flyers/flyers/${id}`), {
-  //       cache: "no-store",
-  //     });
-  //     const data = await res.json();
-
-  //     runInAction(() => {
-  //       this.flyer = data;
-  //       const fetchedPrice =
-  //         data?.price ??
-  //         data?.base_price ??
-  //         data?.price_value ??
-  //         data?.amount ??
-  //         null
-  //       if (typeof fetchedPrice === "number" && !Number.isNaN(fetchedPrice)) {
-  //         this.basePrice = fetchedPrice
-  //       }
-  //       this.flyerFormDetail.flyerId = data?.id ?? data?.flyer_id ?? data?.flyerId ?? this.flyerFormDetail.flyerId
-  //       this.flyerFormDetail.categoryId =
-  //         data?.category_id ?? data?.categoryId ?? data?.category ?? this.flyerFormDetail.categoryId
-  //     });
-
-  //     this.fetchSimilarFlyers();
-  //   } catch (err) {
-  //     console.error("Failed to load flyer:", err);
-  //   }
-  // }
+  
   async fetchFlyer(id: string, refreshSimilar = true) {
-    console.log('🚀 fetchFlyer called with ID:', id);
     try {
       const res = await fetch(getApiUrl(`/api/flyers/${id}`), {
         cache: "no-store",
       });
 
       const data = await res.json();
-      console.log('📦 API response received:', data);
 
       runInAction(() => {
-        console.log('🔍 FlyerFormStore - Raw API data:', data);
 
         // FIX PRICE
         const rawPrice = data.price;
@@ -159,7 +121,6 @@ export class FlyerFormStore {
           ? Number(String(rawPrice).replace(/[^0-9.]/g, ""))
           : null;
 
-        console.log('🔍 Price parsing:', {
           rawPrice,
           numericPrice,
           isNaN: Number.isNaN(numericPrice),
@@ -175,9 +136,7 @@ export class FlyerFormStore {
 
         if (numericPrice !== null && !Number.isNaN(numericPrice)) {
           this.basePrice = numericPrice;
-          console.log('✅ BasePrice set to:', this.basePrice);
         } else {
-          console.log('❌ Failed to set basePrice - numericPrice is NaN');
         }
 
         // FIX FLYER ID
@@ -204,7 +163,6 @@ export class FlyerFormStore {
     const flyer = this.flyer
     if (!flyer) return
 
-    console.log("flyer:", toJS(flyer))
 
     try {
       // Get categories from the current flyer
@@ -238,7 +196,6 @@ export class FlyerFormStore {
         }));
       });
 
-      console.log("Similar flyers found:", this.similarFlyers.length);
     } catch (error) {
       console.error("Error fetching similar flyers:", error);
       // If API fails, return empty list

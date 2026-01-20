@@ -212,7 +212,6 @@ const EventBookingForm = () => {
   // Auto-load cart data when user is logged in
   useEffect(() => {
     if (authStore.user?.id) {
-      console.log('FlyerForm: Auto-loading cart for user:', authStore.user.id)
       cartStore.load(authStore.user.id)
     }
   }, [authStore.user?.id, cartStore])
@@ -284,7 +283,6 @@ const EventBookingForm = () => {
   const totalDisplay = (computedSubtotal > 0 ? computedSubtotal : basePrice) + additionalFlyersPrice;
 
   // Debug logging
-  console.log('🔍 Price Debug:', {
     routeFlyerId,
     basePrice: flyerFormStore.basePrice,
     flyerPrice: flyer?.price,
@@ -331,7 +329,6 @@ const EventBookingForm = () => {
         try {
           const cart = await fetchCartByUserId(authStore.user.id);
           setCartData(cart);
-          console.log('Cart data loaded:', cart);
         } catch (error) {
           console.error('Failed to load cart data:', error);
           toast.error('Failed to load cart data');
@@ -353,7 +350,6 @@ const EventBookingForm = () => {
       const cart = await fetchCartByUserId(authStore.user.id);
       setCartData(cart);
       toast.success('Cart data refreshed');
-      console.log('Cart data refreshed:', cart);
     } catch (error) {
       console.error('Failed to refresh cart data:', error);
       toast.error('Failed to refresh cart data');
@@ -478,7 +474,6 @@ const EventBookingForm = () => {
     categoryFromQuery === 'Birthday';
 
   // Debug logging
-  console.log('🎂 Birthday Form Detection:', {
     form_type: flyer?.form_type,
     category: flyer?.category,
     categoryFromQuery,
@@ -487,7 +482,6 @@ const EventBookingForm = () => {
 
   // If Birthday category, render Birthday form instead
   if (isBirthdayCategory) {
-    console.log('✅ Rendering Birthday Form');
     return <BirthdayForm key={flyer?.id || routeFlyerId} flyer={flyer} />;
   }
 
@@ -506,7 +500,6 @@ const EventBookingForm = () => {
     (flyer as any)?.hasPhotos === true;
 
   // Debug logging for form routing
-  console.log('📋 Form Routing Debug:', {
     flyerPrice,
     flyerPriceType: typeof flyerPrice,
     flyerCategory,
@@ -525,114 +518,31 @@ const EventBookingForm = () => {
   // Route to No-Photo forms
   if (isNoPhotoForm) {
     if (Number(flyerPrice) === 10) {
-      console.log('✅ Rendering NoPhotoForm $10');
       return <NoPhotoForm key={flyer?.id || routeFlyerId} flyer={flyer} fixedPrice={10} />;
     } else if (Number(flyerPrice) === 15) {
-      console.log('✅ Rendering NoPhotoForm $15');
       return <NoPhotoForm key={flyer?.id || routeFlyerId} flyer={flyer} fixedPrice={15} />;
     } else if (Number(flyerPrice) === 40 || Number(flyerPrice) >= 40) {
-      console.log('✅ Rendering NoPhotoForm $40');
       return <NoPhotoForm key={flyer?.id || routeFlyerId} flyer={flyer} fixedPrice={40} />;
     }
   }
 
   // Route to $10 With Photo form (partial photo support)
   if (isWithPhotoForm && Number(flyerPrice) === 10) {
-    console.log('✅ Rendering Photo10Form ($10 With Photo)');
     return <Photo10Form key={flyer?.id || routeFlyerId} flyer={flyer} />;
   }
 
   // Route to $15 With Photo form (full photo support)
   if (isWithPhotoForm && Number(flyerPrice) === 15) {
-    console.log('✅ Rendering Photo15Form ($15 With Photo)');
     return <Photo15Form key={flyer?.id || routeFlyerId} flyer={flyer} />;
   }
 
   // Default: Render regular form
-  console.log('⚠️ Rendering DEFAULT form (no specific form matched)');
 
-  // submit function 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   if (!authStore.user?.id) {
-  //     toast.error("Please sign in to continue with checkout.");
-  //     authStore.handleAuthModal();
-  //     return;
-  //   }
-
-  //   const { valid, errors } = flyerFormStore.validateForm();
-  //   if (!valid) {
-  //     toast.error(errors.join("\n"));
-  //     return;
-  //   }
-
-  //   setIsSubmitting(true);
-  //   flyerFormStore.setUserId(authStore.user.id);
-
-  //   const apiBody = mapToApiRequest(flyerFormStore.flyerFormDetail, {
-  //     userId: authStore.user.id,
-  //     flyerId: flyer?.id ?? flyerFormStore.flyerFormDetail.flyerId,
-  //     categoryId:
-  //       (flyer as any)?.category_id ??
-  //       flyer?.category ??
-  //       flyerFormStore.flyerFormDetail.categoryId,
-  //     subtotal: totalDisplay,
-  //     image_url: image || ""
-  //   });
-
-  //   const handleCreate = async () => {
-  //     const res = await fetch(getApiUrl("/api/orders"), {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify(apiBody)
-  //     });
-
-  //     const data = await res.json();
-  //     if (data.url) {
-  //       window.location.href = data.url; // Redirect to Stripe Checkout
-  //     } else {
-  //       toast.error("Checkout URL not generated. Please try again.");
-  //       console.error("Stripe session response:", data);
-  //     }
-  //   };
-
-  //   const handleCheckout = async () => {
-  //     const res = await fetch("/api/checkout/session", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         item: {
-  //           ...flyerFormStore.flyerFormDetail,
-  //           subtotal: totalDisplay
-  //         }
-  //       })
-
-  //     }
-  //   );
-
-  //     const data = await res.json();
-  //     if (data.url) {
-  //       window.location.href = data.url; // Redirect to Stripe Checkout
-  //     } else {
-  //       toast.error("Checkout URL not generated. Please try again.");
-  //       console.error("Stripe session response:", data);
-  //     }
-  //   };
-
-  //   try {
-  //      await handleCheckout();
-  //     await handleCreate();
-
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
+ 
   const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
     try {
       e.preventDefault();
 
-      console.log('🚀 Checkout started...');
 
       if (!authStore.user?.id) {
         toast.error("Please sign in to continue with checkout.");
@@ -640,22 +550,18 @@ const EventBookingForm = () => {
         return;
       }
 
-      console.log('✅ User authenticated:', authStore.user.id);
 
       const { valid, errors } = flyerFormStore.validateForm();
       if (!valid) {
-        console.log('❌ Form validation failed:', errors);
         toast.error(errors.join("\n"));
         return;
       }
 
-      console.log('✅ Form validation passed');
 
       setIsSubmitting(true);
       flyerFormStore.setUserId(authStore.user.id);
 
       // Debug: Log the actual form store data
-      console.log('🔍 DEBUG - Raw form store data:', toJS(flyerFormStore.flyerFormDetail));
 
       toast.info("Uploading images to temp storage...");
 
@@ -725,14 +631,10 @@ const EventBookingForm = () => {
       sponsorData.push(await processSponsor(sponsors.sponsor2, 1));
       sponsorData.push(await processSponsor(sponsors.sponsor3, 2));
 
-      console.log('🔍 DEBUG - Host data from store:', toJS(flyerFormStore.flyerFormDetail.host));
-      console.log('🔍 DEBUG - Sponsors from store:', {
         sponsor1: (sponsors.sponsor1 instanceof File) ? sponsors.sponsor1.name : sponsors.sponsor1,
         sponsor2: (sponsors.sponsor2 instanceof File) ? sponsors.sponsor2.name : sponsors.sponsor2,
         sponsor3: (sponsors.sponsor3 instanceof File) ? sponsors.sponsor3.name : sponsors.sponsor3
       });
-      console.log('🔍 DEBUG - Processed sponsor data:', sponsorData);
-      console.log('🔍 DEBUG - Hosts with URLs:', hostsWithUrls);
 
       const apiBody = {
         presenting: flyerFormStore.flyerFormDetail.eventDetails.presenting,
@@ -768,14 +670,12 @@ const EventBookingForm = () => {
         temp_files: tempFiles
       };
 
-      console.log('🔍 DEBUG - Complete API Body:', {
         ...apiBody,
         host: apiBody.host,
         sponsors: apiBody.sponsors,
         djs: apiBody.djs
       });
 
-      console.log('🔍 Order data prepared:', {
         event_title: apiBody.event_title,
         presenting: apiBody.presenting,
         total_price: apiBody.total_price,
@@ -800,7 +700,6 @@ const EventBookingForm = () => {
       });
 
       // Create Stripe checkout session with order data
-      console.log('📡 Creating Stripe checkout session...');
       const res = await fetch("/api/checkout/create-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -814,7 +713,6 @@ const EventBookingForm = () => {
         })
       });
 
-      console.log('📡 Response status:', res.status);
 
       if (!res.ok) {
         const text = await res.text().catch(() => null);
@@ -825,7 +723,6 @@ const EventBookingForm = () => {
       }
 
       const data = await res.json();
-      console.log('✅ Stripe session created:', data);
 
       if (!data?.sessionId) {
         console.error("❌ Stripe response missing sessionId", data);
@@ -835,7 +732,6 @@ const EventBookingForm = () => {
       }
 
       // Get the Stripe Checkout URL from the session
-      console.log('🔗 Getting Stripe checkout URL...');
       const stripeSession = await fetch(`/api/checkout/get-session-url?sessionId=${data.sessionId}`);
 
       if (!stripeSession.ok) {
@@ -854,7 +750,6 @@ const EventBookingForm = () => {
         return;
       }
 
-      console.log('🔄 Redirecting to Stripe checkout...');
       // Redirect to Stripe Checkout URL
       window.location.href = url;
 
@@ -872,32 +767,25 @@ const EventBookingForm = () => {
 
   // Test order function
   const handleTestOrder = async () => {
-    console.log('🧪 Test order button clicked!');
 
     if (!authStore.user?.id) {
-      console.log('❌ User not logged in');
       toast.error("Please sign in to create a test order.");
       authStore.handleAuthModal();
       return;
     }
 
-    console.log('✅ User logged in:', authStore.user.id);
 
     const { valid, errors } = flyerFormStore.validateForm();
-    console.log('📋 Form validation:', { valid, errors });
 
     if (!valid) {
-      console.log('❌ Form validation failed:', errors);
       toast.error(errors.join("\n"));
       return;
     }
 
-    console.log('✅ Form validation passed');
     setIsSubmitting(true);
     flyerFormStore.setUserId(authStore.user.id);
 
     try {
-      console.log('🚀 Starting test order creation...');
 
       // Create FormData to handle file uploads
       const formData = new FormData();
@@ -914,7 +802,6 @@ const EventBookingForm = () => {
         image_url: image || ""
       });
 
-      console.log('📦 API body prepared:', apiBody);
 
       // Add individual form fields (matching Postman format)
       formData.append('presenting', apiBody.presenting);
@@ -944,9 +831,6 @@ const EventBookingForm = () => {
       formData.append('flyer_is', apiBody.flyer_id);
 
       // Add user information
-      console.log('👤 User object:', authStore.user);
-      console.log('📧 User email:', authStore.user.email);
-      console.log('👤 User name:', authStore.user.name);
       formData.append('web_user_id', authStore.user.id);
       formData.append('email', authStore.user.email || authStore.user.name || 'unknown@example.com');
 
@@ -958,17 +842,14 @@ const EventBookingForm = () => {
 
       // Add venue logo if it exists
       if (typeof flyerFormStore.flyerFormDetail.eventDetails.venueLogo === 'string') {
-        console.log('🏢 Adding venue logo (URL):', flyerFormStore.flyerFormDetail.eventDetails.venueLogo);
         formData.append('venue_logo', flyerFormStore.flyerFormDetail.eventDetails.venueLogo);
       } else if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo instanceof File) {
-        console.log('🏢 Adding venue logo (File):', flyerFormStore.flyerFormDetail.eventDetails.venueLogo.name);
         formData.append('venue_logo', flyerFormStore.flyerFormDetail.eventDetails.venueLogo);
       }
 
       // Add DJ/Artist images
       flyerFormStore.flyerFormDetail.djsOrArtists.forEach((dj, index) => {
         if (dj.image instanceof File) {
-          console.log(`🎵 Adding DJ ${index} image:`, dj.image.name);
           formData.append(`dj_${index}`, dj.image);
         }
       });
@@ -977,7 +858,6 @@ const EventBookingForm = () => {
       if (Array.isArray(flyerFormStore.flyerFormDetail.host)) {
         flyerFormStore.flyerFormDetail.host.forEach((h, index) => {
           if (h.image instanceof File) {
-            console.log(`🎤 Adding host ${index} image:`, h.image.name);
             if (index === 0) {
               formData.append('host', h.image);
             } else {
@@ -990,12 +870,10 @@ const EventBookingForm = () => {
       // Add sponsor images
       Object.entries(flyerFormStore.flyerFormDetail.sponsors).forEach(([key, sponsor]) => {
         if (sponsor instanceof File) {
-          console.log(`🏷️ Adding sponsor ${key} image:`, sponsor.name);
           formData.append(`sponsor_${key}`, sponsor);
         }
       });
 
-      console.log("📤 Submitting test order with FormData:", {
         dataKeys: Array.from(formData.keys()),
         hasFiles: formData.has('image') || formData.has('venue_logo'),
         userId: authStore.user.id
@@ -1015,7 +893,6 @@ const EventBookingForm = () => {
         if (h.name) saveRecentItem('host', h.name);
       });
 
-      console.log('🌐 Calling /api/test-order endpoint...');
 
       // Send test order to dedicated test-order API
       const response = await fetch("/api/test-order", {
@@ -1023,8 +900,6 @@ const EventBookingForm = () => {
         body: formData,
       });
 
-      console.log('📬 Response status:', response.status);
-      console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
@@ -1034,7 +909,6 @@ const EventBookingForm = () => {
       }
 
       const result = await response.json();
-      console.log("✅ Test order success:", result);
 
       toast.success("🎉 Test order created successfully!");
 
@@ -1119,63 +993,7 @@ const EventBookingForm = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-3 md:p-5 max-w-[1600px] mx-auto w-full">
         {/* Left Side - Event Flyer */}
         <div className="space-y-6 w-full max-w-[280px] mx-auto lg:max-w-full">
-          {/* Cart Information Section */}
-          {/* {authStore.user?.id && (
-            <div className="bg-gradient-to-br from-blue-950/20 to-black p-4 rounded-2xl border border-gray-800 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-white">Your Cart</h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => cartStore.load(authStore.user!.id)}
-                  className="text-xs"
-                  disabled={cartStore.isLoading}
-                >
-                  {cartStore.isLoading ? 'Loading...' : 'Refresh Cart'}
-                </Button>
-              </div>
-              
-              {!cartStore.isEmpty ? (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-300">
-                    User ID: {authStore.user.id}
-                  </p>
-                  {cartStore.cartItems && cartStore.cartItems.length > 0 ? (
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold text-gray-300">
-                        Items ({cartStore.cartItems.length}):
-                      </p>
-                      {cartStore.cartItems.map((item: any, index: number) => (
-                        <div key={item.id || index} className="text-xs text-gray-400 bg-gray-900 p-2 rounded">
-                          <p>{item.event_title || 'Unknown Item'}</p>
-                          <p>Status: {item.status}</p>
-                          <p>Price: {formatCurrency(item.total_price || 0)}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-400">Your cart is empty</p>
-                  )}
-                  
-                  {cartStore.totalPrice > 0 && (
-                    <p className="text-sm font-bold text-primary">
-                      Total: {formatCurrency(cartStore.totalPrice)}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {cartStore.isLoading ? (
-                    <p className="text-sm text-gray-400">Loading cart data...</p>
-                  ) : (
-                    <p className="text-sm text-gray-400">Your cart is empty</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )} */}
-          <div className="relative bg-gradient-to-br from-orange-900/20 via-black to-purple-900/20 rounded-2xl overflow-hidden  glow-effect transition-all duration-300 ">
+                   <div className="relative bg-gradient-to-br from-orange-900/20 via-black to-purple-900/20 rounded-2xl overflow-hidden  glow-effect transition-all duration-300 ">
 
 
             <div className="relative p-3 md:p-6 space-y-4">
@@ -1482,7 +1300,6 @@ const EventBookingForm = () => {
                 selectedIds={selectedFlyerIds}
                 onSelect={(selectedFlyer) => {
                   const idStr = String(selectedFlyer.id);
-                  console.log("Multi-select flyer:", idStr);
 
                   // 1. Toggle Selection State
                   setSelectedFlyerIds(prev => {

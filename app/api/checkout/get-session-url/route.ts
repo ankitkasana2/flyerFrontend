@@ -17,7 +17,6 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        console.log('🔍 Retrieving Stripe session:', sessionId)
 
         // Retrieve the session from Stripe
         const session = await stripe.checkout.sessions.retrieve(sessionId)
@@ -29,7 +28,6 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        console.log('✅ Session URL retrieved:', session.url)
 
         return NextResponse.json({ url: session.url })
     } catch (error) {

@@ -31,7 +31,6 @@ export default function GoogleCallbackPage() {
                     return;
                 }
 
-                console.log("Processing Google callback with code:", code);
 
                 // Exchange code for user info and register in database
                 const result = await handleGoogleCallback(code);
@@ -42,7 +41,6 @@ export default function GoogleCallbackPage() {
                     return;
                 }
 
-                console.log("Google sign-in successful:", result.user);
 
                 // Update auth store with user info
                 authStore.setOAuthUser(result.user);

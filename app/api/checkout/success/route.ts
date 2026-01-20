@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('🔍 Processing success for session:', sessionId)
 
     // Retrieve the session to verify payment
     const session = await stripe.checkout.sessions.retrieve(sessionId)
@@ -38,7 +37,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('✅ Payment verified successfully!')
 
     // Get order data from Stripe metadata
     let orderDataBase64 = session.metadata?.orderData
@@ -46,7 +44,6 @@ export async function GET(request: NextRequest) {
 
     // Check if data was chunked
     if (chunkCount) {
-      console.log(`📦 Reassembling ${chunkCount} chunks...`)
       const chunks = []
       for (let i = 0; i < parseInt(chunkCount); i++) {
         const chunk = session.metadata?.[`orderData_${i}`]
@@ -55,7 +52,6 @@ export async function GET(request: NextRequest) {
         }
       }
       orderDataBase64 = chunks.join('')
-      console.log('✅ Chunks reassembled, total size:', orderDataBase64.length, 'bytes')
     }
 
     if (!orderDataBase64) {
@@ -65,7 +61,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('📦 Decoding order data from metadata...')
 
     // Decode order data from base64
     let orderData
@@ -73,7 +68,6 @@ export async function GET(request: NextRequest) {
       const orderDataString = Buffer.from(orderDataBase64, 'base64').toString('utf-8')
       orderData = JSON.parse(orderDataString)
 
-      console.log('✅ Order data decoded successfully:', {
         userId: orderData.userId,
         presenting: orderData.formData?.presenting,
         total_price: orderData.formData?.total_price
@@ -88,7 +82,6 @@ export async function GET(request: NextRequest) {
     // Extract form data from the retrieved order data
     const formDataObj = orderData.formData || orderData
 
-    console.log('🚀 Creating REAL order with actual form data...')
 
     // Create FormData for the backend API with REAL data
     // Create FormData for the backend API with REAL data
@@ -109,7 +102,6 @@ export async function GET(request: NextRequest) {
 
     // Log the flyer_id being used
     const flyerId = formDataObj.flyer_id || formDataObj.flyer_is || 1;
-    console.log('🎯 Using flyer_id:', flyerId, '(from flyer_id:', formDataObj.flyer_id, ', flyer_is:', formDataObj.flyer_is, ')');
 
     formData.append('flyer_is', flyerId.toString())
     formData.append('category_id', (formDataObj.category_id || 1).toString())
@@ -121,9 +113,6 @@ export async function GET(request: NextRequest) {
     formData.append('image_url', formDataObj.image_url || '')
 
     // 🔍 DEBUG: Log what we're about to send
-    console.log('🔍 DEBUG - formDataObj.host:', formDataObj.host);
-    console.log('🔍 DEBUG - formDataObj.sponsors:', formDataObj.sponsors);
-    console.log('🔍 DEBUG - formDataObj.djs:', formDataObj.djs);
 
     // Add JSON fields with actual data
     // Add JSON fields with actual data - Sanitize to only send names (stripping temp image_urls) to match backend expectation
@@ -148,8 +137,6 @@ export async function GET(request: NextRequest) {
     
     formData.append('sponsors', JSON.stringify(sponsorsSanitized))
 
-    console.log('🔍 DEBUG - JSON stringified host (sanitized):', JSON.stringify(hostPayload));
-    console.log('🔍 DEBUG - JSON stringified sponsors (sanitized):', JSON.stringify(sponsorsSanitized));
 
     // Add venue_text if present
     formData.append('venue_text', formDataObj.venue_text || '')
@@ -164,7 +151,6 @@ export async function GET(request: NextRequest) {
     const tempFilesToCleanup: string[] = [];
     
     if (formDataObj.temp_files) {
-      console.log('📂 Processing temp files:', Object.keys(formDataObj.temp_files));
       const { readFile } = await import('fs/promises');
       const { existsSync } = await import('fs');
 
@@ -201,7 +187,6 @@ export async function GET(request: NextRequest) {
               // DJ and venue_logo stay as is: dj_0, dj_1, venue_logo
               
               formData.append(backendFieldName, blob as any, filepath.split(/[\\\/]/).pop());
-              console.log(`✅ Attached file ${fieldName} → ${backendFieldName} from ${filepath}`);
               
               // Track for cleanup after successful submission
               tempFilesToCleanup.push(filepath);
@@ -214,8 +199,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('📤 Submitting REAL order to backend API...')
-    console.log('📋 Order details:', {
       presenting: formDataObj.presenting,
       event_title: formDataObj.event_title,
       total_price: formDataObj.total_price,
@@ -226,12 +209,9 @@ export async function GET(request: NextRequest) {
     })
 
     // 🔍 DEBUG: Log all FormData keys AND values
-    console.log('🔍 DEBUG - FormData contents:');
     for (const [key, value] of formData.entries()) {
       if (key === 'host' || key === 'sponsors' || key === 'djs') {
-        console.log(`  - ${key}: ${typeof value === 'string' ? value : '[File]'}`);
       } else if (key.startsWith('host_') || key.startsWith('sponsor_') || key.startsWith('dj_')) {
-        console.log(`  - ${key}: [File - ${value instanceof Blob ? (value as any).name || 'unnamed' : 'not a blob'}]`);
       }
     }
 
@@ -241,7 +221,6 @@ export async function GET(request: NextRequest) {
       body: formData
     })
 
-    console.log('📬 Backend API response status:', response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -253,18 +232,15 @@ export async function GET(request: NextRequest) {
     }
 
     const responseData = await response.json()
-    console.log('🎉 Order created successfully:', responseData)
 
     // ✅ CLEANUP TEMP FILES AFTER SUCCESSFUL ORDER CREATION
     if (tempFilesToCleanup.length > 0) {
-      console.log('🧹 Cleaning up temp files...');
       const { unlink, rmdir } = await import('fs/promises');
       const { dirname } = await import('path');
       
       for (const filepath of tempFilesToCleanup) {
         try {
           await unlink(filepath);
-          console.log(`✅ Deleted temp file: ${filepath}`);
         } catch (err) {
           console.warn(`⚠️ Could not delete temp file ${filepath}:`, err);
         }
@@ -275,17 +251,14 @@ export async function GET(request: NextRequest) {
         try {
           const uploadDir = dirname(tempFilesToCleanup[0]);
           await rmdir(uploadDir);
-          console.log(`✅ Deleted empty temp directory: ${uploadDir}`);
         } catch (err) {
           // Directory not empty or other error - this is fine
-          console.log('ℹ️ Temp directory not deleted (may contain other files)');
         }
       }
     }
 
     // Get order ID from response
     const orderId = responseData.orderId || responseData.id || responseData._id
-    console.log('📋 Order ID:', orderId)
 
     // Send confirmation email
     try {
@@ -297,7 +270,6 @@ export async function GET(request: NextRequest) {
       if (formDataObj.custom_flyer) extras.push("Custom Flyer Design");
       if (formDataObj.animated_flyer) extras.push("Animated Flyer");
       
-      console.log('📧 Sending confirmation email to:', formDataObj.email);
       
       await sendOrderConfirmationEmail({
         orderId: orderId.toString(),

@@ -53,11 +53,9 @@ function MediaPage() {
             return
         }
 
-        console.log("Fetching library for user:", userId)
         setIsLoading(true)
         try {
             const data = await listLibrary(userId)
-            console.log("Library fetched:", data.length, "items")
             setItems(data)
         } catch (e) {
             console.error("Failed to load library", e)

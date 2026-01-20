@@ -13,18 +13,13 @@ export function useOrderSubmission() {
     setError(null)
 
     try {
-      console.log('Starting order submission...')
-      console.log('Order data:', orderSubmission)
       
       const result = await submitOrder(orderSubmission)
       
-      console.log('Submit order result:', result)
 
       if (result.success) {
-        console.log('Order submitted successfully')
         // Redirect to success page with order ID if available
         const orderId = result.data?.orderId || result.data?.id || result.data?._id
-        console.log('Redirecting to thank-you page with orderId:', orderId)
         router.push(`/thank-you${orderId ? `?orderId=${orderId}` : ''}`)
         return { success: true, data: result.data }
       } else {

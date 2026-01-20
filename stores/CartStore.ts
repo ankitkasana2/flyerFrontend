@@ -1,121 +1,3 @@
-// import { makeAutoObservable } from "mobx"
-
-// export class CartStore {
-//     cart: string[] = []
-
-//     constructor() {
-//         makeAutoObservable(this)
-//     }
-
-//     addToCart(id: string) {
-//         if (!this.cart.includes(id)) {
-//             this.cart.push(id)
-//         }
-//     }
-
-//     removeFromCart(id: string) {
-//         this.cart = this.cart.filter(itemId => itemId !== id)
-//     }
-
-//     clearCart() {
-//         this.cart = []
-//     }
-// }
-
-
-
-
-
-// import { makeAutoObservable } from "mobx"
-// import { getApiUrl } from "@/config/api"
-
-
-// export class CartStore {
-//     cart: string[] = []
-//     // cartfly: string[] = []
-
-
-
-
-//     constructor() {
-//         makeAutoObservable(this)
-//     }
-
-//     async addToCart(id: string, userId: string, formData?: any) {
-//         if (!userId) {
-//             throw new Error("User ID is required to add items to the cart.")
-//         }
-
-//         console.log("🛒 addToCart called")
-
-//         // 1) Add to local cart
-//         if (!this.cart.includes(id)) {
-//             this.cart.push(id)
-//         }
-
-//         // 2) Prepare API values here
-//         const payload = {
-//             user_id: userId,
-//             flyer_id: id,
-//             event_title: formData.event_title,
-//             event_date: formData.event_date,
-//             image_url: formData.image_url,         // id IS flyer_id
-//             form_data: formData ?? null
-//         }
-
-//         console.log("📦 Saving to server:", payload)
-
-//         try {
-//             // const res = await fetch(`http://193.203.161.174:3007/api/cart/add`, {
-//             const res = await fetch(getApiUrl("/api/cart/add"), {
-//                 method: "POST",
-//                 headers: {
-//                     "Content-Type": "application/json"
-//                 },
-//                 body: JSON.stringify(payload)
-//             })
-
-//             const data = await res.json()
-//             console.log("🟢 Cart saved:", data)
-
-//         } catch (err) {
-//             console.error("❌ Cart save error:", err)
-//         }
-//     }
-
-
-
-//     // Load cart for user
-//     async load(userId: string) {
-//         // alert("Loading cart for user: " + userId);
-//         if (!userId) return
-
-//         try {
-//             const res = await fetch(getApiUrl(`/api/cart/${userId}`))
-//             const data = await res.json()
-
-//             if (data.success) {
-//                 // Save full flyer objects
-//                 this.cart = data.cart
-//             }
-//         } catch (err) {
-//             console.error("❌ Cart load error:", err)
-//         }
-//     }   
-
-
-//     removeFromCart(id: string) {
-//         this.cart = this.cart.filter(itemId => itemId !== id)
-//     }
-
-//     clearCart() {
-//         this.cart = []
-//     }
-//      get count() {
-//     return this.cart?.length ?? 7
-//   }
-// }
-
 
 
 // stores/CartStore.ts
@@ -233,14 +115,11 @@ export class CartStore {
       const response = await fetch(getApiUrl(`/api/cart/${userId}`))
       const data: CartResponse = await response.json()
 
-      console.log('Raw API response:', data)
 
       if (data.success && Array.isArray(data.cart)) {
         this.cartItems = data.cart
-        console.log('Cart loaded successfully:', data.cart.length, 'items')
       } else {
         this.cartItems = []
-        console.log('No cart items found or invalid response:', data)
       }
     } catch (err) {
       console.error("Cart load error:", err)
@@ -269,7 +148,6 @@ export class CartStore {
       const data = await response.json()
 
       if (response.ok) {
-        console.log('Item added to cart successfully:', data)
 
         // Reload cart to get updated items
         const userId = formData.get('user_id') as string
@@ -304,7 +182,6 @@ export class CartStore {
 
       if (response.ok) {
         this.cartItems = this.cartItems.filter(item => item.id !== itemId)
-        console.log('Item removed from cart:', itemId)
       }
     } catch (err) {
       console.error("Failed to remove item from cart:", err)
@@ -324,7 +201,6 @@ export class CartStore {
 
       if (response.ok) {
         this.cartItems = []
-        console.log('Cart cleared successfully')
       }
     } catch (err) {
       console.error("Failed to clear cart:", err)
@@ -334,8 +210,6 @@ export class CartStore {
 
   // Get total items count
   get count() {
-    console.log('CartStore.count called, cartItems.length:', this.cartItems.length)
-    console.log('CartStore.cartItems:', this.cartItems)
     return this.cartItems.length
   }
 

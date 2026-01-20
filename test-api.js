@@ -27,10 +27,7 @@ async function testOrderAPI() {
     formData.append('host', JSON.stringify({ name: 'Test Host' }));
     formData.append('sponsors', JSON.stringify([]));
     
-    console.log('Testing API endpoint...');
-    console.log('FormData contents:');
     for (let [key, value] of formData.entries()) {
-      console.log(`  ${key}: ${value}`);
     }
     
     const response = await fetch('http://193.203.161.174:3007/api/orders', {
@@ -38,16 +35,11 @@ async function testOrderAPI() {
       body: formData
     });
     
-    console.log('Response status:', response.status);
-    console.log('Response ok:', response.ok);
     
     const data = await response.json();
-    console.log('Response data:', data);
     
     if (response.ok) {
-      console.log('✅ API test successful!');
     } else {
-      console.log('❌ API test failed:', data.message || 'Unknown error');
     }
   } catch (error) {
     console.error('❌ API test error:', error);

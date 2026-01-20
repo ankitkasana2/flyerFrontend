@@ -11,14 +11,12 @@ export default function SuccessPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    console.log('✅ Success page loaded - payment completed')
 
     // Get parameters from URL
     const sessionId = searchParams.get('session_id')
     const orderCreated = searchParams.get('order_created')
     const errorParam = searchParams.get('error')
 
-    console.log('📋 URL Parameters:', { sessionId, orderCreated, errorParam })
 
     // Check for errors
     if (errorParam) {
@@ -33,7 +31,6 @@ export default function SuccessPage() {
     }
 
     // Success! Order was already created in the API route
-    console.log('🎉 Order creation completed in API route')
 
   }, [searchParams])
 

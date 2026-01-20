@@ -60,7 +60,6 @@ export function OrdersTable() {
   })
 
   const handleStatusUpdate = (orderId: string, newStatus: string) => {
-    console.log(`Updating order ${orderId} to status: ${newStatus}`)
     // TODO: Implement status update
   }
 

@@ -107,7 +107,6 @@ export const generateOrderEmailHtml = (data: OrderEmailData) => {
 };
 
 export const sendOrderConfirmationEmail = async (data: OrderEmailData) => {
-  console.log('📧 initializing email send...');
   
   if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
     console.error('❌ AWS credentials missing from process.env');
@@ -125,8 +124,6 @@ export const sendOrderConfirmationEmail = async (data: OrderEmailData) => {
   });
 
   const fromEmail = process.env.AWS_SES_FROM_EMAIL || 'ankitoffice121@gmail.com';
-  console.log(`📧 Sending from: ${fromEmail} in region: ${currentRegion}`);
-  console.log(`📧 Sending to: ${data.customerEmail}`);
 
   const params: AWS.SES.SendEmailRequest = {
     Source: fromEmail,
@@ -153,7 +150,6 @@ export const sendOrderConfirmationEmail = async (data: OrderEmailData) => {
 
   try {
     const result = await ses.sendEmail(params).promise();
-    console.log(`✅ Order confirmation email sent to ${data.customerEmail}. MessageId: ${result.MessageId}`);
     return result;
   } catch (error: any) {
     console.error('❌ Failed to verify/send SES email:', error);

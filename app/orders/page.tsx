@@ -83,7 +83,6 @@ const OrdersPage = observer(() => {
 
       if (data.success) {
         setOrders(data.orders)
-        console.log('✅ Orders loaded:', data.count)
       } else {
         toast.error('Failed to load orders')
       }

@@ -24,7 +24,6 @@ const FavoritesPage = () => {
   // Fetch favorites when user is logged in
   useEffect(() => {
     if (user?.id) {
-      console.log("📊 Fetching favorites for user:", user.id)
       favoritesStore.fetchFavorites(user.id)
     }
   }, [user?.id, favoritesStore])

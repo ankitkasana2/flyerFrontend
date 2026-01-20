@@ -17,16 +17,11 @@ export default function GoogleCallbackPage() {
     useEffect(() => {
         const processCallback = async () => {
             try {
-                console.log("🔵 Google OAuth Callback Page Loaded");
-                console.log("🔵 Current URL:", window.location.href);
 
                 const code = searchParams.get("code");
                 const errorParam = searchParams.get("error");
                 const scope = searchParams.get("scope");
 
-                console.log("🔵 Authorization Code:", code ? `${code.substring(0, 20)}...` : "MISSING");
-                console.log("🔵 Error Parameter:", errorParam || "None");
-                console.log("🔵 Scope:", scope || "None");
 
                 if (errorParam) {
                     console.error("❌ Google OAuth Error:", errorParam);
@@ -44,13 +39,11 @@ export default function GoogleCallbackPage() {
                     return;
                 }
 
-                console.log("✅ Authorization code received, exchanging for user info...");
                 setDebugInfo("Exchanging authorization code...");
 
                 // Exchange code for user info and register in database
                 const result = await handleGoogleCallback(code);
 
-                console.log("🔵 Callback Result:", result);
 
                 if (!result.success || !result.user) {
                     console.error("❌ Failed to get user info:", result.error);
@@ -60,8 +53,6 @@ export default function GoogleCallbackPage() {
                     return;
                 }
 
-                console.log("✅ Google sign-in successful!");
-                console.log("👤 User Info:", {
                     id: result.user.id,
                     email: result.user.email,
                     name: result.user.name,
@@ -73,8 +64,6 @@ export default function GoogleCallbackPage() {
                 // Update auth store with user info
                 authStore.setOAuthUser(result.user);
 
-                console.log("✅ User session set in AuthStore");
-                console.log("🔄 Redirecting to home page...");
 
                 setDebugInfo("Login successful! Redirecting...");
 

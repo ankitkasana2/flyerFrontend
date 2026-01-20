@@ -147,7 +147,6 @@ export function OrderForm({ selectedFlyer, onCancel }: OrderFormProps) {
       userEmail: user?.email || "user@example.com" // Use real user email
     }
 
-    console.log('Submitting order:', orderSubmission)
 
     // Process checkout with Stripe
     setOrderData(orderSubmission)

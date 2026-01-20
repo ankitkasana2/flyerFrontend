@@ -26,14 +26,12 @@ export const Header = observer(() => {
   useEffect(() => {
     // Load cart for logged-in user only
     if (authStore.user?.id) {
-      console.log('Header: Loading cart for user:', authStore.user.id)
       cartStore.load(authStore.user.id)
     }
 
     // Also try to load cart if user data becomes available later
     const checkUser = setInterval(() => {
       if (authStore.user?.id) {
-        console.log('Header: Retrying cart load for user:', authStore.user.id)
         cartStore.load(authStore.user.id)
         clearInterval(checkUser)
       }
@@ -49,7 +47,6 @@ export const Header = observer(() => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      console.log("🔍 Searching for:", searchQuery)
       // Navigate to categories page with search query
       router.push(`/categories?search=${encodeURIComponent(searchQuery.trim())}`)
       setIsSearchOpen(false) // Close mobile search

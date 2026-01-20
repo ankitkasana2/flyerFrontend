@@ -15,7 +15,6 @@ const Cart = observer(() => {
   useEffect(() => {
     // Auto-load cart when user is logged in
     if (authStore.user?.id) {
-      console.log('Loading cart for user:', authStore.user.id)
       cartStore.load(authStore.user.id)
     }
   }, [authStore.user?.id, cartStore])
@@ -39,14 +38,12 @@ const Cart = observer(() => {
 
   const handleRemoveItem = (itemId: number) => {
     if (authStore.user?.id) {
-      console.log('Removing item:', itemId, 'for user:', authStore.user.id)
       cartStore.removeFromCart(itemId, authStore.user.id)
     }
   }
 
   const handleClearCart = () => {
     if (authStore.user?.id) {
-      console.log('Clearing cart for user:', authStore.user.id)
       cartStore.clearCart(authStore.user.id)
     }
   }
@@ -282,7 +279,6 @@ const Cart = observer(() => {
               <p>{cartStore.error}</p>
               <Button
                 onClick={() => {
-                  console.log('Retrying cart load for user:', authStore.user?.id)
                   cartStore.load(authStore.user!.id)
                 }}
                 className="mt-4"

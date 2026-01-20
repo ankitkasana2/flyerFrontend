@@ -57,7 +57,6 @@ export class FavoritesStore {
             this.favorites.push(String(flyerId))
           }
         })
-        console.log("✅ Added to favorites:", flyerId)
         return { success: true, message: data.message }
       } else {
         throw new Error(data.message || "Failed to add to favorites")
@@ -97,7 +96,6 @@ export class FavoritesStore {
           this.favorites = this.favorites.filter(id => id !== String(flyerId))
           this.favoritesData = this.favoritesData.filter(f => f.id !== flyerId)
         })
-        console.log("✅ Removed from favorites:", flyerId)
         return { success: true, message: data.message }
       } else {
         throw new Error(data.message || "Failed to remove from favorites")
@@ -137,7 +135,6 @@ export class FavoritesStore {
           this.favorites = data.favorites.map(f => String(f.id))
           this.loading = false
         })
-        console.log(`✅ Fetched ${data.count} favorites for user:`, userId)
       } else {
         throw new Error("Failed to fetch favorites")
       }

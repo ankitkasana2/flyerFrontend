@@ -23,10 +23,6 @@ export async function POST(req: Request) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
-      console.log("🎉 PAYMENT SUCCESSFUL");
-      console.log("Customer:", session.customer_email);
-      console.log("Amount Paid:", session.amount_total);
-      console.log("Payment Intent:", session.payment_intent);
 
       // 👉 Save into DB if needed
       // await prisma.payment.create({...});
@@ -34,7 +30,6 @@ export async function POST(req: Request) {
 
     // ❌ Payment failed
     if (event.type === "checkout.session.async_payment_failed") {
-      console.log("❌ Payment Failed");
     }
 
     return NextResponse.json({ received: true });

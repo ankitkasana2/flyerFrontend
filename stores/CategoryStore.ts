@@ -36,7 +36,7 @@ export class CategoryStore {
             const res = await fetch(getApiUrl('/api/categories'));
             const data = await res.json();
             if (data.success && Array.isArray(data.categories)) {
-                console.log("📊 API Categories Fetched:", data.categories);
+
                 // Sort by rank ascending (1, 2, 3...)
                 runInAction(() => {
                     this.categories = data.categories.sort((a: any, b: any) => a.rank - b.rank);
@@ -223,7 +223,7 @@ export class CategoryStore {
             return
         }
 
-        console.log("🔍 Searching flyers for:", searchLower)
+
 
         this.flyers = allFlyers.filter((fly: any) => {
             // Search in name
@@ -246,7 +246,7 @@ export class CategoryStore {
         })
 
         this.category = `Search Results for "${query}"`
-        console.log("✅ Found", this.flyers.length, "flyers")
+
     }
 
 

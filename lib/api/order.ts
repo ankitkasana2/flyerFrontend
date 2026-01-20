@@ -4,7 +4,6 @@ export function buildOrderFormData(submission: OrderSubmission): FormData {
   const { formData, files } = submission;
   const formDataObj = new FormData();
 
-  console.log('Building FormData with:', { formData, files })
 
   // Required fields based on working Postman code
   formDataObj.append('presenting', formData.presenting || '')
@@ -31,46 +30,31 @@ export function buildOrderFormData(submission: OrderSubmission): FormData {
   formDataObj.append(' total_price', String(formData.total_price || 78))
 
   // JSON fields
-  console.log('Appending djs as JSON:', formData.djs)
   formDataObj.append('djs', JSON.stringify(formData.djs || []))
   
-  console.log('Appending host as JSON:', formData.host)
   formDataObj.append('host', JSON.stringify(formData.host || {}))
   
-  console.log('Appending sponsors as JSON:', formData.sponsors)
   formDataObj.append('sponsors', JSON.stringify(formData.sponsors || []))
 
   // Append files
   if (files.venueLogoFile) {
-    console.log('Appending venue_logo file:', files.venueLogoFile.name)
     formDataObj.append('venue_logo', files.venueLogoFile);
   }
   if (files.hostFile) {
-    console.log('Appending host_file:', files.hostFile.name)
     formDataObj.append('host_file', files.hostFile);
   }
 
   // Append DJ files
   files.djFiles.forEach((file, index) => {
-    console.log(`Appending dj_${index}:`, file.name)
     formDataObj.append(`dj_${index}`, file);
   });
 
   // Append sponsor files
   files.sponsorFiles.forEach((file, index) => {
-    console.log(`Appending sponsor_${index}:`, file.name)
     formDataObj.append(`sponsor_${index}`, file);
   });
 
-  // Log all FormData entries (for debugging)
-  console.log('FormData entries:')
-  for (let [key, value] of formDataObj.entries()) {
-    if (value instanceof File) {
-      console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`)
-    } else {
-      console.log(`  ${key}: ${value}`)
-    }
-  }
+
 
   return formDataObj;
 }
@@ -79,10 +63,8 @@ export async function submitOrder(
   orderSubmission: OrderSubmission
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
-    console.log('Building form data...')
     const formData = buildOrderFormData(orderSubmission)
     
-    console.log('Sending request to: http://193.203.161.174:3007/api/orders')
     
     const response = await fetch('http://193.203.161.174:3007/api/orders', {
       method: 'POST',
@@ -90,11 +72,8 @@ export async function submitOrder(
       // Note: Don't set Content-Type header - let the browser set it with the correct boundary
     })
 
-    console.log('Response status:', response.status)
-    console.log('Response ok:', response.ok)
 
     const responseData = await response.json()
-    console.log('Response data:', responseData)
 
     if (!response.ok) {
       throw new Error(responseData.message || 'Failed to submit order')

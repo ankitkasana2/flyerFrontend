@@ -52,7 +52,6 @@ export default function TestOrderPage() {
       // Mark as test order
       formData.append('isTest', 'true')
 
-      console.log("Sending quick test order:", {
         presenting: formData.get('presenting'),
         event_title: formData.get('event_title'),
         event_date: formData.get('event_date'),
@@ -74,7 +73,6 @@ export default function TestOrderPage() {
       }
 
       const result = await response.json()
-      console.log("Test order response:", result)
       
       if (result.isTest) {
         toast.success('Test order validated successfully! (No real order created)')
@@ -142,7 +140,6 @@ export default function TestOrderPage() {
       const logoFile = new File([mockLogo], 'test-logo.png', { type: 'image/png' })
       formData.append('venue_logo', logoFile)
 
-      console.log("Sending test order with files:", {
         hasImage: formData.has('image'),
         hasVenueLogo: formData.has('venue_logo'),
         imageName: formData.get('image') instanceof File ? 'test-image.jpg' : 'Not a file',
@@ -163,7 +160,6 @@ export default function TestOrderPage() {
       }
 
       const result = await response.json()
-      console.log("Test order with files response:", result)
       
       if (result.isTest) {
         toast.success('Test order with files validated! (No real order created)')

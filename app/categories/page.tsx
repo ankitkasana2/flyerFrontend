@@ -37,7 +37,7 @@ const CategoriesPage = () => {
   // Fetch favorites on mount if user is logged in
   useEffect(() => {
     if (authStore.user?.id) {
-      console.log("📂 Categories page: Fetching favorites for user:", authStore.user.id)
+
       favoritesStore.fetchFavorites(authStore.user.id)
     }
   }, [authStore.user?.id, favoritesStore])
@@ -51,7 +51,7 @@ const CategoriesPage = () => {
   useEffect(() => {
     const search = searchParams.get('search')
     if (search) {
-      console.log("🔍 Search query:", search)
+
       setSearchQuery(search)
       categoryStore.searchFlyers(search)
     } else {

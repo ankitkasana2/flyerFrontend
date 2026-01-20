@@ -2,16 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Test order API called')
     
     // Parse the incoming FormData (not JSON)
     const formData = await request.formData()
-    console.log('Received FormData with entries:')
     for (let [key, value] of formData.entries()) {
       if (value instanceof File) {
-        console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`)
       } else {
-        console.log(`  ${key}: ${value}`)
       }
     }
     
@@ -51,18 +47,14 @@ export async function POST(request: NextRequest) {
     // Add the duplicate total_price field with space
     if (!backendFormData.has(' total_price')) backendFormData.append(' total_price', '78')
     
-    console.log('Sending FormData to backend API...')
     
     const response = await fetch('http://193.203.161.174:3007/api/orders', {
       method: 'POST',
       body: backendFormData
     })
     
-    console.log('Backend API response status:', response.status)
-    console.log('Backend API response ok:', response.ok)
     
     const responseData = await response.json()
-    console.log('Backend API response:', responseData)
     
     if (!response.ok) {
       return NextResponse.json(

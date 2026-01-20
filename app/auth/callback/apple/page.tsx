@@ -32,7 +32,6 @@ export default function AppleCallbackPage() {
                     return;
                 }
 
-                console.log("Processing Apple callback with code:", code);
 
                 // Parse user data if provided (only on first sign-in)
                 let userData = null;
@@ -53,7 +52,6 @@ export default function AppleCallbackPage() {
                     return;
                 }
 
-                console.log("Apple sign-in successful:", result.user);
 
                 // Update auth store with user info
                 authStore.setOAuthUser(result.user);

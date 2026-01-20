@@ -18,13 +18,10 @@ export function FavoritesSync() {
     // Fetch favorites when user is available (on mount or login)
     useEffect(() => {
         if (user?.id) {
-            console.log("🔄 Fetching favorites for user:", user.id)
-            console.log("📊 Current favorites count:", favoritesStore.count)
 
             // Always fetch to ensure we have the latest data
             favoritesStore.fetchFavorites(user.id)
         } else {
-            console.log("🔄 No user found, clearing favorites")
             favoritesStore.clearLocalFavorites()
         }
     }, [user?.id]) // Re-run when user.id changes (login/logout/page load)

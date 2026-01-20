@@ -34,7 +34,7 @@ const HomePage: React.FC<HomeSectionProps> = () => {
   // Fetch favorites on mount if user is logged in
   useEffect(() => {
     if (authStore.user?.id) {
-      console.log("🏠 Home page: Fetching favorites for user:", authStore.user.id)
+
       favoritesStore.fetchFavorites(authStore.user.id)
     }
   }, [authStore.user?.id, favoritesStore])

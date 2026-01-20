@@ -22,7 +22,7 @@ const FilterBar = () => {
 
     // Unified function to apply all filters together
     const applyAllFilters = (categories: string[], prices: string[], types: string[]) => {
-        console.log("🔍 Applying filters:", { categories, prices, types })
+
 
         const allFlyers = flyersStore.flyers.length ? flyersStore.flyers : SAMPLE_FLYERS
         let filtered = allFlyers
@@ -35,7 +35,7 @@ const FilterBar = () => {
                 }
                 return categories.includes(flyer.category)
             })
-            console.log("📂 After category filter:", filtered.length, "flyers")
+
         }
 
         // Step 2: Filter by price (if any selected)
@@ -52,7 +52,7 @@ const FilterBar = () => {
 
                 return prices.includes(priceType)
             })
-            console.log("💰 After price filter:", filtered.length, "flyers")
+
         }
 
         // Step 3: Filter by type (if any selected)
@@ -71,7 +71,7 @@ const FilterBar = () => {
                     return false
                 })
             })
-            console.log("🎨 After type filter:", filtered.length, "flyers")
+
         }
 
         // Update category store
@@ -86,7 +86,7 @@ const FilterBar = () => {
             categoryStore.category = 'All Flyers'
         }
 
-        console.log("✅ Final filtered flyers:", filtered.length)
+
     }
 
     const toggleCategory = (categoryName: string) => {

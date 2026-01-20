@@ -53,7 +53,6 @@ export async function listLibrary(userId: string, type?: LibraryItem["type"]): P
     const url = `${API_BASE_URL}/${encodedId}`
 
     try {
-        console.log(`[API] Fetching media for: ${encodedId}`)
         // Added timestamp AND Cache-Control headers to forcefully prevent caching
         const res = await fetch(`${url}?_t=${Date.now()}`, {
             method: 'GET',
@@ -104,7 +103,6 @@ export async function saveToLibrary(userId: string, file: File): Promise<string 
     formData.append("web_user_id", userId)
     formData.append("file", file)
 
-    console.log(`[API] Uploading file for ${userId}: ${file.name} (${file.size} bytes)`)
 
     try {
         const res = await fetch(`${API_BASE_URL}`, {
@@ -124,7 +122,6 @@ export async function saveToLibrary(userId: string, file: File): Promise<string 
             console.error("[API] Upload API returned false success:", data)
             return null
         }
-        console.log("[API] Upload successful", data)
         return data.file_url || data.media?.file_url || data.url || null
     } catch (error) {
         console.error("[API] Error saving to library:", error)

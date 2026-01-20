@@ -3,12 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 const BACKEND_API_URL = "http://193.203.161.174:3007";
 
 export async function POST(req: NextRequest) {
-  console.log('Orders API called');
   
   try {
     // Handle FormData (with files)
     const formData = await req.formData();
-    console.log('FormData keys:', Array.from(formData.keys()));
     
     // Create a new FormData to send to backend
     const backendFormData = new FormData();
@@ -22,7 +20,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log('Forwarding to backend...');
     
     // Forward the request to the backend API
     const response = await fetch(`${BACKEND_API_URL}/api/orders`, {
@@ -31,7 +28,6 @@ export async function POST(req: NextRequest) {
       // Don't set Content-Type header for FormData - let browser set it with boundary
     });
 
-    console.log('Backend response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -57,7 +53,6 @@ export async function POST(req: NextRequest) {
 
     // Get the response data
     const responseData = await response.json();
-    console.log("Order created successfully:", responseData);
 
     // Return the backend response
     return NextResponse.json(responseData, {

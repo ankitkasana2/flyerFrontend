@@ -22,7 +22,6 @@ export async function POST(req: NextRequest) {
       orderDataStore.delete(sessionId)
     }, 30 * 60 * 1000)
 
-    console.log('✅ Order data stored for session:', sessionId)
     
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -49,14 +48,12 @@ export async function GET(req: NextRequest) {
     const orderData = orderDataStore.get(sessionId)
     
     if (!orderData) {
-      console.log('❌ Order data not found for session:', sessionId)
       return NextResponse.json(
         { error: 'Order data not found' },
         { status: 404 }
       )
     }
 
-    console.log('✅ Order data retrieved for session:', sessionId)
     
     return NextResponse.json({ orderData })
   } catch (error) {
@@ -82,9 +79,7 @@ export async function DELETE(req: NextRequest) {
     const deleted = orderDataStore.delete(sessionId)
     
     if (deleted) {
-      console.log('✅ Order data cleaned up for session:', sessionId)
     } else {
-      console.log('⚠️ No order data found to clean up for session:', sessionId)
     }
     
     return NextResponse.json({ success: true, deleted })

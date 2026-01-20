@@ -33,7 +33,6 @@ export async function POST(request: NextRequest) {
 
     // Write file to temp storage
     await writeFile(filepath, buffer);
-    console.log(`✅ File saved to temp storage: ${filepath}`);
 
     return NextResponse.json({ 
       success: true, 

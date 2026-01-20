@@ -17,18 +17,12 @@ export default function AppleCallbackPage() {
     useEffect(() => {
         const processCallback = async () => {
             try {
-                console.log("🍎 Apple OAuth Callback Page Loaded");
-                console.log("🍎 Current URL:", window.location.href);
 
                 const code = searchParams.get("code");
                 const errorParam = searchParams.get("error");
                 const userParam = searchParams.get("user");
                 const state = searchParams.get("state");
 
-                console.log("🍎 Authorization Code:", code ? `${code.substring(0, 20)}...` : "MISSING");
-                console.log("🍎 Error Parameter:", errorParam || "None");
-                console.log("🍎 User Parameter:", userParam ? "Present" : "None");
-                console.log("🍎 State:", state || "None");
 
                 if (errorParam) {
                     console.error("❌ Apple OAuth Error:", errorParam);
@@ -46,7 +40,6 @@ export default function AppleCallbackPage() {
                     return;
                 }
 
-                console.log("✅ Authorization code received, exchanging for user info...");
                 setDebugInfo("Exchanging authorization code...");
 
                 // Parse user data if provided (only on first sign-in)
@@ -54,7 +47,6 @@ export default function AppleCallbackPage() {
                 if (userParam) {
                     try {
                         userData = JSON.parse(userParam);
-                        console.log("👤 User data from Apple:", userData);
                     } catch (e) {
                         console.warn("Failed to parse user data:", e);
                     }
@@ -63,7 +55,6 @@ export default function AppleCallbackPage() {
                 // Exchange code for user info and register in database
                 const result = await handleAppleCallback(code, userData);
 
-                console.log("🍎 Callback Result:", result);
 
                 if (!result.success || !result.user) {
                     console.error("❌ Failed to get user info:", result.error);
@@ -73,8 +64,6 @@ export default function AppleCallbackPage() {
                     return;
                 }
 
-                console.log("✅ Apple sign-in successful!");
-                console.log("👤 User Info:", {
                     id: result.user.id,
                     email: result.user.email,
                     name: result.user.name,
@@ -86,8 +75,6 @@ export default function AppleCallbackPage() {
                 // Update auth store with user info
                 authStore.setOAuthUser(result.user);
 
-                console.log("✅ User session set in AuthStore");
-                console.log("🔄 Redirecting to home page...");
 
                 setDebugInfo("Login successful! Redirecting...");
 

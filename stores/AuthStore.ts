@@ -330,9 +330,6 @@ export class AuthStore {
       const session = await fetchAuthSession()
       const token = session.tokens?.idToken?.toString() || ''
 
-      console.log('Raw user from AWS:', user);
-      console.log('Session tokens:', session.tokens);
-      console.log('ID Token exists:', !!token);
 
       // Extract data from JWT token
       let emailFromToken = ''
@@ -343,14 +340,11 @@ export class AuthStore {
         try {
           // Simple JWT decode (without verification since it's from AWS)
           const payload = JSON.parse(atob(token.split('.')[1]))
-          console.log('JWT payload:', payload);
 
           emailFromToken = payload.email || ''
-          console.log('Email from token:', emailFromToken);
 
           // Extract name from token (different providers use different fields)
           nameFromToken = payload.name || payload.given_name || payload.nickname || ''
-          console.log('Name from token:', nameFromToken);
 
           // Detect provider from token
           // Google: identities array contains google
@@ -364,7 +358,6 @@ export class AuthStore {
               providerFromToken = 'apple'
             }
           }
-          console.log('Provider from token:', providerFromToken);
 
         } catch (e) {
           console.warn('Could not extract data from token:', e)
@@ -378,12 +371,10 @@ export class AuthStore {
         provider: providerFromToken,
       })
 
-      console.log('Normalized user:', normalized);
 
       // Register user in backend database
       try {
         const formattedUserId = formatCognitoUserId(user.userId, providerFromToken)
-        console.log('Formatted user ID for database:', formattedUserId);
 
         const result = await registerUserInDatabase({
           fullname: normalized.name,
@@ -392,7 +383,6 @@ export class AuthStore {
         })
 
         if (result.success) {
-          console.log('✅ User successfully registered/updated in database:', result);
         } else {
           console.error('❌ Failed to register user in database:', result.message);
         }
@@ -457,7 +447,6 @@ export class AuthStore {
       // Register user in backend database immediately after Cognito registration
       try {
         const formattedUserId = formatCognitoUserId(userId ?? '', 'cognito')
-        console.log('Registering user in database with ID:', formattedUserId);
 
         const result = await registerUserInDatabase({
           fullname: fullname,
@@ -466,7 +455,6 @@ export class AuthStore {
         })
 
         if (result.success) {
-          console.log('✅ User successfully registered in database:', result);
         } else {
           console.error('❌ Failed to register user in database:', result.message);
         }
@@ -595,7 +583,6 @@ export class AuthStore {
     const userId = this.user?.id // Save userId before clearing
 
     try {
-      console.log("🚪 Logging out user...")
       await awsSignOut()
     } catch (error) {
       console.error('Error during sign out:', error)
@@ -605,17 +592,14 @@ export class AuthStore {
 
       // Clear cart and favorites stores
       if (this.cartStore) {
-        console.log("🛒 Clearing cart...")
         // Clear local cart items immediately
         this.cartStore.cartItems = []
       }
 
       if (this.favoritesStore) {
-        console.log("❤️ Clearing favorites...")
         this.favoritesStore.clearLocalFavorites()
       }
 
-      console.log("✅ Logout complete - all data cleared")
     }
   }
 
@@ -839,7 +823,6 @@ export class AuthStore {
       provider: oauthUser.provider,
     })
 
-    console.log('Setting OAuth user:', normalized)
 
     // Create a simple token (you might want to get this from your backend)
     const simpleToken = `oauth_${oauthUser.provider}_${oauthUser.id}`

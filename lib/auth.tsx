@@ -206,7 +206,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const sendOTP = async (email: string) => {
     // Mock OTP sending - replace with real API call
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    console.log("OTP sent to:", email)
   }
 
   const verifyOTP = async (email: string, otp: string) => {

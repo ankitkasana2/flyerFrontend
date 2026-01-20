@@ -43,8 +43,6 @@ export const signInWithGoogle = async (): Promise<OAuthResponse> => {
             `&access_type=offline` +
             `&prompt=consent`;
 
-        console.log('Redirecting to Google OAuth...');
-        console.log('Redirect URI:', redirectUri);
 
         // Redirect to Google OAuth
         window.location.href = googleAuthUrl;
@@ -84,8 +82,6 @@ export const signInWithApple = async (): Promise<OAuthResponse> => {
             `&response_mode=${responseMode}` +
             `&scope=${encodeURIComponent(scope)}`;
 
-        console.log('Redirecting to Apple OAuth...');
-        console.log('Redirect URI:', redirectUri);
 
         // Redirect to Apple OAuth
         window.location.href = appleAuthUrl;
