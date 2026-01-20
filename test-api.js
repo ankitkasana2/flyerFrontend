@@ -27,8 +27,7 @@ async function testOrderAPI() {
     formData.append('host', JSON.stringify({ name: 'Test Host' }));
     formData.append('sponsors', JSON.stringify([]));
     
-    for (let [key, value] of formData.entries()) {
-    }
+
     
     const response = await fetch('http://193.203.161.174:3007/api/orders', {
       method: 'POST',
@@ -38,9 +37,7 @@ async function testOrderAPI() {
     
     const data = await response.json();
     
-    if (response.ok) {
-    } else {
-    }
+
   } catch (error) {
     console.error('❌ API test error:', error);
   }

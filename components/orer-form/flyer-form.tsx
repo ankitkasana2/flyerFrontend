@@ -282,14 +282,7 @@ const EventBookingForm = () => {
   const computedSubtotal = flyerFormStore.subtotal;
   const totalDisplay = (computedSubtotal > 0 ? computedSubtotal : basePrice) + additionalFlyersPrice;
 
-  // Debug logging
-    routeFlyerId,
-    basePrice: flyerFormStore.basePrice,
-    flyerPrice: flyer?.price,
-    priceFromQuery,
-    totalDisplay,
-    flyer: flyer
-  });
+
 
   useEffect(() => {
     if (routeFlyerId) {
@@ -473,12 +466,7 @@ const EventBookingForm = () => {
     (Array.isArray((flyer as any)?.categories) && (flyer as any).categories.includes('Birthday')) ||
     categoryFromQuery === 'Birthday';
 
-  // Debug logging
-    form_type: flyer?.form_type,
-    category: flyer?.category,
-    categoryFromQuery,
-    isBirthdayCategory
-  });
+
 
   // If Birthday category, render Birthday form instead
   if (isBirthdayCategory) {
@@ -499,14 +487,7 @@ const EventBookingForm = () => {
     flyerCategory.toLowerCase().includes("photo") ||
     (flyer as any)?.hasPhotos === true;
 
-  // Debug logging for form routing
-    flyerPrice,
-    flyerPriceType: typeof flyerPrice,
-    flyerCategory,
-    flyerFormType,
-    hasPhotos: (flyer as any)?.hasPhotos,
-    isWithPhotoForm
-  });
+
 
   // Check if it's a No-Photo form ($10, $15, or $40 No-Photo)
   const isNoPhotoForm =
@@ -631,10 +612,7 @@ const EventBookingForm = () => {
       sponsorData.push(await processSponsor(sponsors.sponsor2, 1));
       sponsorData.push(await processSponsor(sponsors.sponsor3, 2));
 
-        sponsor1: (sponsors.sponsor1 instanceof File) ? sponsors.sponsor1.name : sponsors.sponsor1,
-        sponsor2: (sponsors.sponsor2 instanceof File) ? sponsors.sponsor2.name : sponsors.sponsor2,
-        sponsor3: (sponsors.sponsor3 instanceof File) ? sponsors.sponsor3.name : sponsors.sponsor3
-      });
+
 
       const apiBody = {
         presenting: flyerFormStore.flyerFormDetail.eventDetails.presenting,
@@ -670,20 +648,9 @@ const EventBookingForm = () => {
         temp_files: tempFiles
       };
 
-        ...apiBody,
-        host: apiBody.host,
-        sponsors: apiBody.sponsors,
-        djs: apiBody.djs
-      });
 
-        event_title: apiBody.event_title,
-        presenting: apiBody.presenting,
-        total_price: apiBody.total_price,
-        user_id: authStore.user.id,
-        image_url: apiBody.image_url,
-        flyer_id: apiBody.flyer_id,
-        temp_files_count: Object.keys(tempFiles).length
-      });
+
+
 
       // Save recent data for autofill
       if (apiBody.address_phone) {
@@ -874,10 +841,7 @@ const EventBookingForm = () => {
         }
       });
 
-        dataKeys: Array.from(formData.keys()),
-        hasFiles: formData.has('image') || formData.has('venue_logo'),
-        userId: authStore.user.id
-      });
+
 
       // Save recent data for autofill
       if (apiBody.address_phone) {

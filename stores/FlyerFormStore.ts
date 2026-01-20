@@ -121,11 +121,7 @@ export class FlyerFormStore {
           ? Number(String(rawPrice).replace(/[^0-9.]/g, ""))
           : null;
 
-          rawPrice,
-          numericPrice,
-          isNaN: Number.isNaN(numericPrice),
-          finalPrice: numericPrice || 0
-        });
+
 
         this.flyer = {
           ...data,
