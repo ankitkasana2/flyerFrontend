@@ -14,36 +14,58 @@ export async function POST(req: NextRequest) {
       : req.headers.get("origin") || "http://localhost:3000";
 
     const itemsArray = Array.isArray(item) ? item : [item];
+    
+    // Build metadata for the success handler (app/api/checkout/success/route.ts)
+    const firstItem = itemsArray[0];
+    const orderData = {
+      userId: firstItem.user_id,
+      userEmail: firstItem.email || firstItem.userEmail,
+      formData: {
+        ...firstItem,
+        flyer_id: firstItem.flyer_id || firstItem.flyer_is,
+      }
+    };
 
-    // Store complete order data in sessionStorage (client-side) and use minimal metadata
+    const orderDataString = JSON.stringify(orderData);
+    const orderDataBase64 = Buffer.from(orderDataString).toString('base64');
+
+    const metadata: any = {
+      userId: orderData.userId || '',
+      userEmail: orderData.userEmail || '',
+      totalPrice: itemsArray.reduce((sum: number, i: any) => sum + Number(i.subtotal || i.total_price || 0), 0).toString(),
+    };
+
+    // Handle chunking if metadata is too large
+    if (orderDataBase64.length > 500) {
+      const chunkSize = 500;
+      const chunks = [];
+      for (let i = 0; i < orderDataBase64.length; i += chunkSize) {
+        chunks.push(orderDataBase64.substring(i, i + chunkSize));
+      }
+      metadata.chunkCount = chunks.length.toString();
+      chunks.forEach((chunk, index) => {
+        metadata[`orderData_${index}`] = chunk;
+      });
+    } else {
+      metadata.orderData = orderDataBase64;
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      line_items: itemsArray.map((i: any) => {
-
-        return {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: i?.eventDetails?.mainTitle || "Event Ticket",
-            },
-            unit_amount: Number(i?.subtotal) * 100,
+      line_items: itemsArray.map((i: any) => ({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: i?.eventDetails?.mainTitle || i?.event_title || "Flyer Order",
           },
-          quantity: 1,
-        };
-      }),
+          unit_amount: Math.round(Number(i.subtotal || i.total_price || 0) * 100),
+        },
+        quantity: 1,
+      })),
       success_url: `${origin}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/cancel`,
-      metadata: {
-        // Store only essential info - the rest comes from sessionStorage
-        userId: item?.user_id || '',
-        flyerId: item?.flyer_id || '',
-        totalPrice: item?.total_price || '0',
-        eventTitle: item?.event_title || 'Event',
-        subtotal: item?.subtotal || '0',
-        // Store a flag to indicate we should use sessionStorage data
-        useSessionStorage: 'true'
-      },
+      cancel_url: `${origin}/cart`,
+      metadata: metadata,
     });
 
     if (!session.url) throw new Error("Stripe session URL not created");

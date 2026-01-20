@@ -70,6 +70,7 @@ export class FlyerFormStore {
   flyer: Flyer | null = null
   similarFlyers: Flyer[] = []
   basePrice = 0
+  loading = false
   flyerFormDetail: FlyerFormDetails = {
     flyerId: "",
     categoryId: "",
@@ -106,6 +107,9 @@ export class FlyerFormStore {
 
   
   async fetchFlyer(id: string, refreshSimilar = true) {
+    runInAction(() => {
+      this.loading = true
+    })
     try {
       const res = await fetch(getApiUrl(`/api/flyers/${id}`), {
         cache: "no-store",
@@ -146,9 +150,13 @@ export class FlyerFormStore {
         if (refreshSimilar) {
           this.fetchSimilarFlyers();
         }
+        this.loading = false;
       });
     } catch (err) {
       console.error("Failed to load flyer:", err);
+      runInAction(() => {
+        this.loading = false;
+      });
     }
   }
 

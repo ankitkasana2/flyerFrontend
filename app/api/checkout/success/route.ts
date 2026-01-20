@@ -67,11 +67,7 @@ export async function GET(request: NextRequest) {
     try {
       const orderDataString = Buffer.from(orderDataBase64, 'base64').toString('utf-8')
       orderData = JSON.parse(orderDataString)
-
-        userId: orderData.userId,
-        presenting: orderData.formData?.presenting,
-        total_price: orderData.formData?.total_price
-      })
+      console.log('✅ Decoded order data for:', orderData.userEmail)
     } catch (decodeError) {
       console.error('❌ Error decoding order data:', decodeError)
       return NextResponse.redirect(
@@ -199,14 +195,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-      presenting: formDataObj.presenting,
-      event_title: formDataObj.event_title,
-      total_price: formDataObj.total_price,
-      user_id: formDataObj.user_id,
-      host_count: (formDataObj.host || []).length,
-      dj_count: (formDataObj.djs || []).length,
-      temp_files_count: tempFilesToCleanup.length
-    })
+    console.log('✅ Prepared FormData for backend upload')
 
     // 🔍 DEBUG: Log all FormData keys AND values
     for (const [key, value] of formData.entries()) {

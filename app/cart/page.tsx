@@ -1,12 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Trash2, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
+import { getApiUrl } from "@/config/api"
+import { toast } from "sonner"
 
 function currency(n?: number | string) {
     if (!n) return "$0.00"
@@ -14,8 +16,65 @@ function currency(n?: number | string) {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(num)
 }
 
+function getImageUrl(url: string | null | undefined) {
+    if (!url) return null
+    if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('/')) return url
+    // If it's a relative path and doesn't start with /, it's likely a backend path
+    return `${getApiUrl()}/${url}`
+}
+
 const CartPage = observer(() => {
     const { authStore, cartStore } = useStore()
+    const [isCheckingOut, setIsCheckingOut] = useState(false)
+
+    const handleCheckout = async () => {
+        console.log("🛒 ~ handleCheckout started")
+        if (!authStore.user) {
+            authStore.handleAuthModal()
+            return
+        }
+
+        if (cartStore.cartItems.length === 0) return
+
+        setIsCheckingOut(true)
+        try {
+            // Map cart items to the format expected by the checkout session API
+            const items = cartStore.cartItems.map(item => ({
+                user_id: authStore.user?.id,
+                flyer_id: item.flyer_is,
+                event_title: item.event_title,
+                subtotal: item.total_price, // Use total_price as subtotal for the line item
+                eventDetails: {
+                    mainTitle: item.event_title,
+                    presenting: item.presenting
+                }
+            }))
+
+            console.log("🚀 ~ Proceeding to checkout with items ->", items)
+
+            const response = await fetch('/api/checkout/session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ item: items }),
+            })
+
+            const data = await response.json()
+            console.log("📦 ~ Checkout Session Response ->", data)
+
+            if (data.url) {
+                window.location.href = data.url
+            } else {
+                throw new Error(data.error || 'Failed to create checkout session')
+            }
+        } catch (err: any) {
+            console.error('Checkout error:', err)
+            toast.error(err.message || 'An error occurred during checkout')
+        } finally {
+            setIsCheckingOut(false)
+        }
+    }
 
     // Load cart on mount
     useEffect(() => {
@@ -88,9 +147,7 @@ const CartPage = observer(() => {
                                         <div className="h-70 w-50 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
                                             <img
                                                 src={
-                                                    item.flyer?.image ||
-                                                    item.image_url ||
-                                                    item.venue_logo ||
+                                                    getImageUrl(item.flyer?.image || item.image_url || item.venue_logo) ||
                                                     "/placeholder.svg"
                                                 }
                                                 alt={item.flyer?.title || item.event_title || "Flyer thumbnail"}
@@ -163,9 +220,13 @@ const CartPage = observer(() => {
                             <Link href="/categories">
                                 <Button variant="outline">Continue Shopping</Button>
                             </Link>
-                            <Link href="/checkout">
-                                <Button className="bg-primary text-primary-foreground">Checkout</Button>
-                            </Link>
+                            <Button 
+                                className="bg-primary text-primary-foreground"
+                                onClick={handleCheckout}
+                                disabled={isCheckingOut}
+                            >
+                                {isCheckingOut ? "Processing..." : "Checkout"}
+                            </Button>
                         </div>
                     </section>
 
@@ -191,9 +252,13 @@ const CartPage = observer(() => {
                             </p>
                         </div>
 
-                        <Link href="/checkout">
-                            <Button className="mt-5 w-full bg-primary text-primary-foreground">Proceed to Checkout</Button>
-                        </Link>
+                        <Button 
+                            className="mt-5 w-full bg-primary text-primary-foreground"
+                            onClick={handleCheckout}
+                            disabled={isCheckingOut}
+                        >
+                            {isCheckingOut ? "Processing..." : "Proceed to Checkout"}
+                        </Button>
 
                         <div className="mt-4">
                             <h3 className="text-sm font-medium">What's included</h3>

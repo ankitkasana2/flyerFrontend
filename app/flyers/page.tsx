@@ -1,13 +1,14 @@
 "use client"
-
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { FlyerCard } from "@/components/flyer/flyer-card"
 import { FlyerFilters } from "@/components/flyer/flyer-filters"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { SAMPLE_FLYERS, getCategoriesWithFlyers, type Flyer } from "@/lib/types"
+import { type Flyer } from "@/lib/types"
+import { observer } from "mobx-react-lite"
+import { useStore } from "@/stores/StoreProvider"
 import { Grid, List } from "lucide-react"
 
 interface FilterState {
@@ -18,9 +19,15 @@ interface FilterState {
   sortBy: string
 }
 
-export default function FlyersPage() {
+const FlyersPage = () => {
+  const { flyersStore, categoryStore } = useStore()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const availableCategories = getCategoriesWithFlyers()
+  
+  useEffect(() => {
+    if (flyersStore.flyers.length === 0) flyersStore.fetchFlyers()
+    if (categoryStore.categories.length === 0) categoryStore.fetchCategories()
+  }, [])
+
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     categories: [],
@@ -30,23 +37,27 @@ export default function FlyersPage() {
   })
 
   const filteredFlyers = useMemo(() => {
-    let result = [...SAMPLE_FLYERS]
+    let result = [...flyersStore.flyers]
 
     // Search filter
     if (filters.search) {
       result = result.filter(
         (flyer) =>
-          flyer.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          flyer.category.toLowerCase().includes(filters.search.toLowerCase()) ||
-          flyer.tags.some((tag) => tag.toLowerCase().includes(filters.search.toLowerCase())),
+          (flyer: any) =>
+            (flyer.name || flyer.title)?.toLowerCase().includes(filters.search.toLowerCase()) ||
+            (Array.isArray(flyer.categories) ? flyer.categories.some((c: string) => c.toLowerCase().includes(filters.search.toLowerCase())) : flyer.category?.toLowerCase().includes(filters.search.toLowerCase())) ||
+            (Array.isArray(flyer.tags) && flyer.tags.some((tag: string) => tag.toLowerCase().includes(filters.search.toLowerCase()))),
       )
     }
 
     // Category filter
     if (filters.categories.length > 0) {
-      result = result.filter((flyer) => {
-        const categorySlug = availableCategories.find((c) => c.name === flyer.category)?.slug
-        return categorySlug && filters.categories.includes(categorySlug)
+      result = result.filter((flyer: any) => {
+        const catList = Array.isArray(flyer.categories) ? flyer.categories : [flyer.category]
+        return catList.some((cat: string) => {
+           const slug = cat.toLowerCase().replace(/\s+/g, '-')
+           return filters.categories.includes(slug)
+        })
       })
     }
 
@@ -60,7 +71,10 @@ export default function FlyersPage() {
           result = result.filter((flyer) => flyer.priceType === "regular")
           break
         case "premium":
-          result = result.filter((flyer) => flyer.priceType === "premium")
+          result = result.filter((flyer: any) => {
+            const price = typeof flyer.price === 'string' ? parseFloat(flyer.price.replace('$', '')) : flyer.price
+            return price === 40
+          })
           break
         case "10-15":
           result = result.filter((flyer) => flyer.price >= 10 && flyer.price <= 15)
@@ -134,21 +148,24 @@ export default function FlyersPage() {
 
           {/* Category Pills */}
           <div className="flex flex-wrap gap-2 mb-6">
-            {availableCategories.slice(0, 8).map((category) => (
-              <Badge
-                key={category.id}
-                variant={filters.categories.includes(category.slug) ? "default" : "outline"}
-                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                onClick={() => {
-                  const newCategories = filters.categories.includes(category.slug)
-                    ? filters.categories.filter((c) => c !== category.slug)
-                    : [...filters.categories, category.slug]
-                  setFilters({ ...filters, categories: newCategories })
-                }}
-              >
-                {category.name}
-              </Badge>
-            ))}
+            {categoryStore.categories.slice(0, 8).map((category) => {
+              const slug = category.name.toLowerCase().replace(/\s+/g, '-')
+              return (
+                <Badge
+                  key={category.id}
+                  variant={filters.categories.includes(slug) ? "default" : "outline"}
+                  className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                  onClick={() => {
+                    const newCategories = filters.categories.includes(slug)
+                      ? filters.categories.filter((c) => c !== slug)
+                      : [...filters.categories, slug]
+                    setFilters({ ...filters, categories: newCategories })
+                  }}
+                >
+                  {category.name}
+                </Badge>
+              )
+            })}
           </div>
         </div>
 
@@ -161,9 +178,9 @@ export default function FlyersPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <span className="text-muted-foreground">{filteredFlyers.length} flyers found</span>
-            {filteredFlyers.length !== SAMPLE_FLYERS.length && (
+            {filteredFlyers.length !== flyersStore.flyers.length && (
               <Button variant="ghost" size="sm" onClick={clearFilters}>
-                Show All ({SAMPLE_FLYERS.length})
+                Show All ({flyersStore.flyers.length})
               </Button>
             )}
           </div>
@@ -209,3 +226,5 @@ export default function FlyersPage() {
     </div>
   )
 }
+
+export default observer(FlyersPage)

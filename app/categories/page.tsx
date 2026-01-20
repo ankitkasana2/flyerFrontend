@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FLYER_CATEGORIES, SAMPLE_FLYERS } from "@/lib/types"
 import Link from "next/link"
 import FilterBar from "@/components/categories/FilterBar"
 import FlyersSection from "@/components/home/FlyersSection"

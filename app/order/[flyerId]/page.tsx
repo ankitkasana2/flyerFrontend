@@ -1,23 +1,37 @@
 "use client"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { OrderForm } from "@/components/order/order-form"
-import { useAuth } from "@/lib/auth"
-import { SAMPLE_FLYERS } from "@/lib/types"
+import { observer } from "mobx-react-lite"
+import { useStore } from "@/stores/StoreProvider"
 import { useToast } from "@/hooks/use-toast"
 
-export default function OrderPage() {
+const OrderPage = () => {
   const params = useParams()
   const router = useRouter()
-  const { user } = useAuth()
+  const { authStore, flyerFormStore } = useStore()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-
   const flyerId = params.flyerId as string
-  const selectedFlyer = SAMPLE_FLYERS.find((flyer) => flyer.id === flyerId)
+  const user = authStore.user
+
+  useEffect(() => {
+    if (flyerId) {
+      flyerFormStore.fetchFlyer(flyerId)
+    }
+  }, [flyerId, flyerFormStore])
+
+  const selectedFlyer = flyerFormStore.flyer
+
+  if (flyerFormStore.loading) {
+     return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+     )
+  }
 
   if (!selectedFlyer) {
     return (
@@ -83,10 +97,15 @@ export default function OrderPage() {
           <p className="text-muted-foreground">Fill out the details for your custom flyer</p>
         </div>
 
-        <OrderForm selectedFlyer={selectedFlyer} onSubmit={handleOrderSubmit} onCancel={handleCancel} />
+        <OrderForm 
+           selectedFlyer={selectedFlyer as any} 
+           onCancel={handleCancel} 
+        />
       </main>
 
       <Footer />
     </div>
   )
 }
+
+export default observer(OrderPage)

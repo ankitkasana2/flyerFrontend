@@ -1,10 +1,11 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import { getApiUrl } from "@/config/api";
+import { Flyer } from "@/lib/types";
 
 export class FlyersStore {
-  flyers = [];
+  flyers: Flyer[] = [];
   loading = false;
-  error = null;
+  error: string | null = null;
 
   constructor() {
     makeAutoObservable(this);

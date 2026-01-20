@@ -2,7 +2,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { SAMPLE_FLYERS, getCategoriesWithFlyers, getCategoryCounts } from "@/lib/types"
 import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
 
@@ -24,7 +23,7 @@ const FilterBar = () => {
     const applyAllFilters = (categories: string[], prices: string[], types: string[]) => {
 
 
-        const allFlyers = flyersStore.flyers.length ? flyersStore.flyers : SAMPLE_FLYERS
+        const allFlyers = flyersStore.flyers
         let filtered = allFlyers
 
         // Step 1: Filter by categories (if any selected)
@@ -131,7 +130,6 @@ const FilterBar = () => {
         }
     }, [flyersStore])
 
-    const flyerSource = flyersStore.flyers.length ? flyersStore.flyers : SAMPLE_FLYERS
     const availableCategories = useMemo(() => {
         if (categoryStore.categories.length > 0) {
             return categoryStore.categories.map((c: any) => ({
@@ -141,13 +139,9 @@ const FilterBar = () => {
                 homePage: true
             }));
         }
-        return getCategoriesWithFlyers(flyerSource)
-    }, [categoryStore.categories, flyerSource])
+        return []
+    }, [categoryStore.categories])
 
-    const categoryCounts = useMemo(
-        () => getCategoryCounts(flyerSource),
-        [flyerSource]
-    )
 
 
     return (

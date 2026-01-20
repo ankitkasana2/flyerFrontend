@@ -9,11 +9,7 @@ export async function POST(request: Request) {
   try {
     const { amount, orderData } = await request.json()
 
-      userId: orderData.userId,
-      email: orderData.userEmail,
-      presenting: orderData.formData?.presenting,
-      total_price: orderData.formData?.total_price
-    })
+    console.log('✅ Creating checkout session for:', orderData.userEmail)
 
     // Encode order data as base64 to store in Stripe metadata
     const orderDataString = JSON.stringify(orderData)

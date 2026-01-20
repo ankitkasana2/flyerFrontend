@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { FLYER_CATEGORIES, SAMPLE_FLYERS } from "@/lib/types"
 import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
 import { toJS, reaction } from 'mobx'
