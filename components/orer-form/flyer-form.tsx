@@ -268,19 +268,8 @@ const EventBookingForm = () => {
   const flyerName = flyer?.name || name || "";
   const basePrice = flyerFormStore.basePrice ?? flyer?.price ?? priceFromQuery;
 
-  // Calculate total for multiple flyers
-  const additionalFlyersPrice = selectedFlyerIds
-    .filter(id => id !== flyer?.id) // Exclude current active flyer (already in basePrice)
-    .reduce((sum, id) => {
-      // Find flyer in similarFlyers to get its price
-      const found = flyerFormStore.similarFlyers.find(f => String(f.id) === String(id)) as any;
-      const priceStr = found ? found.price : 0;
-      const price = typeof priceStr === 'number' ? priceStr : Number(String(priceStr || 0).replace('$', ''));
-      return sum + price;
-    }, 0);
-
   const computedSubtotal = flyerFormStore.subtotal;
-  const totalDisplay = (computedSubtotal > 0 ? computedSubtotal : basePrice) + additionalFlyersPrice;
+  const totalDisplay = computedSubtotal > 0 ? computedSubtotal : basePrice;
 
 
 
@@ -313,7 +302,8 @@ const EventBookingForm = () => {
       { id: 2, name: "" },
     ]);
     setNote("");
-  }, [routeFlyerId]);
+    setSelectedFlyerIds([]); // Clear selections when switching flyers
+  }, [flyer?.id]);
 
   // Fetch cart data when user is logged in
   useEffect(() => {
@@ -1263,22 +1253,6 @@ const EventBookingForm = () => {
                 flyers={flyerFormStore.similarFlyers}
                 selectedIds={selectedFlyerIds}
                 onSelect={(selectedFlyer) => {
-                  const idStr = String(selectedFlyer.id);
-
-                  // 1. Toggle Selection State
-                  setSelectedFlyerIds(prev => {
-                    const isSelected = prev.includes(idStr);
-                    if (isSelected) {
-                      // Don't allow deselecting the active one (optional UX choice, but safest)
-                      // if (idStr === String(flyer?.id)) return prev; 
-                      return prev.filter(id => id !== idStr);
-                    } else {
-                      return [...prev, idStr];
-                    }
-                  });
-
-                  // 2. Set as Active Preview (Always switch preview to what was clicked)
-                  // Use 'false' to prevent refreshing list
                   flyerFormStore.setFlyerId(selectedFlyer.id);
                   flyerFormStore.fetchFlyer(selectedFlyer.id, false);
                 }}

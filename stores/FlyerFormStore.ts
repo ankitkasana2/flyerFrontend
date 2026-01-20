@@ -106,9 +106,42 @@ export class FlyerFormStore {
   }
 
   
+  resetForm() {
+    this.flyerFormDetail = {
+      flyerId: "",
+      categoryId: "",
+      userId: "",
+      eventDetails: {
+        presenting: "",
+        mainTitle: "",
+        date: null,
+        flyerInfo: "",
+        addressAndPhone: "",
+        venueLogo: null,
+        venueText: '',
+      },
+      djsOrArtists: [
+        { name: "", image: null },
+        { name: "", image: null },
+      ],
+      host: [{ name: "", image: null }],
+      sponsors: { sponsor1: null, sponsor2: null, sponsor3: null },
+      extras: {
+        storySizeVersion: false,
+        customFlyer: false,
+        animatedFlyer: false,
+        instagramPostSize: true,
+      },
+      deliveryTime: "",
+      customNote: "",
+      subtotal: 0,
+    }
+  }
+
   async fetchFlyer(id: string, refreshSimilar = true) {
     runInAction(() => {
       this.loading = true
+      this.resetForm() // Reset form when fetching a new flyer
     })
     try {
       const res = await fetch(getApiUrl(`/api/flyers/${id}`), {
