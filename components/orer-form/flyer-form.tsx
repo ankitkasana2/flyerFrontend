@@ -1179,18 +1179,17 @@ const EventBookingForm = () => {
 
 
             <div className="relative p-3 md:p-6 space-y-4">
-              <div className="space-y-2 float-effect flex justify-between items-center">
+              <div className="float-effect flex justify-between items-center gap-2">
                 <h1
-                  className="text-xl md:text-2xl font-bold text-white "
-
+                  className="text-sm md:text-2xl font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis"
                 >
                   {flyerName}
                 </h1>
 
                 {/* Price Section */}
-                <div className="flex">
+                <div className="flex shrink-0">
 
-                  <span className="text-sm font-semibold text-white border border-primary px-4 py-1 rounded-md shadow-md">
+                  <span className="text-xs md:text-sm font-bold text-white border border-primary px-2 py-1 rounded-md shadow-md bg-black/50 backdrop-blur-sm">
                     {formatCurrency(basePrice)}
                   </span>
 
