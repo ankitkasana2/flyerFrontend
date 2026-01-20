@@ -1,5 +1,5 @@
-import { makeAutoObservable } from "mobx"
-import { SAMPLE_FLYERS, FLYER_CATEGORIES } from "@/lib/types"
+import { makeAutoObservable, runInAction } from "mobx"
+import { getApiUrl } from "@/config/api"
 
 export type Flyer = {
     id: string
@@ -24,21 +24,30 @@ export class CategoryStore {
 
     constructor() {
         makeAutoObservable(this)
+        this.fetchCategories()
     }
 
     async fetchCategories() {
-        this.isLoading = true;
+        runInAction(() => {
+            this.isLoading = true;
+        });
+        
         try {
-            const res = await fetch('http://193.203.161.174:3007/api/categories');
+            const res = await fetch(getApiUrl('/api/categories'));
             const data = await res.json();
             if (data.success && Array.isArray(data.categories)) {
+                console.log("📊 API Categories Fetched:", data.categories);
                 // Sort by rank ascending (1, 2, 3...)
-                this.categories = data.categories.sort((a: any, b: any) => a.rank - b.rank);
+                runInAction(() => {
+                    this.categories = data.categories.sort((a: any, b: any) => a.rank - b.rank);
+                });
             }
         } catch (error) {
             console.error("Failed to fetch categories:", error);
         } finally {
-            this.isLoading = false;
+            runInAction(() => {
+                this.isLoading = false;
+            });
         }
     }
 
@@ -47,11 +56,11 @@ export class CategoryStore {
         this.flyersStore = store
     }
 
-    // Get all flyers from flyersStore or fallback to SAMPLE_FLYERS
+    // Get all flyers from flyersStore or fallback to empty array
     get allFlyers() {
         return this.flyersStore?.flyers?.length > 0
             ? this.flyersStore.flyers
-            : SAMPLE_FLYERS
+            : []
     }
 
     // Helper to shuffle an array (Fisher-Yates)
@@ -70,14 +79,8 @@ export class CategoryStore {
 
         if (cat == 'Recently Added' || cat == 'recently-added') {
             // Recently Added: KEEP ORDER (Newest to Oldest)
-            // Assuming the source 'allFlyers' or 'recentlyAdded' filter returns them 
-            // in some reasonable order, or we sort by ID/date here.
-            // For now, we trust the filter/source order for "Recently Added".
             this.flyers = allFlyers.filter((fly: any) => fly.isRecentlyAdded || fly.recently_added || fly.recentlyAdded)
 
-            // Explicitly sort by ID descending (proxy for date) if needed, 
-            // but usually recently added specific list is already sorted.
-            // If we have created_at, we could sort by that.
             this.flyers.sort((a: any, b: any) => {
                 const idA = parseInt(a.id) || 0
                 const idB = parseInt(b.id) || 0
@@ -85,25 +88,8 @@ export class CategoryStore {
             })
 
             this.category = 'Recently Added'
-        } else if (cat == 'premium-flyers' || cat == 'Premium Flyers') {
-            this.category = 'Premium Flyers'
-            let filtered = allFlyers.filter((fly: any) => {
-                const price = typeof fly.price === 'string' ? parseFloat(fly.price.replace('$', '')) : fly.price
-                return price === 40
-            })
-            // RANDOMIZE
-            this.flyers = this.shuffleArray(filtered)
-        } else if (cat == 'basic-flyers' || cat == 'Basic Flyers') {
-            this.category = 'Basic Flyers'
-            let filtered = allFlyers.filter((fly: any) => {
-                const price = typeof fly.price === 'string' ? parseFloat(fly.price.replace('$', '')) : fly.price
-                return price === 10
-            })
-            // RANDOMIZE
-            this.flyers = this.shuffleArray(filtered)
         } else {
-            // For other categories, check if flyer has this category in its categories array
-            // First try to find in API-fetched categories, then fall back to static list
+            // Dynmaic Category Logic
             let categoryName = cat;
 
             // Try to find in API categories first
@@ -115,10 +101,11 @@ export class CategoryStore {
             if (apiCategory) {
                 categoryName = apiCategory.name;
             } else {
-                // Fall back to static FLYER_CATEGORIES
-                const staticCategory = FLYER_CATEGORIES.find(categ => categ.slug === cat);
-                if (staticCategory) {
-                    categoryName = staticCategory.name;
+                // Formatting fallback
+                if (cat.includes('-')) {
+                    categoryName = cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                } else {
+                    categoryName = cat;
                 }
             }
 
@@ -186,18 +173,6 @@ export class CategoryStore {
         if (cat === 'Recently Added' || cat === 'recently-added') {
             result = allFlyers.filter((fly: any) => fly.isRecentlyAdded || fly.recently_added || fly.recentlyAdded);
             resolvedCategoryName = 'Recently Added';
-        } else if (cat === 'premium-flyers' || cat === 'Premium Flyers') {
-            result = allFlyers.filter((fly: any) => {
-                const price = typeof fly.price === 'string' ? parseFloat(fly.price.replace('$', '')) : fly.price
-                return price === 40
-            });
-            resolvedCategoryName = 'Premium Flyers';
-        } else if (cat === 'basic-flyers' || cat === 'Basic Flyers') {
-            result = allFlyers.filter((fly: any) => {
-                const price = typeof fly.price === 'string' ? parseFloat(fly.price.replace('$', '')) : fly.price
-                return price === 10
-            });
-            resolvedCategoryName = 'Basic Flyers';
         } else {
             // Try to find in API categories first, then fall back to static list
             let catName = cat;
@@ -210,9 +185,10 @@ export class CategoryStore {
             if (apiCategory) {
                 catName = apiCategory.name;
             } else {
-                const staticCategory = FLYER_CATEGORIES.find(c => c.slug === cat);
-                if (staticCategory) {
-                    catName = staticCategory.name;
+                if (cat.includes('-')) {
+                    catName = cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                } else {
+                    catName = cat;
                 }
             }
             resolvedCategoryName = catName;

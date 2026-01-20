@@ -1,5 +1,4 @@
 import { makeAutoObservable, toJS, runInAction } from "mobx"
-import { SAMPLE_FLYERS } from "@/lib/types"
 import { getApiUrl } from "@/config/api"
 
 type Flyer = {
@@ -144,7 +143,7 @@ export class FlyerFormStore {
   async fetchFlyer(id: string, refreshSimilar = true) {
     console.log('🚀 fetchFlyer called with ID:', id);
     try {
-      const res = await fetch(`http://193.203.161.174:3007/api/flyers/${id}`, {
+      const res = await fetch(getApiUrl(`/api/flyers/${id}`), {
         cache: "no-store",
       });
 
@@ -214,7 +213,7 @@ export class FlyerFormStore {
         : [flyer.category];
 
       // Fetch all flyers from API
-      const response = await fetch('http://193.203.161.174:3007/api/flyers');
+      const response = await fetch(getApiUrl('/api/flyers'));
       const allFlyers = await response.json();
 
       // Filter flyers that share at least one category with the current flyer
@@ -242,22 +241,8 @@ export class FlyerFormStore {
       console.log("Similar flyers found:", this.similarFlyers.length);
     } catch (error) {
       console.error("Error fetching similar flyers:", error);
-      // Fallback to SAMPLE_FLYERS if API fails
-      const flyerCategories = Array.isArray((flyer as any).categories)
-        ? (flyer as any).categories
-        : [flyer.category];
-
-      this.similarFlyers = SAMPLE_FLYERS.filter((f) => {
-        const fCategories = Array.isArray((f as any).categories)
-          ? (f as any).categories
-          : [f.category];
-
-        const hasCommonCategory = flyerCategories.some((cat: string) =>
-          fCategories.includes(cat)
-        );
-
-        return hasCommonCategory && f.id !== flyer.id;
-      });
+      // If API fails, return empty list
+      this.similarFlyers = [];
     }
   }
 
