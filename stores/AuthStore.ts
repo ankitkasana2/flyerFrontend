@@ -65,6 +65,7 @@ export interface AuthUser {
   favorites?: string[]
   orders?: string[]
   createdAt?: string
+  avatar?: string
 }
 
 type LoginPayload = {
@@ -324,7 +325,7 @@ export class AuthStore {
     return await this.updateUserFromAmplify()
   }
 
-  private updateUserFromAmplify = async () => {
+  updateUserFromAmplify = async () => {
     try {
       const user = await getCurrentUser()
       const session = await fetchAuthSession()

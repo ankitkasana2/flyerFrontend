@@ -72,11 +72,9 @@ const UserMenu = () => {
 
   const getInitials = (name?: string) => {
     if (!name) return "U"
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
+    const parts = name.trim().split(/\s+/)
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
 
   return (
@@ -88,11 +86,13 @@ const UserMenu = () => {
           aria-label="User menu"
         >
           <Avatar className="h-9 w-9 ring-2 ring-white/10 shadow-lg">
-            <AvatarImage 
-              src={authStore.user.avatar || "/placeholder.svg"} 
-              alt={authStore.user.name || 'User'} 
-            />
-            <AvatarFallback className="bg-gradient-to-br from-primary to-red-800 text-white font-extrabold text-sm tracking-wide">
+            {authStore.user.avatar && (
+              <AvatarImage 
+                src={authStore.user.avatar} 
+                alt={authStore.user.name || 'User'} 
+              />
+            )}
+            <AvatarFallback className="bg-gradient-to-br from-primary to-orange-600 text-white font-extrabold text-lg tracking-tighter">
               {getInitials(authStore.user.name)}
             </AvatarFallback>
           </Avatar>

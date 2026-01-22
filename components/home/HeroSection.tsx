@@ -137,7 +137,7 @@ const HeroSection = observer(() => {
                 <Button
                   size="sm"
                   onClick={handleButtonClick}
-                  className="hover:cursor-pointer hover:scale-105 duration-300 min-w-[60px] sm:min-w-[120px] px-2 sm:px-6 py-1 sm:py-3 text-[8px] sm:text-base tracking-wider sm:tracking-[.1000rem] bg-primary shadow-lg shadow-black/50 z-10 font-semibold"
+                  className="hover:cursor-pointer hover:scale-105 duration-300 min-w-[90px] sm:min-w-[120px] px-4 sm:px-6 py-2.5 sm:py-3 text-[13px] sm:text-lg tracking-wider sm:tracking-[.1000rem] bg-primary shadow-lg shadow-black/50 z-10 font-bold"
                 >
                   {currentBanner.button_text || 'GET IT'}
                 </Button>
