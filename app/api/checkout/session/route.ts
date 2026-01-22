@@ -15,17 +15,17 @@ export async function POST(req: NextRequest) {
 
     const itemsArray = Array.isArray(item) ? item : [item];
     
-    // Build metadata for the success handler (app/api/checkout/success/route.ts)
+    // Build metadata for the success handler - INCLUDE ALL ITEMS for multi-order creation
     const firstItem = itemsArray[0];
     const orderData = {
       userId: firstItem.user_id || firstItem.userId,
       userEmail: firstItem.email || firstItem.userEmail || firstItem.user_email,
-      formData: {
-        ...firstItem,
-        flyer_id: firstItem.flyer_id || firstItem.flyer_is,
-        total_price: firstItem.total_price || firstItem.subtotal || 0,
-        address_phone: firstItem.address_phone || firstItem.address_and_phone || '',
-      }
+      items: itemsArray.map((i: any) => ({
+        ...i,
+        flyer_id: i.flyer_id || i.flyer_is,
+        total_price: i.total_price || i.subtotal || 0,
+        address_phone: i.address_phone || i.address_and_phone || '',
+      }))
     };
 
     const orderDataString = JSON.stringify(orderData);
