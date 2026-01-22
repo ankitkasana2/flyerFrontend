@@ -926,7 +926,7 @@ const EventBookingForm = () => {
         flyerFormStore.flyerFormDetail.categoryId,
       totalPrice: String(totalDisplay),
       subtotal: String(totalDisplay),
-      deliveryTime: "1 Hour",
+      deliveryTime: flyerFormStore.flyerFormDetail.deliveryTime || "24 hours",
       imageUrl: image || ""
     });
 

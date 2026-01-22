@@ -64,7 +64,7 @@ export const createCartFormData = (
     ? new Date(data.eventDetails.date).toISOString().split('T')[0]
     : new Date().toISOString().split('T')[0]);
   formData.append('flyer_info', data?.eventDetails?.flyerInfo || 'Event Information');
-  formData.append('address_phone', data?.eventDetails?.addressAndPhone || 'Address and Phone');
+  formData.append('address_phone', data?.eventDetails?.addressAndPhone || '');
 
   // Options/Extras
   formData.append('story_size_version', String(extras.storySizeVersion));
@@ -84,7 +84,7 @@ export const createCartFormData = (
   formData.append('web_user_id', options.webUserId || '');
 
   // Pricing
-  formData.append('delivery_time', options.deliveryTime || '1 Hour');
+  formData.append('delivery_time', options.deliveryTime || '24 hours');
   formData.append('total_price', options.totalPrice || '10');
   formData.append('subtotal', options.subtotal || '10');
 
