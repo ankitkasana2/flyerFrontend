@@ -394,13 +394,13 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
         <div className="min-h-screen bg-black text-white overflow-x-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-3 md:p-5 max-w-[1600px] mx-auto w-full">
                 {/* Left: Flyer Preview */}
-                <div className="space-y-4 w-full max-w-[280px] mx-auto lg:max-w-full">
+                <div className="space-y-4 w-full max-w-[400px] mx-auto lg:max-w-full text-nowrap">
                     {/* Header: Title & Price - Restored to match screenshot */}
-                    <div className="flex justify-between items-start gap-4">
-                        <h1 className="text-2xl font-bold text-white leading-tight max-w-[70%]">{flyerName}</h1>
+                    <div className="flex justify-between items-center gap-4 flex-nowrap">
+                        <h1 className="text-base md:text-2xl font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis flex-1">{flyerName}</h1>
 
-                        <div className="flex flex-col items-end shrink-0 bg-black px-3 py-1.5 rounded-lg border border-red-600">
-                            <span className="text-white font-bold text-lg leading-none">
+                        <div className="flex shrink-0 bg-black px-3 py-1.5 rounded-lg border border-red-600">
+                            <span className="text-white font-bold text-sm md:text-lg leading-none">
                                 {formatCurrency(FIXED_PRICE)}
                             </span>
                         </div>

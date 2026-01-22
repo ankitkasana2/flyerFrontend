@@ -246,21 +246,24 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
     return (
         <div className="min-h-screen bg-black text-white overflow-x-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-3 md:p-5 max-w-[1600px] mx-auto w-full">
-                {/* Left: Flyer Preview */}
-                <div className="relative aspect-[4/5] w-full max-w-[280px] mx-auto lg:max-w-full rounded-2xl overflow-hidden border border-gray-800 shadow-2xl">
-                    <img
-                        src={flyerImage}
-                        alt={flyerName}
-                        className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6">
-                        <h1 className="text-2xl font-bold text-white mb-2">{flyerName}</h1>
-                        <div className="flex items-center gap-2">
-                            <span className="text-primary font-bold text-xl">
+                <div className="space-y-4 w-full max-w-[400px] mx-auto lg:max-w-full">
+                    {/* Header: Title & Price */}
+                    <div className="flex justify-between items-center gap-4 flex-nowrap">
+                        <h1 className="text-base md:text-2xl font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis flex-1">{flyerName}</h1>
+
+                        <div className="flex shrink-0 bg-black px-3 py-1.5 rounded-lg border border-red-600">
+                            <span className="text-white font-bold text-sm md:text-lg leading-none">
                                 {formatCurrency(fixedPrice)}
                             </span>
-                            <span className="text-sm text-gray-400">({priceLabel})</span>
                         </div>
+                    </div>
+
+                    <div className="aspect-[4/5] relative rounded-xl flex items-center justify-center overflow-hidden transition-all duration-300 hover:border-primary hover:scale-[1.02] border border-gray-800 shadow-2xl">
+                        <img
+                            src={flyerImage}
+                            alt={flyerName}
+                            className="w-full h-full object-cover"
+                        />
                     </div>
                 </div>
 

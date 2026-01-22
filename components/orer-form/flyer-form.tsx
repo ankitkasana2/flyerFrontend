@@ -946,14 +946,14 @@ const EventBookingForm = () => {
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-3 md:p-5 max-w-[1600px] mx-auto w-full">
         {/* Left Side - Event Flyer */}
-        <div className="space-y-6 w-full max-w-[280px] mx-auto lg:max-w-full">
+        <div className="space-y-6 w-full max-w-[400px] mx-auto lg:max-w-full">
                    <div className="relative bg-gradient-to-br from-orange-900/20 via-black to-purple-900/20 rounded-2xl overflow-hidden  glow-effect transition-all duration-300 ">
 
 
             <div className="relative p-3 md:p-6 space-y-4">
-              <div className="float-effect flex justify-between items-center gap-2">
+              <div className="float-effect flex justify-between items-center gap-2 flex-nowrap">
                 <h1
-                  className="text-sm md:text-2xl font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis"
+                  className="text-base md:text-2xl font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis flex-1"
                 >
                   {flyerName}
                 </h1>
@@ -961,7 +961,7 @@ const EventBookingForm = () => {
                 {/* Price Section */}
                 <div className="flex shrink-0">
 
-                  <span className="text-xs md:text-sm font-bold text-white border border-primary px-2 py-1 rounded-md shadow-md bg-black/50 backdrop-blur-sm">
+                  <span className="text-sm md:text-sm font-bold text-white border border-primary px-2 py-1 rounded-md shadow-md bg-black/50 backdrop-blur-sm">
                     {formatCurrency(basePrice)}
                   </span>
 
