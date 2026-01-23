@@ -9,6 +9,20 @@ export async function POST(request: Request) {
   try {
     const { amount, orderData } = await request.json()
 
+    // Determine the base URL dynamically to avoid 0.0.0.0 issues
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+    if (!baseUrl || baseUrl.includes('0.0.0.0')) {
+      const host = request.headers.get('host')
+      const protocol = request.headers.get('x-forwarded-proto') || 'http' 
+      if (host && !host.includes('0.0.0.0')) {
+        baseUrl = `${protocol}://${host}`
+      } else {
+        // Fallback to localhost if host is also invalid/missing (unlikely in real request)
+        baseUrl = 'http://localhost:3000'
+      }
+      console.log('⚠️ Adapted Base URL for Stripe:', baseUrl)
+    }
+
     console.log('✅ Creating checkout session for:', orderData.userEmail)
 
     // Encode order data as base64 to store in Stripe metadata
@@ -58,8 +72,8 @@ export async function POST(request: Request) {
           },
         ],
         mode: 'payment',
-        success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/order/${orderData.formData.flyer_is}`,
+        success_url: `${baseUrl}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/order/${orderData.formData.flyer_is}`,
         metadata: metadata,
       })
 
@@ -83,8 +97,8 @@ export async function POST(request: Request) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/order/${orderData.formData.flyer_is}`,
+      success_url: `${baseUrl}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/order/${orderData.formData.flyer_is}`,
       metadata: {
         orderData: orderDataBase64,
         userId: orderData.userId || '',
