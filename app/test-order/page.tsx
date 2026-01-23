@@ -52,15 +52,6 @@ export default function TestOrderPage() {
       // Mark as test order
       formData.append('isTest', 'true')
 
-        presenting: formData.get('presenting'),
-        event_title: formData.get('event_title'),
-        event_date: formData.get('event_date'),
-        djs: formData.get('djs'),
-        host: formData.get('host'),
-        web_user_id: formData.get('web_user_id'),
-        email: formData.get('email')
-      })
-
       // Send test order
       const response = await fetch('/api/test-order', {
         method: 'POST',
@@ -139,14 +130,6 @@ export default function TestOrderPage() {
       const mockLogo = new Blob(['test logo content'], { type: 'image/png' })
       const logoFile = new File([mockLogo], 'test-logo.png', { type: 'image/png' })
       formData.append('venue_logo', logoFile)
-
-        hasImage: formData.has('image'),
-        hasVenueLogo: formData.has('venue_logo'),
-        imageName: formData.get('image') instanceof File ? 'test-image.jpg' : 'Not a file',
-        logoName: formData.get('venue_logo') instanceof File ? 'test-logo.png' : 'Not a file',
-        web_user_id: formData.get('web_user_id'),
-        email: formData.get('email')
-      })
 
       // Send test order
       const response = await fetch('/api/test-order', {

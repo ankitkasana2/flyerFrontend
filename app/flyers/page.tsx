@@ -11,6 +11,9 @@ import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
 import { Grid, List } from "lucide-react"
 
+// Force dynamic rendering to avoid pre-rendering errors
+export const dynamic = 'force-dynamic'
+
 interface FilterState {
   search: string
   categories: string[]
@@ -37,6 +40,10 @@ const FlyersPage = () => {
   })
 
   const filteredFlyers = useMemo(() => {
+    if (!flyersStore.flyers || flyersStore.flyers.length === 0) {
+      return []
+    }
+    
     let result = [...flyersStore.flyers]
 
     // Search filter
@@ -110,7 +117,7 @@ const FlyersPage = () => {
     }
 
     return result
-  }, [filters])
+  }, [filters, flyersStore.flyers])
 
   const clearFilters = () => {
     setFilters({
@@ -148,7 +155,7 @@ const FlyersPage = () => {
 
           {/* Category Pills */}
           <div className="flex flex-wrap gap-2 mb-6">
-            {categoryStore.categories.slice(0, 8).map((category) => {
+            {categoryStore.categories && categoryStore.categories.slice(0, 8).map((category) => {
               const slug = category.name.toLowerCase().replace(/\s+/g, '-')
               return (
                 <Badge

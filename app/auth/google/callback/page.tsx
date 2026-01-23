@@ -53,12 +53,6 @@ export default function GoogleCallbackPage() {
                     return;
                 }
 
-                    id: result.user.id,
-                    email: result.user.email,
-                    name: result.user.name,
-                    provider: result.user.provider
-                });
-
                 setDebugInfo("Setting user session...");
 
                 // Update auth store with user info
