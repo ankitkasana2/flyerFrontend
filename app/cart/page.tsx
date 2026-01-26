@@ -41,6 +41,7 @@ const CartPage = observer(() => {
             // Map cart items to the format expected by the checkout session API
             const items = cartStore.cartItems.map(item => ({
                 ...item,
+                image_url: getImageUrl(item.image_url || item.flyer?.image || item.venue_logo),
                 user_id: authStore.user?.id,
                 email: item.email || authStore.user?.email,
                 flyer_id: item.flyer_is,

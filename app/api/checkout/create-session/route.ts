@@ -55,6 +55,13 @@ export async function POST(request: Request) {
         metadata[`orderData_${index}`] = chunk
       })
 
+      // Ensure image URL is valid for Stripe (must be absolute)
+      let imageUrl = orderData.formData?.image_url;
+      if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://193.203.161.174:3007";
+        imageUrl = `${apiBaseUrl.replace(/\/$/, '')}/${imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl}`;
+      }
+
       // Create Stripe session with chunked metadata
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -65,7 +72,7 @@ export async function POST(request: Request) {
               product_data: {
                 name: 'Flyer Design Order',
                 description: `Custom flyer for ${orderData.formData?.presenting || 'Event'}`,
-                images: orderData.formData?.image_url ? [orderData.formData.image_url] : [],
+                images: imageUrl ? [imageUrl] : [],
               },
               unit_amount: Math.round(amount * 100),
             },
@@ -81,6 +88,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ sessionId: session.id })
     }
 
+    // Ensure image URL is valid for Stripe (must be absolute)
+    let imageUrl = orderData.formData?.image_url;
+    if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://193.203.161.174:3007";
+      imageUrl = `${apiBaseUrl.replace(/\/$/, '')}/${imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl}`;
+    }
+
     // If data fits in one field, use simple approach
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -91,7 +105,7 @@ export async function POST(request: Request) {
             product_data: {
               name: 'Flyer Design Order',
               description: `Custom flyer for ${orderData.formData?.presenting || 'Event'}`,
-              images: orderData.formData?.image_url ? [orderData.formData.image_url] : [],
+              images: imageUrl ? [imageUrl] : [],
             },
             unit_amount: Math.round(amount * 100),
           },

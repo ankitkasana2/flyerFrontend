@@ -59,11 +59,24 @@ export async function POST(req: NextRequest) {
       line_items: itemsArray.map((i: any) => {
         const priceStr = String(i.subtotal || i.total_price || 0);
         const amount = parseFloat(priceStr.replace(/[^0-9.]/g, '')) || 0;
+        
+        // Ensure image URL is valid for Stripe (must be absolute)
+        let imageUrl = i.image_url || i.flyer?.image || i.venue_logo;
+        
+        if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://193.203.161.174:3007";
+            imageUrl = `${apiBaseUrl.replace(/\/$/, '')}/${imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl}`;
+        }
+        
+        const images = imageUrl ? [imageUrl] : [];
+
         return {
           price_data: {
             currency: "usd",
             product_data: {
               name: i?.eventDetails?.mainTitle || i?.event_title || "Flyer Order",
+              description: i?.presenting ? `Custom flyer for ${i.presenting}` : undefined,
+              images: images,
             },
             unit_amount: Math.round(amount * 100),
           },
