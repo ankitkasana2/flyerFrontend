@@ -30,7 +30,7 @@ const PageTransitionLoader = observer(() => {
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
             <IOSLoader
-                size="lg"
+                size="md"
                 color="text-red-500"
                 // text={loadingStore.loadingText}
             />
