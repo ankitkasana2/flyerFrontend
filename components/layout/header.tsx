@@ -18,10 +18,14 @@ import { observer } from "mobx-react-lite";
 
 export const Header = observer(() => {
   const router = useRouter()
-  const { authStore, cartStore } = useStore()
+  const { authStore, cartStore, loadingStore } = useStore()
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   // const cart = CartStore((s) => s.cart);
+
+  const handleHomeClick = () => {
+    loadingStore.startLoading("Loading...")
+  }
 
   useEffect(() => {
     // Load cart for logged-in user only
@@ -47,6 +51,7 @@ export const Header = observer(() => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
+      loadingStore.startLoading("Searching...")
       // Navigate to categories page with search query
       router.push(`/categories?search=${encodeURIComponent(searchQuery.trim())}`)
       setIsSearchOpen(false) // Close mobile search
@@ -79,6 +84,7 @@ export const Header = observer(() => {
 
           <Link
             href="/"
+            onClick={handleHomeClick}
             className="inline-flex items-center justify-center cursor-pointer transition-transform duration-200 hover:scale-110"
           >
             <Image
