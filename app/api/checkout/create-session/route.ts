@@ -65,6 +65,7 @@ export async function POST(request: Request) {
               product_data: {
                 name: 'Flyer Design Order',
                 description: `Custom flyer for ${orderData.formData?.presenting || 'Event'}`,
+                images: orderData.formData?.image_url ? [orderData.formData.image_url] : [],
               },
               unit_amount: Math.round(amount * 100),
             },
@@ -90,6 +91,7 @@ export async function POST(request: Request) {
             product_data: {
               name: 'Flyer Design Order',
               description: `Custom flyer for ${orderData.formData?.presenting || 'Event'}`,
+              images: orderData.formData?.image_url ? [orderData.formData.image_url] : [],
             },
             unit_amount: Math.round(amount * 100),
           },
