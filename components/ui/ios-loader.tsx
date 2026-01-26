@@ -4,7 +4,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 interface IOSLoaderProps {
-    size?: "xs" | "sm" | "md" | "lg" | "xl";
+    size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
     className?: string;
     color?: string; // Tailwind text color class, e.g., "text-white", "text-gray-500"
     text?: string;
@@ -25,6 +25,8 @@ export const IOSLoader: React.FC<IOSLoaderProps> = ({
         md: "w-8 h-8",
         lg: "w-12 h-12",
         xl: "w-16 h-16",
+        "2xl": "w-24 h-24",
+        "3xl": "w-32 h-32",
     };
 
     // The iOS spinner consists of 12 lines (blades)
@@ -36,17 +38,17 @@ export const IOSLoader: React.FC<IOSLoaderProps> = ({
                 {blades.map((_, i) => (
                     <div
                         key={i}
-                        className="absolute left-1/2 top-0 w-[8%] h-[28%] -ml-[4%] rounded-full bg-current opacity-0 animate-spinner-leaf-fade"
+                        className="absolute left-[46.5%] top-0 w-[7%] h-[27%] rounded-full bg-current opacity-0 animate-spinner-leaf-fade"
                         style={{
-                            transform: `rotate(${i * 30}deg) translate(0, 140%)`, // Push blades out from center
-                            transformOrigin: "center 250%", // Adjust pivot point
+                            transform: `rotate(${i * 30}deg) translateY(-85%)`,
+                            transformOrigin: "center 110%",
                             animationDelay: `-${(11 - i) * 0.0833}s`,
                         }}
                     />
                 ))}
             </div>
             {text && (
-                <p className={cn("font-medium text-sm animate-pulse", color)}>{text}</p>
+                <p className={cn("font-semibold text-base tracking-wide opacity-90", color)}>{text}</p>
             )}
         </div>
     );

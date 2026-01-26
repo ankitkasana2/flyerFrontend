@@ -159,17 +159,11 @@
 
 /* iOS Spinner Animation */
 @keyframes spinner-leaf-fade {
-  0%, 100% {
-    opacity: 0;
-  }
-  25% {
-    opacity: 0.3;
-  }
-  50% {
+  0% {
     opacity: 1;
   }
-  75% {
-    opacity: 0.7;
+  100% {
+    opacity: 0.15;
   }
 }
 

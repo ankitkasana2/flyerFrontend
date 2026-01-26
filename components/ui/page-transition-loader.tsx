@@ -32,7 +32,7 @@ const PageTransitionLoader = observer(() => {
             <IOSLoader
                 size="lg"
                 color="text-red-500"
-                text={loadingStore.loadingText}
+                // text={loadingStore.loadingText}
             />
         </div>
     );

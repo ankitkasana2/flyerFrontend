@@ -6,6 +6,7 @@ export type Flyer = {
     priceType: "basic" | "regular" | "premium";
     hasPhotos: boolean;
     imageUrl: string;
+    image_url?: string;
     tags: string[];
     isRecentlyAdded?: boolean;
     isFeatured?: boolean;

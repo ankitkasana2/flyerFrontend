@@ -27,7 +27,7 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
 
   const [isLoading, setIsLoading] = useState(true)
   const [isHovered, setIsHovered] = useState(false)
-  const { authStore, favoritesStore } = useStore()
+  const { authStore, favoritesStore, loadingStore } = useStore()
 
   // Use authStore.user instead of useAuth() to work with AWS Cognito
   const user = authStore.user
@@ -105,13 +105,22 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
     setIsLoading(true)
   }, [flyer.image_url])
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (!onPreview) {
+      loadingStore.startLoading("Redirecting...");
+    }
+    if (onPreview) {
+      onPreview(flyer);
+    }
+  }
+
   const CardContent = (
     <div
       className={`group bg-card border rounded-xl overflow-hidden transition-all duration-300 
              hover:scale-105 hover:shadow-xl hover:shadow-primary/20 cursor-pointer 
              flex-[0_0_100%] sm:flex-[0_0_50%] md:flex-[0_0_33.33%] lg:flex-[0_0_25%] xl:flex-[0_0_20%]
              ${selected ? 'ring-2 ring-primary ring-offset-2 ring-offset-black' : ''}`}
-      onClick={onPreview ? () => onPreview(flyer) : undefined}
+      onClick={handleClick}
     >
       <div className="relative aspect-[3/4] overflow-hidden">
         {isLoading && (
