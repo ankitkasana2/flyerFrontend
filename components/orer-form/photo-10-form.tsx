@@ -346,10 +346,9 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
                 total_price: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_PRICE,
                 subtotal: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_PRICE,
                 image_url: flyer?.image_url || flyer?.imageUrl || "",
-
-                // IMPORTANT: Pass the temp file mapping so success handler can pick them up
-                temp_files: tempFiles
             };
+
+            console.log("DEBUG Photo10Form image_url:", apiBody.image_url);
 
             // Create Stripe Session
             const res = await fetch("/api/checkout/create-session", {

@@ -61,6 +61,8 @@ interface Order {
   animated_flyer?: boolean
   instagram_post_size?: boolean
   venue_text?: string
+  flyer_is?: number | string
+  flyer_id?: number | string
 }
 
 interface OrdersResponse {
@@ -78,6 +80,27 @@ const OrdersPage = observer(() => {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [flyerMap, setFlyerMap] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    fetchFlyers()
+  }, [])
+
+  const fetchFlyers = async () => {
+    try {
+      const response = await fetch('http://193.203.161.174:3007/api/flyers')
+      if (response.ok) {
+        const data = await response.json()
+        const map: Record<string, string> = {}
+        data.forEach((f: any) => {
+          map[String(f.id)] = f.image_url || f.imageUrl || f.image
+        })
+        setFlyerMap(map)
+      }
+    } catch (err) {
+      console.error('❌ Error fetching flyers for map:', err)
+    }
+  }
 
   useEffect(() => {
     if (authStore.user?.id) {
@@ -233,14 +256,24 @@ const OrdersPage = observer(() => {
                     {/* Flyer Image */}
                     <div className="flex-shrink-0">
                       <div className="w-24 h-32 rounded-lg overflow-hidden bg-gray-800 border border-gray-700">
-                        {getImageUrl(order.image_url || order.venue_logo) ? (
+                        {/* 
+                          UI Hierarchy for Images:
+                          1. Direct image_url if provided (for custom orders)
+                          2. Template image from our pre-fetched map using flyer_is
+                          3. Venue Logo as literal fallback
+                          4. Placeholder icon
+                        */}
+                        {getImageUrl(order.image_url || flyerMap[String(order.flyer_is || order.flyer_id)] || order.venue_logo) ? (
                           <img
-                            src={getImageUrl(order.image_url || order.venue_logo) || ''}
+                            src={getImageUrl(order.image_url || flyerMap[String(order.flyer_is || order.flyer_id)] || order.venue_logo) || ''}
                             alt={order.event_title}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              e.currentTarget.style.display = 'none'
-                              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div>'
+                              const target = e.currentTarget;
+                              target.style.display = 'none';
+                              if (target.parentElement) {
+                                target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div>';
+                              }
                             }}
                           />
                         ) : (
@@ -578,7 +611,7 @@ const OrdersPage = observer(() => {
                   </h4>
                   <div className="relative aspect-[3/4] w-full rounded-xl overflow-hidden border-2 border-primary/20 shadow-2xl shadow-black">
                     <img 
-                      src={getImageUrl(selectedOrder?.image_url || selectedOrder?.venue_logo)!} 
+                      src={getImageUrl(selectedOrder?.image_url || (selectedOrder?.flyer_is ? flyerMap[String(selectedOrder.flyer_is)] : null) || selectedOrder?.venue_logo)!} 
                       alt="Full Flyer Preview" 
                       className="w-full h-full object-cover"
                     />

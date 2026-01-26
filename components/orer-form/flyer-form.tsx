@@ -633,10 +633,12 @@ const EventBookingForm = () => {
         total_price: totalDisplay,
         subtotal: totalDisplay,
         image_url: flyerImage,
-
         // IMPORTANT: Pass the temp file mapping so success handler can pick them up
         temp_files: tempFiles
       };
+
+      console.log("DEBUG: flyerImage value in handleSubmit:", flyerImage);
+      console.log("DEBUG: apiBody.image_url:", apiBody.image_url);
 
 
 

@@ -10,12 +10,14 @@ import { Upload, Music, Check, X } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
 import { toast } from "sonner";
+import { saveToTemp } from "@/lib/uploads";
+import { createCartFormData, setUserIdInFormData } from "@/lib/cart";
 import SponsorsBlock from "./sponser";
 import ExtrasBlock from "./extra-block";
 import DeliveryTimeBlock from "./delivery-time-block";
 import { FlyersCarousel } from "../home/FlyersCarousel";
 import EventDetails from "./event-details";
-import { createCartFormData, setUserIdInFormData } from "@/lib/cart";
+
 
 type Flyer = {
     id: string;
@@ -229,12 +231,92 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
         setIsSubmitting(true);
 
         try {
-            toast.success("Proceeding to checkout...");
-            // Implement checkout logic here
+            toast.info("Preparing checkout...");
+
+            const tempFiles: Record<string, string> = {};
+
+            // 1. Upload Venue Logo if it's a File
+            let venueLogoUrl = "";
+            if (venueLogo instanceof File) {
+                const res = await saveToTemp(venueLogo, "venue_logo");
+                if (res) {
+                    tempFiles['venue_logo'] = res.filepath;
+                    venueLogoUrl = res.filepath;
+                }
+            } else if (typeof venueLogo === 'string') {
+                venueLogoUrl = venueLogo;
+            }
+
+            // 2. Resolve Flyer Image
+            const flyerImageUrl = flyer?.image_url || flyer?.imageUrl || "";
+            console.log("DEBUG NoPhotoForm image_url:", flyerImageUrl);
+
+            // Construct API Body
+            const apiBody = {
+                presenting: flyerFormStore.flyerFormDetail.eventDetails.presenting,
+                event_title: flyerFormStore.flyerFormDetail.eventDetails.mainTitle,
+                event_date: flyerFormStore.flyerFormDetail.eventDetails.date
+                    ? new Date(flyerFormStore.flyerFormDetail.eventDetails.date).toISOString().split("T")[0]
+                    : "",
+                flyer_info: flyerFormStore.flyerFormDetail.eventDetails.flyerInfo,
+                address_phone: flyerFormStore.flyerFormDetail.eventDetails.addressAndPhone,
+
+                // Standard fields for NoPhoto
+                djs: [],
+                host: { name: "", image: null },
+                sponsors: [],
+                venue_logo_url: venueLogoUrl,
+                venue_text: venueText || flyerFormStore.flyerFormDetail.eventDetails.venueText,
+
+                story_size_version: flyerFormStore.flyerFormDetail.extras.storySizeVersion,
+                custom_flyer: flyerFormStore.flyerFormDetail.extras.customFlyer,
+                animated_flyer: flyerFormStore.flyerFormDetail.extras.animatedFlyer,
+                instagram_post_size: flyerFormStore.flyerFormDetail.extras.instagramPostSize,
+
+                custom_notes: flyerFormStore.flyerFormDetail.customNote,
+                flyer_is: flyer?.id ?? flyerFormStore.flyerFormDetail.flyerId ?? "NoPhoto",
+                category_id: flyer?.category_id ?? flyerFormStore.flyerFormDetail.categoryId,
+                user_id: authStore.user.id,
+
+                delivery_time: flyerFormStore.flyerFormDetail.deliveryTime,
+                total_price: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : fixedPrice,
+                subtotal: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : fixedPrice,
+                image_url: flyerImageUrl,
+
+                temp_files: tempFiles
+            };
+
+            // Create Stripe Session
+            const res = await fetch("/api/checkout/create-session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    amount: apiBody.total_price,
+                    orderData: {
+                        userId: authStore.user.id,
+                        userEmail: authStore.user.email || authStore.user.name || 'unknown@example.com',
+                        formData: apiBody
+                    }
+                })
+            });
+
+            if (!res.ok) throw new Error("Failed to create checkout session");
+
+            const data = await res.json();
+            if (!data.sessionId) throw new Error("No session ID returned");
+
+            const stripeSession = await fetch(`/api/checkout/get-session-url?sessionId=${data.sessionId}`);
+            const { url } = await stripeSession.json();
+
+            if (url) {
+                window.location.href = url;
+            } else {
+                throw new Error("No checkout URL");
+            }
+
         } catch (error) {
             console.error("Checkout error:", error);
             toast.error("An error occurred during checkout. Please try again.");
-        } finally {
             setIsSubmitting(false);
         }
     };
