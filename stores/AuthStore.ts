@@ -648,6 +648,8 @@ export class AuthStore {
   }
 
   sendOTP = async (email: string) => {
+    this.loading = true
+    this.error = null
     try {
       // Basic validation
       if (!email) {
@@ -662,6 +664,10 @@ export class AuthStore {
 
       const resetPasswordInput: ResetPasswordInput = { username: email }
       const result = await awsResetPassword(resetPasswordInput)
+
+      runInAction(() => {
+        this.loading = false
+      })
 
       // In v6, resetPassword doesn't return a boolean, so we assume success if no error is thrown
       return {
@@ -712,10 +718,16 @@ export class AuthStore {
       }
 
       throw new Error(errorMessage)
+    } finally {
+      runInAction(() => {
+        this.loading = false
+      })
     }
   }
 
   verifyOTP = async (email: string, code: string, newPassword: string) => {
+    this.loading = true
+    this.error = null
     try {
       // Basic validation
       if (!email || !code || !newPassword) {
@@ -746,6 +758,10 @@ export class AuthStore {
 
       // In v6, confirmResetPassword doesn't return a boolean
       await awsConfirmResetPassword(confirmResetPasswordInput)
+
+      runInAction(() => {
+        this.loading = false
+      })
 
       return {
         success: true,
@@ -810,6 +826,10 @@ export class AuthStore {
       }
 
       throw new Error(errorMessage)
+    } finally {
+      runInAction(() => {
+        this.loading = false
+      })
     }
   }
 
