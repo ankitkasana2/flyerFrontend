@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { sendEmail } from "@/lib/email";
-import { orderConfirmationTemplate } from "@/lib/templates/orderConfirmation";
 
 export async function POST(req: Request) {
     try {
@@ -14,14 +12,12 @@ export async function POST(req: Request) {
         // Simulated order creation
         const orderId = `ORD-${Date.now()}`;
 
-        await sendEmail({
-            to: email,
-            subject: `Order Confirmation – ${orderId}`,
-            html: orderConfirmationTemplate({
-                name: name || "Customer",
-                orderId,
-                flyerType: flyerType || "Standard Flyer",
-            }),
+        const { sendOrderConfirmationEmail } = await import("@/lib/email");
+        await sendOrderConfirmationEmail({
+            customerEmail: email,
+            customerName: name || "Customer",
+            orderId,
+            flyerName: flyerType || "Standard Flyer",
         });
 
         return NextResponse.json({

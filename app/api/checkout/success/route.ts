@@ -230,20 +230,11 @@ export async function GET(request: NextRequest) {
           createdOrderIds.push(orderId.toString());
           allTempFilesToCleanup.push(...tempFilesToCleanup);
 
-          // Send confirmation email
-          console.log(`📧 ========== ATTEMPTING TO SEND CONFIRMATION EMAIL ==========`);
-          console.log(`📧 Order ID: ${orderId}`);
-          console.log(`📧 Customer Email: ${formDataObj.email || orderData.userEmail}`);
-
           try {
-            console.log(`📧 Importing email module...`);
             const { sendOrderConfirmationEmail } = await import('@/lib/email');
-            console.log(`📧 Email module imported successfully`);
-            console.log(`📧 sendOrderConfirmationEmail type:`, typeof sendOrderConfirmationEmail);
-
-            const emailParams = {
+            await sendOrderConfirmationEmail({
               orderId: orderId.toString(),
-              customerName: formDataObj.email ? formDataObj.email.split('@')[0] : "Valued Customer",
+              customerName: formDataObj.name || (formDataObj.email ? formDataObj.email.split('@')[0] : "Valued Customer"),
               customerEmail: formDataObj.email || orderData.userEmail,
               flyerName: formDataObj.event_title || `Flyer Order #${orderId}`,
               details: {
@@ -253,22 +244,11 @@ export async function GET(request: NextRequest) {
               },
               totalPrice: Number(formDataObj.total_price),
               imageUrl: formDataObj.image_url
-            };
-
-            console.log(`📧 Email params:`, JSON.stringify(emailParams, null, 2));
-            console.log(`📧 Calling sendOrderConfirmationEmail...`);
-
-            const emailResult = await sendOrderConfirmationEmail(emailParams);
-
-            console.log(`📧 ✅ Email sent successfully! MessageId:`, emailResult?.MessageId);
+            });
           } catch (emailError: any) {
             console.error('📧 ⚠️ Failed to send confirmation email:', emailError);
-            console.error('📧 Error details:', {
-              message: emailError.message,
-              code: emailError.code,
-              stack: emailError.stack
-            });
           }
+
         }
       } catch (fetchError) {
         console.error(`❌ Error submitting order ${index + 1}:`, fetchError);

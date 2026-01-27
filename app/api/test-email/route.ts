@@ -15,17 +15,17 @@ export async function GET(request: Request) {
     console.log('🧪 About to call sendOrderConfirmationEmail...');
 
     const result = await sendOrderConfirmationEmail({
-      orderId: 'TEST-123456',
-      customerName: 'Test User',
+      orderId: 'TEST-888999',
+      customerName: 'Ankit Kasana',
       customerEmail: toEmail,
-      flyerName: 'Test Flyer Design',
+      flyerName: 'Premium Club Night Flyer',
       details: {
-        price: 50.00,
-        extras: ['Test Extra 1', 'Test Extra 2'],
-        deliveryTime: '24 Hours'
+        price: 99.99,
+        extras: ['VIP Package', 'Social Media Kit'],
+        deliveryTime: 'Within 24 Hours'
       },
-      totalPrice: 50.00,
-      imageUrl: 'https://via.placeholder.com/300'
+      totalPrice: 99.99,
+      imageUrl: 'https://images.unsplash.com/photo-1514525253344-a8130819e017?w=1200&auto=format&fit=crop&q=80' // Using a placeholder premium flyer image
     });
 
     console.log('🧪 Result received:', result);
