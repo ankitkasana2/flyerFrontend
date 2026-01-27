@@ -38,6 +38,8 @@ const amplifyConfig = {
           scopes: awsConfig.oauth.scopes
         },
       },
+      // Explicitly set region to prevent extraction from UserPoolID if malformed
+      region: awsConfig.region,
     },
   },
 }

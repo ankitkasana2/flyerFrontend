@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
 import { sendOrderConfirmationEmail } from '@/lib/email';
 
+console.log('🧪 test-email route loaded');
+console.log('🧪 sendOrderConfirmationEmail type:', typeof sendOrderConfirmationEmail);
+
 export async function GET(request: Request) {
+  console.log('🧪 ========== TEST EMAIL ENDPOINT CALLED ==========');
+
   try {
     const { searchParams } = new URL(request.url);
     const toEmail = searchParams.get('to') || process.env.AWS_SES_FROM_EMAIL || 'ankitoffice121@gmail.com';
 
+    console.log('🧪 Target email:', toEmail);
+    console.log('🧪 About to call sendOrderConfirmationEmail...');
 
     const result = await sendOrderConfirmationEmail({
       orderId: 'TEST-123456',
@@ -21,24 +28,30 @@ export async function GET(request: Request) {
       imageUrl: 'https://via.placeholder.com/300'
     });
 
+    console.log('🧪 Result received:', result);
+
     if (result && result.MessageId) {
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         messageId: result.MessageId,
-        message: `Email sent successfully to ${toEmail}` 
+        message: `Email sent successfully to ${toEmail}`
       });
     } else {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Email function completed but didn't return a result. Check server logs." 
+      return NextResponse.json({
+        success: false,
+        error: "Email function completed but didn't return a result. Check server logs."
       }, { status: 500 });
     }
 
   } catch (error: any) {
-    return NextResponse.json({ 
-      success: false, 
+    console.error('🧪 ❌ Test email error:', error);
+    console.error('🧪 Error stack:', error.stack);
+
+    return NextResponse.json({
+      success: false,
       error: error.message,
       code: error.code,
+      stack: error.stack,
       details: error
     }, { status: 500 });
   }
