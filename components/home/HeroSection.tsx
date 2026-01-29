@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
 import { BannerSkeleton } from './BannerSkeleton';
+import { API_BASE_URL } from '@/config/api';
 
 const HeroSection = observer(() => {
   const router = useRouter();
@@ -91,7 +92,7 @@ const HeroSection = observer(() => {
   const bannerImageUrl = currentBanner.image_url ||
     (currentBanner.image.startsWith('http')
       ? currentBanner.image
-      : `${process.env.NEXT_PUBLIC_API_URL || 'http://193.203.161.174:3007'}/uploads/banners/${currentBanner.image}`);
+      : `${API_BASE_URL}/uploads/banners/${currentBanner.image}`);
 
   return (
     <section className="relative w-full aspect-[2/1] sm:aspect-auto sm:min-h-[60vh] flex items-center bg-black">

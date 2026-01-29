@@ -88,7 +88,7 @@ const OrdersPage = observer(() => {
 
   const fetchFlyers = async () => {
     try {
-      const response = await fetch('http://193.203.161.174:3007/api/flyers')
+      const response = await fetch(getApiUrl('/api/flyers'))
       if (response.ok) {
         const data = await response.json()
         const map: Record<string, string> = {}
@@ -115,7 +115,7 @@ const OrdersPage = observer(() => {
 
     setLoading(true)
     try {
-      const response = await fetch(`http://193.203.161.174:3007/api/orders/user/${authStore.user.id}`)
+      const response = await fetch(getApiUrl(`/api/orders/user/${authStore.user.id}`))
 
       if (!response.ok) {
         throw new Error('Failed to fetch orders')
@@ -336,7 +336,7 @@ const OrdersPage = observer(() => {
                       {/* Actions */}
                       <div className="flex gap-2 mt-3">
                         <Button
-                           variant="outline"
+                          variant="outline"
                           size="sm"
                           className="h-7 text-xs border-primary text-primary hover:bg-primary hover:text-white"
                           onClick={() => {

@@ -2,25 +2,25 @@
 export const awsConfig = {
   // REQUIRED - Amazon Cognito Region
   region: process.env.NEXT_PUBLIC_AWS_REGION || 'us-east-1',
-  
+
   // REQUIRED - Amazon Cognito User Pool ID
   userPoolId: process.env.NEXT_PUBLIC_AWS_USER_POOL_ID || 'YOUR_USER_POOL_ID',
-  
+
   // REQUIRED - Amazon Cognito Web Client ID
   userPoolWebClientId: process.env.NEXT_PUBLIC_AWS_USER_POOL_WEB_CLIENT_ID || 'YOUR_APP_CLIENT_ID',
-  
+
   // OPTIONAL - Authentication flow type
   authenticationFlowType: 'USER_PASSWORD_AUTH',
-  
+
   // OPTIONAL - OAuth configuration
   oauth: {
     domain: process.env.NEXT_PUBLIC_AWS_COGNITO_DOMAIN || 'YOUR_COGNITO_DOMAIN.auth.us-east-1.amazoncognito.com',
     scopes: ['email', 'profile', 'openid'],
-    redirectSignIn: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_IN || 'http://localhost:3000/',
-    redirectSignOut: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_OUT || 'http://localhost:3000/login',
+    redirectSignIn: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_IN || `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/`,
+    redirectSignOut: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_OUT || `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/login`,
     responseType: 'code' as const,
   },
-  
+
   // OPTIONAL - Cookie storage configuration
   cookieStorage: {
     domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || 'localhost',

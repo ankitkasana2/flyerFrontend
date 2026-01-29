@@ -1,4 +1,5 @@
 import { OrderSubmission } from '@/types/order';
+import { getApiUrl } from '@/config/api';
 
 export function buildOrderFormData(submission: OrderSubmission): FormData {
   const { formData, files } = submission;
@@ -25,15 +26,15 @@ export function buildOrderFormData(submission: OrderSubmission): FormData {
   formDataObj.append('image_url', formData.image_url || 'https://images.unsplash.com/photo.jpg')
   formDataObj.append('email', formData.email || 'user@example.com') // Use real email from form
   formDataObj.append('web_user_id', '')
-  
+
   // Add duplicate total_price with space (as seen in Postman)
   formDataObj.append(' total_price', String(formData.total_price || 78))
 
   // JSON fields
   formDataObj.append('djs', JSON.stringify(formData.djs || []))
-  
+
   formDataObj.append('host', JSON.stringify(formData.host || {}))
-  
+
   formDataObj.append('sponsors', JSON.stringify(formData.sponsors || []))
 
   // Append files
@@ -54,8 +55,6 @@ export function buildOrderFormData(submission: OrderSubmission): FormData {
     formDataObj.append(`sponsor_${index}`, file);
   });
 
-
-
   return formDataObj;
 }
 
@@ -64,9 +63,9 @@ export async function submitOrder(
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
     const formData = buildOrderFormData(orderSubmission)
-    
-    
-    const response = await fetch('http://193.203.161.174:3007/api/orders', {
+
+
+    const response = await fetch(getApiUrl('/api/orders'), {
       method: 'POST',
       body: formData,
       // Note: Don't set Content-Type header - let the browser set it with the correct boundary

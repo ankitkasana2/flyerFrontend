@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { API_BASE_URL } from '@/config/api'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-10-29.clover',
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
     let baseUrl = process.env.NEXT_PUBLIC_BASE_URL
     if (!baseUrl || baseUrl.includes('0.0.0.0')) {
       const host = request.headers.get('host')
-      const protocol = request.headers.get('x-forwarded-proto') || 'http' 
+      const protocol = request.headers.get('x-forwarded-proto') || 'http'
       if (host && !host.includes('0.0.0.0')) {
         baseUrl = `${protocol}://${host}`
       } else {
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
       // Ensure image URL is valid for Stripe (must be absolute)
       let imageUrl = orderData.formData?.image_url;
       if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://193.203.161.174:3007";
+        const apiBaseUrl = API_BASE_URL;
         imageUrl = `${apiBaseUrl.replace(/\/$/, '')}/${imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl}`;
       }
 
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
     // Ensure image URL is valid for Stripe (must be absolute)
     let imageUrl = orderData.formData?.image_url;
     if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://193.203.161.174:3007";
+      const apiBaseUrl = API_BASE_URL;
       imageUrl = `${apiBaseUrl.replace(/\/$/, '')}/${imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl}`;
     }
 

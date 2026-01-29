@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_BASE_URL } from "@/config/api";
 
-const BACKEND_API_URL = "http://193.203.161.174:3007";
+const BACKEND_API_URL = API_BASE_URL;
 
 export async function POST(req: NextRequest) {
-  
+
   try {
     // Handle FormData (with files)
     const formData = await req.formData();
-    
+
     // Create a new FormData to send to backend
     const backendFormData = new FormData();
-    
+
     // Copy all form data to backend FormData
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) {
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    
+
     // Forward the request to the backend API
     const response = await fetch(`${BACKEND_API_URL}/api/orders`, {
       method: "POST",
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Backend error:", errorText);
-      
+
       // Try to parse as JSON, fallback to text
       let errorData;
       try {
@@ -40,12 +41,12 @@ export async function POST(req: NextRequest) {
       } catch {
         errorData = { message: errorText };
       }
-      
+
       return NextResponse.json(
-        { 
-          error: "Backend API error", 
+        {
+          error: "Backend API error",
           details: errorData,
-          status: response.status 
+          status: response.status
         },
         { status: response.status }
       );
@@ -65,8 +66,8 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("Order API error:", error);
     return NextResponse.json(
-      { 
-        error: "Internal server error", 
+      {
+        error: "Internal server error",
         message: error.message,
         details: {
           stack: error.stack,

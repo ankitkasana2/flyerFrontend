@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { API_BASE_URL } from '@/config/api'
 
 export async function POST(request: NextRequest) {
   try {
-    
+
     // Parse the incoming FormData (not JSON)
     const formData = await request.formData()
     for (let [key, value] of formData.entries()) {
@@ -10,15 +11,15 @@ export async function POST(request: NextRequest) {
       } else {
       }
     }
-    
+
     // Create a new FormData to send to backend
     const backendFormData = new FormData()
-    
+
     // Copy all entries from the received FormData
     for (let [key, value] of formData.entries()) {
       backendFormData.append(key, value)
     }
-    
+
     // Ensure required fields are present (add defaults if missing)
     if (!backendFormData.has('presenting')) backendFormData.append('presenting', 'Test Venue')
     if (!backendFormData.has('event_title')) backendFormData.append('event_title', 'Test Event')
@@ -38,33 +39,33 @@ export async function POST(request: NextRequest) {
     if (!backendFormData.has('subtotal')) backendFormData.append('subtotal', '10')
     if (!backendFormData.has('image_url')) backendFormData.append('image_url', 'https://images.unsplash.com/photo.jpg')
     if (!backendFormData.has('web_user_id')) backendFormData.append('web_user_id', '')
-    
+
     // Add JSON fields if missing
     if (!backendFormData.has('djs')) backendFormData.append('djs', '[{"name":"DJ 1"},{"name":"DJ 2"}]')
     if (!backendFormData.has('host')) backendFormData.append('host', '{"name":"Test Host"}')
     if (!backendFormData.has('sponsors')) backendFormData.append('sponsors', '[{"name":"Sponsor 1"},{"name":"Sponsor 2"},{"name":"Sponsor 3"}]')
-    
+
     // Add the duplicate total_price field with space
     if (!backendFormData.has(' total_price')) backendFormData.append(' total_price', '78')
-    
-    
-    const response = await fetch('http://193.203.161.174:3007/api/orders', {
+
+
+    const response = await fetch(`${API_BASE_URL}/api/orders`, {
       method: 'POST',
       body: backendFormData
     })
-    
-    
+
+
     const responseData = await response.json()
-    
+
     if (!response.ok) {
       return NextResponse.json(
         { error: responseData.message || 'Failed to create order' },
         { status: response.status }
       )
     }
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    return NextResponse.json({
+      success: true,
       data: responseData,
       message: ' order created successfully'
     })

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { API_BASE_URL } from '@/config/api'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-10-29.clover',
 })
 
-const BACKEND_API_URL = "http://193.203.161.174:3007";
+const BACKEND_API_URL = API_BASE_URL;
 
 export async function GET(request: NextRequest) {
   try {

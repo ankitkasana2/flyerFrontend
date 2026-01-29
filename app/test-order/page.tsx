@@ -6,6 +6,7 @@ import { useStore } from '@/stores/StoreProvider'
 import { Button } from '@/components/ui/button'
 import { TestTube, FlaskConical } from 'lucide-react'
 import { toast } from 'sonner'
+import { API_BASE_URL } from '@/config/api'
 
 export default function TestOrderPage() {
   const router = useRouter()
@@ -23,11 +24,11 @@ export default function TestOrderPage() {
     await authStore.refreshUserData()
 
     setIsSubmitting(true)
-    
+
     try {
       // Create a minimal test order matching Postman format
       const formData = new FormData()
-      
+
       // Add basic fields
       formData.append('presenting', 'XYZ Events')
       formData.append('event_title', 'Summer Party 2025')
@@ -44,11 +45,11 @@ export default function TestOrderPage() {
       formData.append('delivery_time', '5 Hours')
       formData.append('custom_notes', 'Please make it colorful')
       formData.append('flyer_is', '1')
-      
+
       // Add user information
       formData.append('web_user_id', authStore.user.id)
       formData.append('email', authStore.user.email || authStore.user.name || 'unknown@example.com')
-      
+
       // Mark as test order
       formData.append('isTest', 'true')
 
@@ -64,14 +65,14 @@ export default function TestOrderPage() {
       }
 
       const result = await response.json()
-      
+
       if (result.isTest) {
         toast.success('Test order validated successfully! (No real order created)')
         toast.info('Real orders are created only after Stripe payment')
       } else {
         toast.success('Test order created successfully!')
       }
-      
+
       if (result.data?.id) {
         toast.success(`Test ID: ${result.data.id}`)
       }
@@ -92,11 +93,11 @@ export default function TestOrderPage() {
     }
 
     setIsSubmitting(true)
-    
+
     try {
       // Create a test order with mock files
       const formData = new FormData()
-      
+
       // Add basic fields
       formData.append('presenting', 'Test Events')
       formData.append('event_title', 'Test Party with Files')
@@ -113,11 +114,11 @@ export default function TestOrderPage() {
       formData.append('delivery_time', '24 Hours')
       formData.append('custom_notes', 'Test with files')
       formData.append('flyer_is', '2')
-      
+
       // Add user information
       formData.append('web_user_id', authStore.user.id)
       formData.append('email', authStore.user.email || authStore.user.name || 'unknown@example.com')
-      
+
       // Mark as test order
       formData.append('isTest', 'true')
 
@@ -125,7 +126,7 @@ export default function TestOrderPage() {
       const mockImage = new Blob(['test image content'], { type: 'image/jpeg' })
       const imageFile = new File([mockImage], 'test-image.jpg', { type: 'image/jpeg' })
       formData.append('image', imageFile)
-      
+
       // Create mock venue logo
       const mockLogo = new Blob(['test logo content'], { type: 'image/png' })
       const logoFile = new File([mockLogo], 'test-logo.png', { type: 'image/png' })
@@ -143,14 +144,14 @@ export default function TestOrderPage() {
       }
 
       const result = await response.json()
-      
+
       if (result.isTest) {
         toast.success('Test order with files validated! (No real order created)')
         toast.info('Real orders are created only after Stripe payment')
       } else {
         toast.success('Test order with files created successfully!')
       }
-      
+
       if (result.data?.id) {
         toast.success(`Test ID: ${result.data.id}`)
       }
@@ -167,7 +168,7 @@ export default function TestOrderPage() {
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">Test Order Page</h1>
-        
+
         <div className="space-y-8">
           {/* Quick Test Section */}
           <div className="bg-gray-900 rounded-lg p-6">
@@ -270,16 +271,16 @@ export default function TestOrderPage() {
           <div className="bg-gray-800 rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-4">Debug Information</h3>
             <div className="space-y-2 text-sm">
-              <p><span className="text-gray-400">Backend URL:</span> http://193.203.161.174:3007/api/orders</p>
+              <p><span className="text-gray-400">Backend URL:</span> {API_BASE_URL}/api/orders</p>
               <p><span className="text-gray-400">Test Endpoint:</span> /api/test-order</p>
               <p><span className="text-gray-400">User Status:</span> {authStore.user ? `Logged in as ${authStore.user.email || authStore.user.name}` : 'Not logged in'}</p>
               <p><span className="text-gray-400">User ID:</span> {authStore.user?.id || 'N/A'}</p>
               <p><span className="text-gray-400">User Email:</span> {authStore.user?.email || 'NULL'}</p>
               <p><span className="text-gray-400">User Name:</span> {authStore.user?.name || 'N/A'}</p>
               <p><span className="text-gray-400">Browser Console:</span> Check for detailed logs</p>
-              <Button 
-                onClick={() => authStore.refreshUserData()} 
-                variant="outline" 
+              <Button
+                onClick={() => authStore.refreshUserData()}
+                variant="outline"
                 size="sm"
                 className="mt-2"
               >

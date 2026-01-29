@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
+import { API_BASE_URL } from "@/config/api";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
       : req.headers.get("origin") || "http://localhost:3000";
 
     const itemsArray = Array.isArray(item) ? item : [item];
-    
+
     // Build metadata for the success handler - INCLUDE ALL ITEMS for multi-order creation
     const firstItem = itemsArray[0];
     const orderData = {
@@ -59,15 +60,15 @@ export async function POST(req: NextRequest) {
       line_items: itemsArray.map((i: any) => {
         const priceStr = String(i.subtotal || i.total_price || 0);
         const amount = parseFloat(priceStr.replace(/[^0-9.]/g, '')) || 0;
-        
+
         // Ensure image URL is valid for Stripe (must be absolute)
         let imageUrl = i.image_url || i.flyer?.image || i.venue_logo;
-        
+
         if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
-            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://193.203.161.174:3007";
-            imageUrl = `${apiBaseUrl.replace(/\/$/, '')}/${imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl}`;
+          const apiBaseUrl = API_BASE_URL;
+          imageUrl = `${apiBaseUrl.replace(/\/$/, '')}/${imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl}`;
         }
-        
+
         const images = imageUrl ? [imageUrl] : [];
 
         return {

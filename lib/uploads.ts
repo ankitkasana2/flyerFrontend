@@ -1,3 +1,5 @@
+import { getApiUrl } from "@/config/api"
+
 export type LibraryItem = {
     id: string
     name: string
@@ -7,7 +9,8 @@ export type LibraryItem = {
     size?: number
 }
 
-const API_BASE_URL = "http://193.203.161.174:3007/api/user-media"
+// Base URL for user media API
+const MEDIA_API_URL = getApiUrl("/api/user-media")
 
 export async function fileToDataUrl(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -47,10 +50,10 @@ export function sanitizeFileName(name: string): string {
 // 2. Get All Media for User
 export async function listLibrary(userId: string, type?: LibraryItem["type"]): Promise<LibraryItem[]> {
     if (!userId || userId === 'guest') return []
-    
+
     // Explicitly encode User ID to be safe, though rare for google IDs to need it.
     const encodedId = encodeURIComponent(userId)
-    const url = `${API_BASE_URL}/${encodedId}`
+    const url = `${MEDIA_API_URL}/${encodedId}`
 
     try {
         // Added timestamp AND Cache-Control headers to forcefully prevent caching
@@ -63,7 +66,7 @@ export async function listLibrary(userId: string, type?: LibraryItem["type"]): P
                 'Expires': '0'
             }
         })
-        
+
         if (!res.ok) {
             console.error(`[API] Error fetching library: ${res.status} ${res.statusText}`)
             return []
@@ -74,11 +77,11 @@ export async function listLibrary(userId: string, type?: LibraryItem["type"]): P
             console.error("[API] API Error listing library:", data.message)
             return []
         }
-        
+
         const items: LibraryItem[] = (data.media || []).map((m: any) => ({
             id: String(m.id),
             name: m.original_name,
-            type: m.is_logo ? "logo" : "image", 
+            type: m.is_logo ? "logo" : "image",
             dataUrl: m.file_url,
             createdAt: m.created_at || new Date().toISOString(),
             size: undefined
@@ -105,7 +108,7 @@ export async function saveToLibrary(userId: string, file: File): Promise<string 
 
 
     try {
-        const res = await fetch(`${API_BASE_URL}`, {
+        const res = await fetch(`${MEDIA_API_URL}`, {
             method: "POST",
             body: formData,
             // DO NOT set Content-Type header when using FormData; fetch does it automatically with boundary.
@@ -135,7 +138,7 @@ export async function saveToTemp(file: File, fieldName: string = "file"): Promis
     formData.append("file", file)
     formData.append("field", fieldName)
     // Create a semi-unique ID for this batch if needed, or let route handle it
-    const uploadId = "checkout_" + Date.now(); 
+    const uploadId = "checkout_" + Date.now();
     formData.append("uploadId", uploadId);
 
     try {
@@ -164,7 +167,7 @@ export async function saveToTemp(file: File, fieldName: string = "file"): Promis
 // 6. Delete Media
 export async function removeFromLibrary(userId: string, id: string): Promise<boolean> {
     try {
-        const res = await fetch(`${API_BASE_URL}/${id}`, {
+        const res = await fetch(`${MEDIA_API_URL}/${id}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json"
@@ -182,7 +185,7 @@ export async function removeFromLibrary(userId: string, id: string): Promise<boo
 // 3. Rename Media
 export async function renameLibraryItem(userId: string, id: string, newName: string): Promise<boolean> {
     try {
-        const res = await fetch(`${API_BASE_URL}/${id}/rename`, {
+        const res = await fetch(`${MEDIA_API_URL}/${id}/rename`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json"
@@ -207,7 +210,7 @@ export async function replaceLibraryItem(userId: string, id: string, file: File)
     formData.append("file", file)
 
     try {
-        const res = await fetch(`${API_BASE_URL}/${id}/replace`, {
+        const res = await fetch(`${MEDIA_API_URL}/${id}/replace`, {
             method: "PATCH",
             body: formData,
         })
@@ -222,12 +225,12 @@ export async function replaceLibraryItem(userId: string, id: string, file: File)
 // 5. Set as Logo/Image
 export async function setLibraryItemIsLogo(userId: string, id: string, isLogo: boolean): Promise<boolean> {
     try {
-        const res = await fetch(`${API_BASE_URL}/${id}/set-logo`, {
+        const res = await fetch(`${MEDIA_API_URL}/${id}/set-logo`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 web_user_id: userId,
                 is_logo: isLogo
             })
@@ -242,12 +245,12 @@ export async function setLibraryItemIsLogo(userId: string, id: string, isLogo: b
 
 export async function setLibraryItemIsImage(userId: string, id: string, isImage: boolean): Promise<boolean> {
     try {
-        const res = await fetch(`${API_BASE_URL}/${id}/set-image`, {
+        const res = await fetch(`${MEDIA_API_URL}/${id}/set-image`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 web_user_id: userId,
                 is_image: isImage
             })
@@ -263,7 +266,7 @@ export async function setLibraryItemIsImage(userId: string, id: string, isImage:
 export async function setLibraryItemType(userId: string, id: string, type: LibraryItem["type"]): Promise<boolean> {
     // To switch types, we explicitely set the target flag to true and the other to false
     // to match the user's provided endpoints and ensure clean state.
-    
+
     if (type === 'logo') {
         const [p1, p2] = await Promise.all([
             setLibraryItemIsLogo(userId, id, true),

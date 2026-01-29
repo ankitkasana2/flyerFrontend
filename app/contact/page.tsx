@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useLoading } from "@/hooks/useLoading";
+import { getApiUrl } from "@/config/api";
 
 export default function ContactPage() {
     const { withLoading } = useLoading();
@@ -22,7 +23,7 @@ export default function ContactPage() {
 
         await withLoading(async () => {
             try {
-                const response = await fetch("http://193.203.161.174:3007/api/contact", {
+                const response = await fetch(getApiUrl("/api/contact"), {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

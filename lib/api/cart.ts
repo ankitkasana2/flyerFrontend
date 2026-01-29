@@ -1,3 +1,5 @@
+import { getApiUrl } from '@/config/api';
+
 export interface CartItem {
   id: string;
   name: string;
@@ -26,7 +28,7 @@ export interface CartResponse {
  */
 export async function fetchCartByUserId(userId: string): Promise<CartResponse> {
   try {
-    const response = await fetch(`http://193.203.161.174:3007/api/cart/${userId}`, {
+    const response = await fetch(getApiUrl(`/api/cart/${userId}`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
