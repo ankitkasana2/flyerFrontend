@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       if (host && !host.includes('0.0.0.0')) {
         baseUrl = `${protocol}://${host}`
       } else {
-        baseUrl = 'http://localhost:3000'
+        baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
       }
     }
 
@@ -298,6 +298,8 @@ export async function GET(request: NextRequest) {
       const host = request.headers.get('host')
       if (host && !host.includes('0.0.0.0')) {
         baseUrl = `http://${host}`
+      } else {
+        baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
       }
     }
 

@@ -18,8 +18,8 @@ export async function POST(request: Request) {
       if (host && !host.includes('0.0.0.0')) {
         baseUrl = `${protocol}://${host}`
       } else {
-        // Fallback to localhost if host is also invalid/missing (unlikely in real request)
-        baseUrl = 'http://localhost:3000'
+        // Fallback to environment variable or localhost
+        baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
       }
       console.log('⚠️ Adapted Base URL for Stripe:', baseUrl)
     }

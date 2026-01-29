@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     const origin = req.headers.get("x-forwarded-proto")
       ? `${req.headers.get("x-forwarded-proto")}://${req.headers.get("host")}`
-      : req.headers.get("origin") || "http://localhost:3000";
+      : req.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
     const itemsArray = Array.isArray(item) ? item : [item];
 
