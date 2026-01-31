@@ -16,7 +16,7 @@ import { toast } from "sonner"
 
 const FavoritesPage = () => {
   const router = useRouter()
-  const { authStore, favoritesStore } = useStore()
+  const { authStore, favoritesStore, loadingStore } = useStore()
 
   // Use authStore.user instead of useAuth() to work with AWS Cognito
   const user = authStore.user
@@ -24,9 +24,12 @@ const FavoritesPage = () => {
   // Fetch favorites when user is logged in
   useEffect(() => {
     if (user?.id) {
-      favoritesStore.fetchFavorites(user.id)
+      loadingStore.startLoading("Loading favorites...")
+      favoritesStore.fetchFavorites(user.id).finally(() => {
+        loadingStore.stopLoading()
+      })
     }
-  }, [user?.id, favoritesStore])
+  }, [user?.id, favoritesStore, loadingStore])
 
   const handleRemoveFavorite = async (flyerId: number) => {
     if (!user) return

@@ -26,7 +26,7 @@ type FilterKey = "all" | "image" | "video" | "document"
 const fetcher = (userId: string) => () => fetchUserDownloads(userId)
 
 const DownloadsPage = observer(() => {
-    const { authStore } = useStore()
+    const { authStore, loadingStore } = useStore()
     const [filter, setFilter] = useState<FilterKey>("all")
     const [mounted, setMounted] = useState(false)
 
@@ -34,11 +34,19 @@ const DownloadsPage = observer(() => {
         setMounted(true)
     }, [authStore.user])
 
-    const { data, mutate } = useSWR<OrderDelivery[]>(
+    const { data, mutate, isLoading: isSwrLoading } = useSWR<OrderDelivery[]>(
         authStore.user ? ["downloads", authStore.user.id] : null,
         authStore.user ? fetcher(authStore.user.id) : null,
         { revalidateOnFocus: false },
     )
+
+    useEffect(() => {
+        if (isSwrLoading) {
+            loadingStore.startLoading("Loading downloads...")
+        } else {
+            loadingStore.stopLoading()
+        }
+    }, [isSwrLoading, loadingStore])
 
     const filtered = useMemo(() => {
         if (!data) return []

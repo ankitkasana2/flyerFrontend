@@ -20,8 +20,8 @@ import { useStore } from "@/stores/StoreProvider"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
-const UserMenu = () => {
-  const { authStore } = useStore()
+const UserMenu = observer(() => {
+  const { authStore, loadingStore } = useStore()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -61,13 +61,20 @@ const UserMenu = () => {
   }
 
   const handleSignOut = async () => {
+    loadingStore.startLoading("Signing out...")
     try {
       await authStore.logout()
       toast.success('Successfully signed out')
     } catch (error) {
       console.error('Error signing out:', error)
       toast.error('Failed to sign out. Please try again.')
+    } finally {
+      loadingStore.stopLoading()
     }
+  }
+
+  const handleLinkClick = () => {
+    loadingStore.startLoading("Loading...")
   }
 
   const getInitials = (name?: string) => {
@@ -92,7 +99,7 @@ const UserMenu = () => {
                 alt={authStore.user.name || 'User'}
               />
             )}
-            <AvatarFallback className="bg-gradient-to-br from-primary to-orange-600 text-white font-extrabold text-lg tracking-tighter">
+            <AvatarFallback className="bg-[#E50914] text-white font-bold text-sm tracking-tighter">
               {getInitials(authStore.user.name)}
             </AvatarFallback>
           </Avatar>
@@ -111,49 +118,49 @@ const UserMenu = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/overview">
+          <Link href="/overview" onClick={handleLinkClick}>
             <User className="h-4 w-4 mr-2" />
             <span>Overview</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/orders">
+          <Link href="/orders" onClick={handleLinkClick}>
             <ShoppingBag className="h-4 w-4 mr-2" />
             <span>My Orders</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/favorites">
+          <Link href="/favorites" onClick={handleLinkClick}>
             <Heart className="h-4 w-4 mr-2" />
             <span>Favorites</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/downloads">
+          <Link href="/downloads" onClick={handleLinkClick}>
             <Download className="h-4 w-4 mr-2" />
             <span>Downloads</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/notifications">
+          <Link href="/notifications" onClick={handleLinkClick}>
             <Bell className="h-4 w-4 mr-2" />
             <span>Notifications</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/profile">
+          <Link href="/profile" onClick={handleLinkClick}>
             <Settings className="h-4 w-4 mr-2" />
             <span>Account Settings</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/media">
+          <Link href="/media" onClick={handleLinkClick}>
             <ImageDown className="h-4 w-4 mr-2" />
             <span>Media Library</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="sm:hidden">
-          <Link href="/categories">
+          <Link href="/categories" onClick={handleLinkClick}>
             <ChartBarStacked className="h-4 w-4 mr-2" />
             <span>Category</span>
           </Link>
@@ -166,6 +173,6 @@ const UserMenu = () => {
       </DropdownMenuContent>
     </DropdownMenu>
   )
-}
+})
 
-export default observer(UserMenu)
+export default UserMenu

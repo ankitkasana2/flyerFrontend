@@ -72,7 +72,7 @@ interface OrdersResponse {
 }
 
 const OrdersPage = observer(() => {
-  const { authStore } = useStore()
+  const { authStore, loadingStore } = useStore()
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -114,6 +114,7 @@ const OrdersPage = observer(() => {
     if (!authStore.user?.id) return
 
     setLoading(true)
+    loadingStore.startLoading("Loading orders...")
     try {
       const response = await fetch(getApiUrl(`/api/orders/user/${authStore.user.id}`), {
         cache: 'no-store',
@@ -138,6 +139,7 @@ const OrdersPage = observer(() => {
       toast.error('Failed to load orders')
     } finally {
       setLoading(false)
+      loadingStore.stopLoading()
     }
   }
 

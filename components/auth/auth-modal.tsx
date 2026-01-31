@@ -45,7 +45,7 @@ const AuthModal = observer(({
   const [resetStep, setResetStep] = useState<"send" | "verify">("send")
   const [isLoading, setIsLoading] = useState(false)
 
-  const { authStore } = useStore()
+  const { authStore, loadingStore } = useStore()
   const { toast } = useToast()
 
   // Reset form when modal opens/closes
@@ -153,7 +153,7 @@ const AuthModal = observer(({
     }
 
     setIsLoading(true)
-
+    loadingStore.startLoading(mode === "signin" ? "Signing in..." : "Creating account...")
     try {
       // SIGN IN
       if (mode === "signin") {
@@ -219,6 +219,7 @@ const AuthModal = observer(({
       })
     } finally {
       setIsLoading(false)
+      loadingStore.stopLoading()
     }
   }
 
@@ -233,6 +234,8 @@ const AuthModal = observer(({
     }
 
     try {
+      setIsLoading(true)
+      loadingStore.startLoading("Verifying...")
       // Use the confirmSignUp method from AWS Amplify to verify the OTP
       const { isSignUpComplete, nextStep } = await awsConfirmSignUp({
         username: userEmail,
@@ -288,12 +291,16 @@ const AuthModal = observer(({
         description: error?.message || "Invalid verification code",
         variant: "destructive",
       })
+    } finally {
+      setIsLoading(false)
+      loadingStore.stopLoading()
     }
   }
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    loadingStore.startLoading("Sending reset code...")
     const emailToReset = formData.email.trim();
 
     if (!emailToReset) {
@@ -303,6 +310,7 @@ const AuthModal = observer(({
         variant: "destructive",
       })
       setIsLoading(false)
+      loadingStore.stopLoading()
       return
     }
 
@@ -322,6 +330,7 @@ const AuthModal = observer(({
       })
     } finally {
       setIsLoading(false)
+      loadingStore.stopLoading()
     }
   }
 
@@ -362,6 +371,7 @@ const AuthModal = observer(({
     }
 
     setIsLoading(true)
+    loadingStore.startLoading("Resetting password...")
     try {
       await authStore.verifyOTP(emailToUse, code, newPass)
       toast({
@@ -379,11 +389,14 @@ const AuthModal = observer(({
       })
     } finally {
       setIsLoading(false)
+      loadingStore.stopLoading()
     }
   }
 
   const handleResendOtp = async () => {
     try {
+      setIsLoading(true)
+      loadingStore.startLoading("Resending code...")
       // Use the resendSignUpCode method from AWS Amplify
       const { destination, deliveryMedium } = await resendSignUpCode({
         username: userEmail
@@ -400,12 +413,16 @@ const AuthModal = observer(({
         description: error?.message || "Failed to resend verification code. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false)
+      loadingStore.stopLoading()
     }
   }
 
   const handleSocialSignIn = async (provider: "google" | "apple") => {
     try {
       setIsLoading(true)
+      loadingStore.startLoading(`Continuing with ${provider}...`)
 
       // Use direct OAuth (not Cognito)
       if (provider === "google") {
@@ -426,6 +443,7 @@ const AuthModal = observer(({
       })
     } finally {
       setIsLoading(false)
+      loadingStore.stopLoading()
     }
   }
 
