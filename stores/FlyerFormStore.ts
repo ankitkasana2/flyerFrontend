@@ -105,7 +105,7 @@ export class FlyerFormStore {
     makeAutoObservable(this)
   }
 
-  
+
   resetForm() {
     this.flyerFormDetail = {
       flyerId: "",
@@ -349,7 +349,7 @@ export class FlyerFormStore {
   }
 
 
-  // subtotal 
+  // subtotal (base price + extras)
   get subtotal() {
     const flyerPrice = this.flyer?.price ?? this.basePrice ?? 0
     let total = flyerPrice;
@@ -377,8 +377,27 @@ export class FlyerFormStore {
 
     total += deliveryPricing[this.flyerFormDetail.deliveryTime] ?? 0;
 
-    this.flyerFormDetail.subtotal = total
+    return total;
+  }
 
+  // Stripe fee calculation (2.9% + $0.30)
+  // We calculate it so that the seller receives exactly the subtotal
+  get stripeFee() {
+    const s = this.subtotal;
+    if (s === 0) return 0;
+
+    // Formula: Total = (Subtotal + 0.30) / (1 - 0.029)
+    // StripeFee = Total - Subtotal
+    const total = (s + 0.30) / (1 - 0.029);
+    return total - s;
+  }
+
+  // Total price to be charged
+  get total() {
+    const total = this.subtotal + this.stripeFee;
+    this.flyerFormDetail.subtotal = this.subtotal;
+    // We update the store's internal subtotal for backend compatibility if needed
+    // but the actual amount to be charged is this.total
     return total;
   }
 

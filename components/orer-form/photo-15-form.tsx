@@ -57,6 +57,11 @@ const Photo15Form: React.FC<Photo15FormProps> = ({ flyer }) => {
 
     const FIXED_PRICE = 15; // $15 With Photo
 
+    // Set base price in store so calculations work correctly
+    useEffect(() => {
+        flyerFormStore.setBasePrice(FIXED_PRICE);
+    }, [FIXED_PRICE, flyerFormStore]);
+
     // DJ List: ALL 4 with photo support
     const [djList, setDjList] = useState<{ name: string; image: string | null; }[]>(() => {
         return [0, 1, 2, 3].map((i) => ({
@@ -335,8 +340,9 @@ const Photo15Form: React.FC<Photo15FormProps> = ({ flyer }) => {
                 user_id: authStore.user.id,
 
                 delivery_time: flyerFormStore.flyerFormDetail.deliveryTime,
-                total_price: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_PRICE,
+                total_price: ((flyerFormStore.subtotal + 0.30) / (1 - 0.029)),
                 subtotal: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_PRICE,
+                stripe_fee: ((flyerFormStore.subtotal + 0.30) / (1 - 0.029)) - flyerFormStore.subtotal,
                 image_url: flyer?.image_url || flyer?.imageUrl || "",
             };
 
@@ -586,14 +592,17 @@ const Photo15Form: React.FC<Photo15FormProps> = ({ flyer }) => {
                             </Button>
                         </div>
 
-                        {/* Right: Total Amount */}
-                        <div className="text-right">
-                            <span className="block text-sm text-gray-300 font-semibold">
-                                Total
-                            </span>
-                            <span className="text-primary font-bold text-lg">
-                                {formatCurrency(flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_PRICE)}
-                            </span>
+                        {/* Right: Price Breakdown */}
+                        <div className="text-right space-y-1">
+                            {/* Right: Total Amount */}
+                            <div className="text-right">
+                                <span className="block text-sm text-gray-300 font-semibold uppercase tracking-wider">
+                                    Total
+                                </span>
+                                <span className="text-primary font-bold text-xl">
+                                    {formatCurrency(flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_PRICE)}
+                                </span>
+                            </div>
                         </div>
                     </div>
 

@@ -64,22 +64,43 @@ export async function POST(request: Request) {
       }
 
       // Create Stripe session with chunked metadata
+      // If data fits in one field, use simple approach
+      const line_items = [];
+      const subtotal = orderData.formData?.subtotal ? Number(orderData.formData.subtotal) : amount;
+      const fee = orderData.formData?.stripe_fee ? Number(orderData.formData.stripe_fee) : 0;
+
+      // Product Item
+      line_items.push({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Flyer Design Order',
+            description: `Custom flyer for ${orderData.formData?.presenting || 'Event'}`,
+            images: imageUrl ? [imageUrl] : [],
+          },
+          unit_amount: Math.round(subtotal * 100),
+        },
+        quantity: 1,
+      });
+
+      // Fee Item (only if > 0)
+      if (fee > 0) {
+        line_items.push({
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Transaction Fee',
+              description: 'Processing fee for secure payment',
+            },
+            unit_amount: Math.round(fee * 100),
+          },
+          quantity: 1,
+        });
+      }
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
-        line_items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: 'Flyer Design Order',
-                description: `Custom flyer for ${orderData.formData?.presenting || 'Event'}`,
-                images: imageUrl ? [imageUrl] : [],
-              },
-              unit_amount: Math.round(amount * 100),
-            },
-            quantity: 1,
-          },
-        ],
+        line_items: line_items,
         mode: 'payment',
         success_url: `${baseUrl}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/order/${orderData.formData.flyer_is}`,
@@ -96,23 +117,44 @@ export async function POST(request: Request) {
       imageUrl = `${apiBaseUrl.replace(/\/$/, '')}/${imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl}`;
     }
 
+
     // If data fits in one field, use simple approach
+    const line_items = [];
+    const subtotal = orderData.formData?.subtotal ? Number(orderData.formData.subtotal) : amount;
+    const fee = orderData.formData?.stripe_fee ? Number(orderData.formData.stripe_fee) : 0;
+
+    // Product Item
+    line_items.push({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: 'Flyer Design Order',
+          description: `Custom flyer for ${orderData.formData?.presenting || 'Event'}`,
+          images: imageUrl ? [imageUrl] : [],
+        },
+        unit_amount: Math.round(subtotal * 100),
+      },
+      quantity: 1,
+    });
+
+    // Fee Item (only if > 0)
+    if (fee > 0) {
+      line_items.push({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Transaction Fee',
+            description: 'Processing fee for secure payment',
+          },
+          unit_amount: Math.round(fee * 100),
+        },
+        quantity: 1,
+      });
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Flyer Design Order',
-              description: `Custom flyer for ${orderData.formData?.presenting || 'Event'}`,
-              images: imageUrl ? [imageUrl] : [],
-            },
-            unit_amount: Math.round(amount * 100),
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: line_items,
       mode: 'payment',
       success_url: `${baseUrl}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/order/${orderData.formData.flyer_is}`,

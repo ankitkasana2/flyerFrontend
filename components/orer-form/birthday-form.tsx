@@ -76,6 +76,11 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
 
     const FIXED_BIRTHDAY_PRICE = 10; // Fixed $10 price for Birthday flyers
 
+    // Set base price in store so calculations work correctly
+    useEffect(() => {
+        flyerFormStore.setBasePrice(FIXED_BIRTHDAY_PRICE);
+    }, [FIXED_BIRTHDAY_PRICE, flyerFormStore]);
+
     // Handle Birthday Person Photo upload
     const handleBirthdayPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -247,8 +252,9 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
                 user_id: authStore.user.id,
 
                 delivery_time: flyerFormStore.flyerFormDetail.deliveryTime,
-                total_price: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_BIRTHDAY_PRICE,
+                total_price: ((flyerFormStore.subtotal + 0.30) / (1 - 0.029)),
                 subtotal: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_BIRTHDAY_PRICE,
+                stripe_fee: ((flyerFormStore.subtotal + 0.30) / (1 - 0.029)) - flyerFormStore.subtotal,
                 image_url: flyer?.image_url || flyer?.imageUrl || "",
             };
 
@@ -464,14 +470,17 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
                             </Button>
                         </div>
 
-                        {/* Right: Total Amount */}
-                        <div className="text-right">
-                            <span className="block text-sm text-gray-300 font-semibold">
-                                Total
-                            </span>
-                            <span className="text-primary font-bold text-lg">
-                                {formatCurrency(flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_BIRTHDAY_PRICE)}
-                            </span>
+                        {/* Right: Price Breakdown */}
+                        <div className="text-right space-y-1">
+                            {/* Right: Total Amount */}
+                            <div className="text-right">
+                                <span className="block text-sm text-gray-300 font-semibold uppercase tracking-wider">
+                                    Total
+                                </span>
+                                <span className="text-primary font-bold text-xl">
+                                    {formatCurrency(flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_BIRTHDAY_PRICE)}
+                                </span>
+                            </div>
                         </div>
                     </div>
 

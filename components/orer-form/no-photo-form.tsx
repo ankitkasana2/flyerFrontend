@@ -66,6 +66,11 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
     const [note, setNote] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Set base price in store so calculations work correctly
+    useEffect(() => {
+        flyerFormStore.setBasePrice(fixedPrice);
+    }, [fixedPrice, flyerFormStore]);
+
     // Handle Venue Logo upload
     const handleVenueLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -279,8 +284,9 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
                 user_id: authStore.user.id,
 
                 delivery_time: flyerFormStore.flyerFormDetail.deliveryTime,
-                total_price: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : fixedPrice,
-                subtotal: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : fixedPrice,
+                total_price: ((flyerFormStore.subtotal + 0.30) / (1 - 0.029)),
+                subtotal: flyerFormStore.subtotal,
+                stripe_fee: ((flyerFormStore.subtotal + 0.30) / (1 - 0.029)) - flyerFormStore.subtotal,
                 image_url: flyerImageUrl,
 
                 temp_files: tempFiles
@@ -574,14 +580,17 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
                             </Button>
                         </div>
 
-                        {/* Right: Total Amount */}
-                        <div className="text-right">
-                            <span className="block text-sm text-gray-300 font-semibold">
-                                Total
-                            </span>
-                            <span className="text-primary font-bold text-lg">
-                                {formatCurrency(flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : fixedPrice)}
-                            </span>
+                        {/* Right: Price Breakdown */}
+                        <div className="text-right space-y-1">
+                            {/* Right: Total Amount */}
+                            <div className="text-right">
+                                <span className="block text-sm text-gray-300 font-semibold uppercase tracking-wider">
+                                    Total
+                                </span>
+                                <span className="text-primary font-bold text-xl">
+                                    {formatCurrency(flyerFormStore.subtotal)}
+                                </span>
+                            </div>
                         </div>
                     </div>
 

@@ -162,17 +162,17 @@ const mapToApiRequest = (
       : [],
 
     sponsors: [
-      { 
-        name: normalizeSponsor(sponsors.sponsor1).name, 
-        image_url: typeof sponsors.sponsor1 === 'string' ? sponsors.sponsor1 : "" 
+      {
+        name: normalizeSponsor(sponsors.sponsor1).name,
+        image_url: typeof sponsors.sponsor1 === 'string' ? sponsors.sponsor1 : ""
       },
-      { 
-        name: normalizeSponsor(sponsors.sponsor2).name, 
-        image_url: typeof sponsors.sponsor2 === 'string' ? sponsors.sponsor2 : "" 
+      {
+        name: normalizeSponsor(sponsors.sponsor2).name,
+        image_url: typeof sponsors.sponsor2 === 'string' ? sponsors.sponsor2 : ""
       },
-      { 
-        name: normalizeSponsor(sponsors.sponsor3).name, 
-        image_url: typeof sponsors.sponsor3 === 'string' ? sponsors.sponsor3 : "" 
+      {
+        name: normalizeSponsor(sponsors.sponsor3).name,
+        image_url: typeof sponsors.sponsor3 === 'string' ? sponsors.sponsor3 : ""
       }
     ],
 
@@ -262,14 +262,22 @@ const EventBookingForm = () => {
         return prev;
       });
     }
-  }, [flyer?.id]);
+
+    // Set base price in store so calculations work correctly for Default Form
+    const price = flyer?.price ?? priceFromQuery ?? 0;
+    if (price > 0) {
+      flyerFormStore.setBasePrice(price);
+    }
+  }, [flyer?.id, flyer?.price, priceFromQuery, flyerFormStore]);
 
   const flyerImage = flyer?.image_url || flyer?.imageUrl || image || "/placeholder.svg";
   const flyerName = flyer?.name || name || "";
   const basePrice = flyerFormStore.basePrice ?? flyer?.price ?? priceFromQuery;
 
   const computedSubtotal = flyerFormStore.subtotal;
-  const totalDisplay = computedSubtotal > 0 ? computedSubtotal : basePrice;
+  const stripeFee = ((computedSubtotal + 0.30) / (1 - 0.029)) - computedSubtotal;
+  const totalAmount = ((computedSubtotal + 0.30) / (1 - 0.029));
+  const totalDisplay = totalAmount > 0 ? totalAmount : (basePrice > 0 ? (basePrice + 0.30) / 0.971 : 0);
 
 
 
@@ -509,7 +517,7 @@ const EventBookingForm = () => {
 
   // Default: Render regular form
 
- 
+
   const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
     try {
       e.preventDefault();
@@ -630,8 +638,9 @@ const EventBookingForm = () => {
         user_id: authStore.user.id,
 
         delivery_time: flyerFormStore.flyerFormDetail.deliveryTime,
-        total_price: totalDisplay,
-        subtotal: totalDisplay,
+        total_price: totalAmount,
+        subtotal: computedSubtotal,
+        stripe_fee: stripeFee,
         image_url: flyerImage,
         // IMPORTANT: Pass the temp file mapping so success handler can pick them up
         temp_files: tempFiles
@@ -949,7 +958,7 @@ const EventBookingForm = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-3 md:p-5 max-w-[1600px] mx-auto w-full">
         {/* Left Side - Event Flyer */}
         <div className="space-y-6 w-full max-w-[400px] mx-auto lg:max-w-full">
-                   <div className="relative bg-gradient-to-br from-orange-900/20 via-black to-purple-900/20 rounded-2xl overflow-hidden  glow-effect transition-all duration-300 ">
+          <div className="relative bg-gradient-to-br from-orange-900/20 via-black to-purple-900/20 rounded-2xl overflow-hidden  glow-effect transition-all duration-300 ">
 
 
             <div className="relative p-3 md:p-6 space-y-4">
@@ -1008,8 +1017,8 @@ const EventBookingForm = () => {
                         <Music className="w-4 h-4 text-primary" />
                         DJ/Artist {index + 1}
                       </Label>
-                      <RecentSuggestions 
-                        type="dj" 
+                      <RecentSuggestions
+                        type="dj"
                         onSelect={(val) => {
                           flyerFormStore.updateDJ(index, "name", val);
                           setDjList((prev) => {
@@ -1111,8 +1120,8 @@ const EventBookingForm = () => {
                           <Music className="w-4 h-4 text-primary" />
                           DJ/Artist {index + 1}
                         </Label>
-                        <RecentSuggestions 
-                          type="dj" 
+                        <RecentSuggestions
+                          type="dj"
                           onSelect={(val) => {
                             flyerFormStore.updateDJ(index, "name", val);
                             setDjListText((prev) => {
@@ -1236,14 +1245,17 @@ const EventBookingForm = () => {
               </Button>
 
             </div>
-            {/* Right: Total Amount */}
-            <div className="text-right">
-              <span className="block text-sm text-gray-300 font-semibold">
-                Total
-              </span>
-              <span className="text-primary font-bold text-lg">
-                {formatCurrency(totalDisplay)}
-              </span>
+            {/* Right: Price Breakdown */}
+            <div className="text-right space-y-1">
+              {/* Right: Total Amount */}
+              <div className="text-right">
+                <span className="block text-sm text-gray-300 font-semibold uppercase tracking-wider">
+                  Total
+                </span>
+                <span className="text-primary font-bold text-xl">
+                  {formatCurrency(computedSubtotal)}
+                </span>
+              </div>
             </div>
           </div>
 
