@@ -2,72 +2,60 @@
 
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function FAQPage() {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
 
     const faqs = [
         {
-            category: "General",
+            category: "Product & Quality",
             questions: [
                 {
-                    q: "What is Grodify?",
-                    a: "Grodify is a premium platform offering high-quality digital flyer templates for nightclubs, lounges, events, and businesses. Our templates are professionally designed and easy to customize.",
+                    q: "What do I receive when I purchase a flyer?",
+                    a: "You will receive a high-quality JPG flyer in professional resolution, ready to post on social media or print. We do not deliver PSD files. All flyers are delivered as finished designs.",
                 },
                 {
-                    q: "How do I download a flyer?",
-                    a: "Simply browse our collection, select a flyer you like, customize it if needed, add it to your cart, and complete the checkout process. You'll receive instant access to download your flyer in high resolution.",
+                    q: "What file format will I receive?",
+                    a: "All flyers are delivered in JPG format only. This ensures compatibility, fast delivery, and easy sharing.",
                 },
                 {
-                    q: "What file formats do you provide?",
-                    a: "All flyers are provided in high-resolution PNG and PDF formats, perfect for both digital sharing and printing.",
+                    q: "Are your flyers high quality?",
+                    a: "Absolutely. All Grodify flyers are first-class quality, high resolution, professionally designed, and optimized for nightlife promotions. We focus on premium visuals that stand out.",
+                },
+                {
+                    q: "Do you offer birthday flyers?",
+                    a: "Yes. We specialize in Birthday Flyers with premium quality, bold visuals, and nightlife-ready designs. Birthday flyers are one of our most popular products.",
                 },
             ],
         },
         {
-            category: "Pricing & Payment",
+            category: "Pricing & Options",
             questions: [
                 {
-                    q: "How much do flyers cost?",
-                    a: "Our flyers are priced individually, with most templates ranging from $5 to $20. We also offer subscription plans for unlimited downloads.",
+                    q: "What flyer prices do you offer?",
+                    a: "We offer three fixed flyer prices: $10 – Basic Flyer, $15 – Regular Flyer, and $40 – Premium Flyer. Each price reflects the level of design detail and complexity.",
                 },
                 {
-                    q: "What payment methods do you accept?",
-                    a: "We accept all major credit cards, debit cards, and PayPal through our secure payment processor Stripe.",
-                },
-                {
-                    q: "Do you offer refunds?",
-                    a: "Yes, we offer a 30-day money-back guarantee. If you're not satisfied with your purchase, contact us for a full refund.",
+                    q: "Do you offer animated flyers?",
+                    a: "Yes. Animated flyers are available as an add-on for $25. If selected, you will receive an animated version optimized for social media use.",
                 },
             ],
         },
         {
-            category: "Customization",
+            category: "Delivery & Trust",
             questions: [
                 {
-                    q: "Can I customize the flyers?",
-                    a: "Yes! All our templates are fully customizable. You can change text, colors, images, and more using our built-in editor or your preferred design software.",
+                    q: "What are your delivery times?",
+                    a: "We offer multiple delivery options: Standard delivery (included), 5-hour rush ($10), and 1-hour express ($20). Delivery time depends on the option selected at checkout.",
                 },
                 {
-                    q: "Do I need design skills?",
-                    a: "No design skills required! Our templates are ready to use and easy to customize, even for beginners.",
+                    q: "What happens if my flyer is delayed?",
+                    a: "In rare cases, delays may occur when we are experiencing a high volume of orders. However, we always deliver and honor the delivery time selected. Grodify is known for reliability and consistency in nightlife flyer design.",
                 },
                 {
-                    q: "Can I use my own images?",
-                    a: "Absolutely! You can upload and use your own images in any template.",
-                },
-            ],
-        },
-        {
-            category: "Licensing",
-            questions: [
-                {
-                    q: "Can I use flyers for commercial purposes?",
-                    a: "Yes, all our flyers come with a commercial license. You can use them for your business, events, or client projects.",
-                },
-                {
-                    q: "Can I resell the templates?",
-                    a: "No, you cannot resell or redistribute the templates themselves. However, you can use them for unlimited client projects.",
+                    q: "Can I trust Grodify with my order?",
+                    a: "Yes. We always complete our work. If you placed an order, expect your flyer. Grodify is one of the top platforms for nightlife flyer design, and customer satisfaction is our priority.",
                 },
             ],
         },
@@ -139,12 +127,12 @@ export default function FAQPage() {
                     <p className="text-xl text-gray-400 mb-8">
                         Our support team is here to help
                     </p>
-                    <a
+                    <Link
                         href="/contact"
                         className="inline-block bg-red-500 hover:bg-red-600 text-white font-semibold px-8 py-4 rounded-lg transition-colors"
                     >
                         Contact Support
-                    </a>
+                    </Link>
                 </div>
             </section>
         </div>

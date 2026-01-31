@@ -16,27 +16,17 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Quick Links */}
           <div className="space-y-4">
             <h3 className="font-semibold text-card-foreground">Quick Links</h3>
             <div className="space-y-2">
               <Link href="/howItWorks" className="block text-muted-foreground hover:text-primary transition-colors text-sm">
                 How It Works
               </Link>
-              <Link href="/categories" className="block text-muted-foreground hover:text-primary transition-colors text-sm">
-                Browse Flyers
-              </Link>
               <Link
                 href="/categories"
                 className="block text-muted-foreground hover:text-primary transition-colors text-sm"
               >
                 Categories
-              </Link>
-              <Link
-                href="/pricing"
-                className="block text-muted-foreground hover:text-primary transition-colors text-sm"
-              >
-                Pricing
               </Link>
             </div>
           </div>

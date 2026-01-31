@@ -121,9 +121,6 @@ export const Header = observer(() => {
             <Link href="/categories" className="text-foreground hover:text-primary transition-colors">
               Categories
             </Link>
-            <Link href="/pricing" className="text-foreground hover:text-primary transition-colors">
-              Pricing
-            </Link>
           </nav>
 
           {/* User Actions */}

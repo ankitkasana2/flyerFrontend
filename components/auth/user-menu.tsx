@@ -46,15 +46,15 @@ const UserMenu = () => {
   if (!authStore.user) {
     return (
       <>
-        <Button 
-          className='h-7 w-14 sm:h-8 sm:w-18 hover:cursor-pointer' 
+        <Button
+          className='h-7 w-14 sm:h-8 sm:w-18 hover:cursor-pointer'
           onClick={() => authStore.handleAuthModal()}
         >
           Sign In
         </Button>
-        <AuthModal 
-          isOpen={authStore.authModal} 
-          onClose={() => authStore.handleAuthModal()} 
+        <AuthModal
+          isOpen={authStore.authModal}
+          onClose={() => authStore.handleAuthModal()}
         />
       </>
     )
@@ -80,16 +80,16 @@ const UserMenu = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center focus:outline-none focus-visible:outline-none">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="relative h-9 w-9 rounded-full p-0 hover:!bg-transparent hover:cursor-pointer focus-visible:outline-none focus-visible:ring-0 focus:outline-none focus:ring-0 transition-transform active:scale-95"
           aria-label="User menu"
         >
           <Avatar className="h-9 w-9 ring-2 ring-white/10 shadow-lg">
             {authStore.user.avatar && (
-              <AvatarImage 
-                src={authStore.user.avatar} 
-                alt={authStore.user.name || 'User'} 
+              <AvatarImage
+                src={authStore.user.avatar}
+                alt={authStore.user.name || 'User'}
               />
             )}
             <AvatarFallback className="bg-gradient-to-br from-primary to-orange-600 text-white font-extrabold text-lg tracking-tighter">
@@ -156,12 +156,6 @@ const UserMenu = () => {
           <Link href="/categories">
             <ChartBarStacked className="h-4 w-4 mr-2" />
             <span>Category</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="sm:hidden">
-          <Link href="/pricing">
-            <CircleDollarSign className="h-4 w-4 mr-2" />
-            <span>Pricing</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
