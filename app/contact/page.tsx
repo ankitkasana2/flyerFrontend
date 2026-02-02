@@ -128,7 +128,7 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-lg">Email</h3>
-                                        <p className="text-gray-400">support@grodify.com</p>
+                                        <p className="text-gray-400">admin@grodify.com</p>
                                     </div>
                                 </div>
                             </div>
@@ -139,28 +139,16 @@ export default function ContactPage() {
                                         <Phone className="w-6 h-6 text-red-500" />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-lg">Phone</h3>
-                                        <p className="text-gray-400">+1 (555) 123-4567</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-900 border border-gray-800 rounded-lg p-8 hover:border-red-500 transition-colors">
-                                <div className="flex items-center space-x-4 mb-4">
-                                    <div className="flex items-center justify-center w-12 h-12 bg-red-500/10 rounded-full">
-                                        <MapPin className="w-6 h-6 text-red-500" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-lg">Address</h3>
-                                        <p className="text-gray-400">123 Design Street<br />Creative City, CC 12345</p>
+                                        <h3 className="font-semibold text-lg">Response Time</h3>
+                                        <p className="text-gray-400">Within 24 hours</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-                                <h3 className="font-semibold text-lg mb-2">Response Time</h3>
+                                <h3 className="font-semibold text-lg mb-2">Support</h3>
                                 <p className="text-gray-400">
-                                    We typically respond within 24 hours during business days.
+                                    Our team is here to help you with any questions about our flyers or services.
                                 </p>
                             </div>
                         </div>

@@ -67,7 +67,7 @@ function ThankYouContent() {
         <div className="mt-10 pt-6 border-t border-zinc-800">
           <p className="text-sm text-zinc-500">
             Need help?{' '}
-            <a href="mailto:support@grodify.com" className="font-medium text-red-500 hover:text-red-400 transition-colors">
+            <a href="mailto:admin@grodify.com" className="font-medium text-red-500 hover:text-red-400 transition-colors">
               Contact Support
             </a>
           </p>

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const toEmail = searchParams.get('to') || process.env.AWS_SES_FROM_EMAIL || 'ankitoffice121@gmail.com';
+    const toEmail = searchParams.get('to') || process.env.AWS_SES_FROM_EMAIL || 'admin@grodify.com';
 
     console.log('🧪 Target email:', toEmail);
     console.log('🧪 About to call sendOrderConfirmationEmail...');
