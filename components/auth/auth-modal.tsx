@@ -258,7 +258,6 @@ const AuthModal = observer(({
             onClose()
             return
           } catch (loginError: any) {
-            console.error('Auto-login after OTP verification failed:', loginError)
             toast({
               title: "✅ Email Verified!",
               description: "Your email has been verified. Please sign in manually.",
@@ -285,7 +284,6 @@ const AuthModal = observer(({
         })
       }
     } catch (error: any) {
-      console.error('Error verifying OTP:', error);
       toast({
         title: "Verification Failed",
         description: error?.message || "Invalid verification code",
@@ -407,7 +405,6 @@ const AuthModal = observer(({
         description: `A new verification code has been sent to ${destination} via ${deliveryMedium}.`,
       });
     } catch (error: any) {
-      console.error('Error resending verification code:', error);
       toast({
         title: "Error",
         description: error?.message || "Failed to resend verification code. Please try again.",

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const sessionId = searchParams.get('session_id')
 
     if (!sessionId) {
-      console.error('❌ No session_id in request')
+
       return NextResponse.redirect(
         new URL('/success?error=missing_session_id', baseUrl)
       )
@@ -37,21 +37,21 @@ export async function GET(request: NextRequest) {
     try {
       session = await stripe.checkout.sessions.retrieve(sessionId)
     } catch (stripeError: any) {
-      console.error('❌ Stripe session retrieval error:', stripeError);
+
       return NextResponse.redirect(
         new URL(`/success?session_id=${sessionId}&error=${encodeURIComponent('Stripe error: ' + stripeError.message)}`, baseUrl)
       )
     }
 
     if (!session) {
-      console.error('❌ Session not found:', sessionId)
+
       return NextResponse.redirect(
         new URL('/success?error=session_not_found', baseUrl)
       )
     }
 
     if (session.payment_status !== 'paid') {
-      console.error('❌ Payment not successful for session:', sessionId)
+
       return NextResponse.redirect(
         new URL(`/success?session_id=${sessionId}&error=payment_failed`, baseUrl)
       )
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
 
 
     // Get order data from Stripe metadata
-    console.log('🔍 Stripe metadata received:', session.metadata)
+
     let orderDataBase64 = session.metadata?.orderData
     const chunkCount = session.metadata?.chunkCount
 
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!orderDataBase64) {
-      console.error('❌ No order data found in session metadata')
+
       return NextResponse.redirect(
         new URL(`/success?session_id=${sessionId}&error=${encodeURIComponent('Order data not found in metadata')}`, baseUrl)
       )
@@ -88,9 +88,9 @@ export async function GET(request: NextRequest) {
     try {
       const orderDataString = Buffer.from(orderDataBase64, 'base64').toString('utf-8')
       orderData = JSON.parse(orderDataString)
-      console.log('✅ Decoded order data for:', orderData.userEmail)
+
     } catch (decodeError: any) {
-      console.error('❌ Error decoding order data:', decodeError)
+
       return NextResponse.redirect(
         new URL(`/success?session_id=${sessionId}&error=${encodeURIComponent('Failed to decode order data: ' + decodeError.message)}`, baseUrl)
       )
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
     const createdOrderIds: string[] = [];
     const allTempFilesToCleanup: string[] = [];
 
-    console.log(`📦 Processing ${itemsToProcess.length} order(s) from cart`);
+
 
     // Loop through each item and create a separate order
     for (let index = 0; index < itemsToProcess.length; index++) {
@@ -201,18 +201,18 @@ export async function GET(request: NextRequest) {
                 formData.append(backendFieldName, blob as any, filepath.split(/[\\\/]/).pop());
                 tempFilesToCleanup.push(filepath);
               } catch (err) {
-                console.error(`❌ Failed to read temp file ${filepath}:`, err);
+
               }
             }
           }
         } catch (importErr) {
-          console.error('❌ Error importing FS tools:', importErr);
+
         }
       }
 
       // Submit THIS order to backend API
       try {
-        console.log(`🚀 Submitting order ${index + 1} to backend...`);
+
         const response = await fetch(`${BACKEND_API_URL}/api/orders`, {
           method: 'POST',
           body: formData
@@ -220,7 +220,7 @@ export async function GET(request: NextRequest) {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error(`❌ Backend API error for item ${index + 1}:`, errorText);
+
           continue;
         }
 
@@ -247,12 +247,12 @@ export async function GET(request: NextRequest) {
               imageUrl: formDataObj.image_url
             });
           } catch (emailError: any) {
-            console.error('📧 ⚠️ Failed to send confirmation email:', emailError);
+
           }
 
         }
       } catch (fetchError) {
-        console.error(`❌ Error submitting order ${index + 1}:`, fetchError);
+
       }
     }
 
@@ -290,7 +290,7 @@ export async function GET(request: NextRequest) {
     )
 
   } catch (error: any) {
-    console.error('❌ Checkout success handler error:', error)
+
 
     // Resolve baseUrl again for the catch block
     let baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'

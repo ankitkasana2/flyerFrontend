@@ -68,13 +68,11 @@ export async function listLibrary(userId: string, type?: LibraryItem["type"]): P
         })
 
         if (!res.ok) {
-            console.error(`[API] Error fetching library: ${res.status} ${res.statusText}`)
             return []
         }
 
         const data = await res.json()
         if (!data.success) {
-            console.error("[API] API Error listing library:", data.message)
             return []
         }
 
@@ -95,7 +93,6 @@ export async function listLibrary(userId: string, type?: LibraryItem["type"]): P
         }
         return items
     } catch (error) {
-        console.error("[API] Network/Parsing Error listing library:", error)
         return []
     }
 }
@@ -115,19 +112,15 @@ export async function saveToLibrary(userId: string, file: File): Promise<string 
         })
 
         if (!res.ok) {
-            const text = await res.text()
-            console.error(`[API] Upload failed status: ${res.status} ${res.statusText}`, text)
             return null
         }
 
         const data = await res.json()
         if (!data.success) {
-            console.error("[API] Upload API returned false success:", data)
             return null
         }
         return data.file_url || data.media?.file_url || data.url || null
     } catch (error) {
-        console.error("[API] Error saving to library:", error)
         return null
     }
 }
@@ -148,18 +141,15 @@ export async function saveToTemp(file: File, fieldName: string = "file"): Promis
         })
 
         if (!res.ok) {
-            console.error(`[Temp] Upload failed: ${res.status}`)
             return null
         }
 
         const data = await res.json()
         if (!data.success) {
-            console.error("[Temp] API returned error:", data.error)
             return null
         }
         return { filepath: data.filepath, filename: data.filename }
     } catch (error) {
-        console.error("[Temp] Error saving:", error)
         return null
     }
 }
@@ -177,7 +167,6 @@ export async function removeFromLibrary(userId: string, id: string): Promise<boo
         const data = await res.json()
         return data.success
     } catch (error) {
-        console.error("[API] Error removing from library:", error)
         return false
     }
 }
@@ -198,7 +187,6 @@ export async function renameLibraryItem(userId: string, id: string, newName: str
         const data = await res.json()
         return data.success
     } catch (error) {
-        console.error("[API] Error renaming item:", error)
         return false
     }
 }
@@ -217,7 +205,6 @@ export async function replaceLibraryItem(userId: string, id: string, file: File)
         const data = await res.json()
         return data.success
     } catch (error) {
-        console.error("[API] Error replacing item:", error)
         return false
     }
 }
@@ -238,7 +225,6 @@ export async function setLibraryItemIsLogo(userId: string, id: string, isLogo: b
         const data = await res.json()
         return data.success
     } catch (error) {
-        console.error("[API] Error setting logo status:", error)
         return false
     }
 }
@@ -258,7 +244,6 @@ export async function setLibraryItemIsImage(userId: string, id: string, isImage:
         const data = await res.json()
         return data.success
     } catch (error) {
-        console.error("[API] Error setting image status:", error)
         return false
     }
 }

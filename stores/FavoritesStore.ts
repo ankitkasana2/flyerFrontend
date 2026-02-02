@@ -62,7 +62,6 @@ export class FavoritesStore {
         throw new Error(data.message || "Failed to add to favorites")
       }
     } catch (error: any) {
-      console.error("❌ Error adding to favorites:", error)
       runInAction(() => {
         this.error = error.message
       })
@@ -101,7 +100,6 @@ export class FavoritesStore {
         throw new Error(data.message || "Failed to remove from favorites")
       }
     } catch (error: any) {
-      console.error("❌ Error removing from favorites:", error)
       runInAction(() => {
         this.error = error.message
       })
@@ -112,7 +110,6 @@ export class FavoritesStore {
   // Fetch user's favorites from backend
   async fetchFavorites(userId: string) {
     if (!userId) {
-      console.warn("⚠️ No user ID provided, skipping favorites fetch")
       return
     }
 
@@ -139,7 +136,6 @@ export class FavoritesStore {
         throw new Error("Failed to fetch favorites")
       }
     } catch (error: any) {
-      console.error("❌ Error fetching favorites:", error)
       runInAction(() => {
         this.error = error.message
         this.loading = false
@@ -180,7 +176,6 @@ export class FavoritesStore {
 
   // Legacy method for backward compatibility
   handleFavorites(id: string) {
-    console.warn("⚠️ handleFavorites is deprecated. Use toggleFavorite instead.")
     if (!this.favorites.includes(id)) {
       this.favorites.push(id)
     } else {

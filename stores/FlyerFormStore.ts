@@ -186,7 +186,6 @@ export class FlyerFormStore {
         this.loading = false;
       });
     } catch (err) {
-      console.error("Failed to load flyer:", err);
       runInAction(() => {
         this.loading = false;
       });
@@ -234,7 +233,6 @@ export class FlyerFormStore {
       });
 
     } catch (error) {
-      console.error("Error fetching similar flyers:", error);
       // If API fails, return empty list
       this.similarFlyers = [];
     }

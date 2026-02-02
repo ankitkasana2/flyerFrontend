@@ -214,7 +214,6 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
             await cartStore.addToCart(finalFormData);
             toast.success("Added to cart. You can keep shopping.");
         } catch (error: any) {
-            console.error("Cart save error", error);
             toast.error(error.message || "Unable to add to cart. Please try again.");
         }
     };
@@ -254,7 +253,7 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
 
             // 2. Resolve Flyer Image
             const flyerImageUrl = flyer?.image_url || flyer?.imageUrl || "";
-            console.log("DEBUG NoPhotoForm image_url:", flyerImageUrl);
+
 
             // Construct API Body
             const apiBody = {
@@ -321,7 +320,6 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
             }
 
         } catch (error) {
-            console.error("Checkout error:", error);
             toast.error("An error occurred during checkout. Please try again.");
             setIsSubmitting(false);
         }

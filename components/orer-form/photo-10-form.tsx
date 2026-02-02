@@ -222,7 +222,6 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             await cartStore.addToCart(finalFormData);
             toast.success("Added to cart. You can keep shopping.");
         } catch (error: any) {
-            console.error("Cart save error", error);
             toast.error(error.message || "Unable to add to cart. Please try again.");
         }
     };
@@ -354,7 +353,7 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
                 image_url: flyer?.image_url || flyer?.imageUrl || "",
             };
 
-            console.log("DEBUG Photo10Form image_url:", apiBody.image_url);
+
 
             // Create Stripe Session
             const res = await fetch("/api/checkout/create-session", {
@@ -385,7 +384,6 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             }
 
         } catch (error) {
-            console.error("Checkout error:", error);
             toast.error("An error occurred during checkout. Please try again.");
         } finally {
             setIsSubmitting(false);

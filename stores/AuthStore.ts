@@ -128,7 +128,6 @@ export class AuthStore {
         case 'signInWithRedirect_failure':
           // Handle redirect sign-in success/failure
           if (payload.event === 'signInWithRedirect_failure') {
-            console.error('Sign in with redirect failed:', payload.message || 'Unknown error')
           }
           break
         case 'tokenRefresh':
@@ -154,7 +153,6 @@ export class AuthStore {
         this.token = parsed.token ?? null
       })
     } catch (error) {
-      console.error("Failed to hydrate auth session", error)
       window.localStorage.removeItem(STORAGE_KEY)
     }
   }
@@ -363,7 +361,6 @@ export class AuthStore {
           }
 
         } catch (e) {
-          console.warn('Could not extract data from token:', e)
         }
       }
 
@@ -458,11 +455,8 @@ export class AuthStore {
         })
 
         if (result.success) {
-        } else {
-          console.error('❌ Failed to register user in database:', result.message);
         }
       } catch (dbError) {
-        console.error('❌ Error registering user in database:', dbError);
         // Continue with authentication even if database registration fails
       }
 
@@ -504,7 +498,6 @@ export class AuthStore {
           }
         } catch (loginError: any) {
           // Registration successful but auto-login failed
-          console.error('Auto-login after registration failed:', loginError)
           return {
             success: true,
             autoLogin: false,
@@ -588,7 +581,6 @@ export class AuthStore {
     try {
       await awsSignOut()
     } catch (error) {
-      console.error('Error during sign out:', error)
     } finally {
       // Clear user session
       this.clearUser()
@@ -620,7 +612,6 @@ export class AuthStore {
       }
       await awsSignInWithRedirect(signInInput)
     } catch (error: any) {
-      console.error('Error signing in with provider:', error)
 
       let errorMessage = `Failed to sign in with ${provider}`
       const errorString = error?.message || error?.toString() || ''
@@ -676,7 +667,6 @@ export class AuthStore {
         nextStep: result.nextStep
       }
     } catch (error: any) {
-      console.error('Error sending OTP:', error)
 
       let errorMessage = 'Failed to send password reset code'
       const errorString = error?.message || error?.toString() || ''
@@ -768,7 +758,6 @@ export class AuthStore {
         message: 'Password reset successful. You can now sign in with your new password.'
       }
     } catch (error: any) {
-      console.error('Error verifying OTP:', error)
 
       let errorMessage = 'Failed to reset password'
       const errorString = error?.message || error?.toString() || ''

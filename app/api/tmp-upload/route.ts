@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
     // Write file to temp storage
     await writeFile(filepath, buffer);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       filepath,
       filename,
       fieldName,
@@ -43,7 +43,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('❌ Upload error:', error);
     return NextResponse.json(
       { error: error.message || 'Upload failed' },
       { status: 500 }

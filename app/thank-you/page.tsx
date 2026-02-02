@@ -15,7 +15,6 @@ function ThankYouContent() {
   useEffect(() => {
     // Clear local cart store items on success
     cartStore.cartItems = [];
-    console.log('✅ Local cart store cleared');
   }, [cartStore]);
 
   return (

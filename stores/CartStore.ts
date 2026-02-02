@@ -122,7 +122,6 @@ export class CartStore {
         this.cartItems = []
       }
     } catch (err) {
-      console.error("Cart load error:", err)
       this.error = "Failed to load cart"
       this.cartItems = []
     } finally {
@@ -160,7 +159,6 @@ export class CartStore {
         throw new Error(data.message || 'Failed to add item to cart')
       }
     } catch (err) {
-      console.error("Add to cart error:", err)
       this.addError = err instanceof Error ? err.message : 'Failed to add item to cart'
       throw err
     } finally {
@@ -184,7 +182,6 @@ export class CartStore {
         this.cartItems = this.cartItems.filter(item => item.id !== itemId)
       }
     } catch (err) {
-      console.error("Failed to remove item from cart:", err)
       this.error = "Failed to remove item from cart"
     }
   }
@@ -203,7 +200,6 @@ export class CartStore {
         this.cartItems = []
       }
     } catch (err) {
-      console.error("Failed to clear cart:", err)
       this.error = "Failed to clear cart"
     }
   }

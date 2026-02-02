@@ -14,7 +14,7 @@ export function useCheckout() {
 
     try {
       const stripe = await stripePromise
-      
+
       if (!stripe) {
         throw new Error('Failed to load Stripe')
       }
@@ -40,7 +40,7 @@ export function useCheckout() {
 
       // Redirect to Stripe Checkout
       const result = await stripe.redirectToCheckout({ sessionId })
-      
+
       if (result.error) {
         throw result.error
       }
@@ -49,7 +49,6 @@ export function useCheckout() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
       setError(errorMessage)
-      console.error('Checkout error:', err)
       return { success: false, error: errorMessage }
     } finally {
       setIsProcessing(false)

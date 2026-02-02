@@ -58,7 +58,6 @@ export class BannerStore {
     } catch (error) {
       runInAction(() => {
         this.error = error instanceof Error ? error.message : 'An unknown error occurred'
-        console.error('Error fetching banners:', error)
       })
     } finally {
       runInAction(() => {

@@ -31,7 +31,7 @@ export class CategoryStore {
         runInAction(() => {
             this.isLoading = true;
         });
-        
+
         try {
             const res = await fetch(getApiUrl('/api/categories'));
             const data = await res.json();
@@ -43,7 +43,6 @@ export class CategoryStore {
                 });
             }
         } catch (error) {
-            console.error("Failed to fetch categories:", error);
         } finally {
             runInAction(() => {
                 this.isLoading = false;

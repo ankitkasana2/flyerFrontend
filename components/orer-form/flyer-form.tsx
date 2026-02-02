@@ -63,7 +63,6 @@ const fetchCartByUserId = async (userId: string) => {
     const cartData = await response.json();
     return cartData;
   } catch (error) {
-    console.error('Error fetching cart:', error);
     throw error;
   }
 };
@@ -321,7 +320,6 @@ const EventBookingForm = () => {
           const cart = await fetchCartByUserId(authStore.user.id);
           setCartData(cart);
         } catch (error) {
-          console.error('Failed to load cart data:', error);
           toast.error('Failed to load cart data');
         }
       }
@@ -342,7 +340,6 @@ const EventBookingForm = () => {
       setCartData(cart);
       toast.success('Cart data refreshed');
     } catch (error) {
-      console.error('Failed to refresh cart data:', error);
       toast.error('Failed to refresh cart data');
     }
   };
@@ -646,8 +643,7 @@ const EventBookingForm = () => {
         temp_files: tempFiles
       };
 
-      console.log("DEBUG: flyerImage value in handleSubmit:", flyerImage);
-      console.log("DEBUG: apiBody.image_url:", apiBody.image_url);
+
 
 
 
@@ -683,8 +679,6 @@ const EventBookingForm = () => {
 
 
       if (!res.ok) {
-        const text = await res.text().catch(() => null);
-        console.error("❌ Checkout session error response:", text);
         toast.error("Unable to create checkout session. Please try again.");
         setIsSubmitting(false);
         return;
@@ -693,7 +687,6 @@ const EventBookingForm = () => {
       const data = await res.json();
 
       if (!data?.sessionId) {
-        console.error("❌ Stripe response missing sessionId", data);
         toast.error("Checkout session not generated. Please try again.");
         setIsSubmitting(false);
         return;
@@ -703,7 +696,6 @@ const EventBookingForm = () => {
       const stripeSession = await fetch(`/api/checkout/get-session-url?sessionId=${data.sessionId}`);
 
       if (!stripeSession.ok) {
-        console.error('❌ Failed to get session URL');
         toast.error("Failed to get payment URL. Please try again.");
         setIsSubmitting(false);
         return;
@@ -712,7 +704,6 @@ const EventBookingForm = () => {
       const { url } = await stripeSession.json();
 
       if (!url) {
-        console.error('❌ No checkout URL returned');
         toast.error("Failed to get payment URL. Please try again.");
         setIsSubmitting(false);
         return;
@@ -722,12 +713,6 @@ const EventBookingForm = () => {
       window.location.href = url;
 
     } catch (err) {
-      console.error("❌ Checkout error:", err);
-      console.error("Error details:", {
-        message: err instanceof Error ? err.message : 'Unknown error',
-        stack: err instanceof Error ? err.stack : undefined,
-        error: err
-      });
       toast.error("An error occurred during checkout. Please try again.");
       setIsSubmitting(false);
     }
@@ -867,9 +852,7 @@ const EventBookingForm = () => {
 
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-        console.error("❌ Test order error:", errorData);
-        toast.error(`Test order failed: ${errorData.message || "Please try again."}`);
+        toast.error(`Test order failed. Please try again.`);
         return;
       }
 
@@ -886,8 +869,7 @@ const EventBookingForm = () => {
       }
 
     } catch (error: any) {
-      console.error("❌ Test order error:", error);
-      toast.error(`Test order failed: ${error.message || "Please try again."}`);
+      toast.error(`Test order failed. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -948,7 +930,6 @@ const EventBookingForm = () => {
       await cartStore.addToCart(finalFormData);
       toast.success("Added to cart. You can keep shopping.");
     } catch (error: any) {
-      console.error("Cart save error", error);
       toast.error(error.message || "Unable to add to cart. Please try again.");
     }
   };

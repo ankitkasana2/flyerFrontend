@@ -49,7 +49,6 @@ export const sendEmail = async ({ to, subject, html }: SendEmailParams) => {
         const result = await ses.sendEmail(params).promise();
         return result;
     } catch (error: any) {
-        console.error("❌ Error sending email:", error);
         throw error;
     }
 };
@@ -88,7 +87,6 @@ export const sendOrderConfirmationEmail = async (params: SendOrderConfirmationPa
             html,
         });
     } catch (error) {
-        console.error('📧 ❌ sendOrderConfirmationEmail failed:', error);
         throw error;
     }
 };
