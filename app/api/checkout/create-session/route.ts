@@ -10,19 +10,18 @@ export async function POST(request: Request) {
   try {
     const { amount, orderData } = await request.json()
 
-    // Determine the base URL dynamically to avoid 0.0.0.0 issues
-    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL
-    if (!baseUrl || baseUrl.includes('0.0.0.0')) {
-      const host = request.headers.get('host')
-      const protocol = request.headers.get('x-forwarded-proto') || 'http'
-      if (host && !host.includes('0.0.0.0')) {
-        baseUrl = `${protocol}://${host}`
-      } else {
-        // Fallback to environment variable or localhost
-        baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-      }
-      console.log('⚠️ Adapted Base URL for Stripe:', baseUrl)
+    // Determine the base URL dynamically, prioritizing the current host header
+    const host = request.headers.get('host')
+    const protocol = request.headers.get('x-forwarded-proto') || 'http'
+    let baseUrl = (host && !host.includes('0.0.0.0'))
+      ? `${protocol}://${host}`
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+
+    // Safety check for invalid baseUrl
+    if (baseUrl.includes('0.0.0.0')) {
+      baseUrl = 'http://localhost:3000'
     }
+    console.log('✅ Base URL for Stripe:', baseUrl)
 
     console.log('✅ Creating checkout session for:', orderData.userEmail)
 

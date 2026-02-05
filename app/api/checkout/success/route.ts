@@ -10,16 +10,16 @@ const BACKEND_API_URL = API_BASE_URL;
 
 export async function GET(request: NextRequest) {
   try {
-    // Determine the base URL dynamically to avoid 0.0.0.0 issues
-    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL
-    if (!baseUrl || baseUrl.includes('0.0.0.0')) {
-      const host = request.headers.get('host')
-      const protocol = request.headers.get('x-forwarded-proto') || 'http'
-      if (host && !host.includes('0.0.0.0')) {
-        baseUrl = `${protocol}://${host}`
-      } else {
-        baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-      }
+    // Determine the base URL dynamically, prioritizing the current host header
+    const host = request.headers.get('host')
+    const protocol = request.headers.get('x-forwarded-proto') || 'http'
+    let baseUrl = (host && !host.includes('0.0.0.0'))
+      ? `${protocol}://${host}`
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+
+    // Safety check for invalid baseUrl
+    if (baseUrl.includes('0.0.0.0')) {
+      baseUrl = 'http://localhost:3000'
     }
 
     const { searchParams } = new URL(request.url)

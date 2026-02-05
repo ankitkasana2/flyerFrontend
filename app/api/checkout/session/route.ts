@@ -10,8 +10,10 @@ export async function POST(req: NextRequest) {
   try {
     const { item } = await req.json();
 
-    const origin = req.headers.get("x-forwarded-proto")
-      ? `${req.headers.get("x-forwarded-proto")}://${req.headers.get("host")}`
+    const host = req.headers.get('host')
+    const protocol = req.headers.get('x-forwarded-proto') || 'http'
+    const origin = (host && !host.includes('0.0.0.0'))
+      ? `${protocol}://${host}`
       : req.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
     const itemsArray = Array.isArray(item) ? item : [item];
