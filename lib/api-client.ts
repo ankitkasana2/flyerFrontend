@@ -25,7 +25,7 @@ export const registerUserInDatabase = async (
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-        const response = await fetch(getApiUrl("/api/web/auth/register"), {
+        const response = await fetch(getApiUrl("/web/auth/register"), {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

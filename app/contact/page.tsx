@@ -23,7 +23,7 @@ export default function ContactPage() {
 
         await withLoading(async () => {
             try {
-                const response = await fetch(getApiUrl("/api/contact"), {
+                const response = await fetch(getApiUrl("/contact"), {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

@@ -33,7 +33,7 @@ export class CategoryStore {
         });
 
         try {
-            const res = await fetch(getApiUrl('/api/categories'));
+            const res = await fetch(getApiUrl('/categories'));
             const data = await res.json();
             if (data.success && Array.isArray(data.categories)) {
 

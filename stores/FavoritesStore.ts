@@ -37,7 +37,7 @@ export class FavoritesStore {
     }
 
     try {
-      const response = await fetch(getApiUrl("/api/favorites/add"), {
+      const response = await fetch(getApiUrl("/favorites/add"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,7 +76,7 @@ export class FavoritesStore {
     }
 
     try {
-      const response = await fetch(getApiUrl(`/api/favorites/remove`), {
+      const response = await fetch(getApiUrl(`/favorites/remove`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +117,7 @@ export class FavoritesStore {
     this.error = null
 
     try {
-      const response = await fetch(getApiUrl(`/api/favorites/user/${userId}`), {
+      const response = await fetch(getApiUrl(`/favorites/user/${userId}`), {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

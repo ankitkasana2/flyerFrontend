@@ -10,7 +10,7 @@ export type LibraryItem = {
 }
 
 // Base URL for user media API
-const MEDIA_API_URL = getApiUrl("/api/user-media")
+const MEDIA_API_URL = getApiUrl("/user-media")
 
 export async function fileToDataUrl(file: File): Promise<string> {
     return new Promise((resolve, reject) => {

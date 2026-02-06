@@ -144,7 +144,7 @@ export class FlyerFormStore {
       this.resetForm() // Reset form when fetching a new flyer
     })
     try {
-      const res = await fetch(getApiUrl(`/api/flyers/${id}`), {
+      const res = await fetch(getApiUrl(`/flyers/${id}`), {
         cache: "no-store",
       });
 
@@ -207,7 +207,7 @@ export class FlyerFormStore {
         : [flyer.category];
 
       // Fetch all flyers from API
-      const response = await fetch(getApiUrl('/api/flyers'));
+      const response = await fetch(getApiUrl('/flyers'));
       const allFlyers = await response.json();
 
       // Filter flyers that share at least one category with the current flyer

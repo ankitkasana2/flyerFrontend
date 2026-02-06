@@ -65,7 +65,7 @@ export async function submitOrder(
     const formData = buildOrderFormData(orderSubmission)
 
 
-    const response = await fetch(getApiUrl('/api/orders'), {
+    const response = await fetch(getApiUrl('/orders'), {
       method: 'POST',
       body: formData,
       // Note: Don't set Content-Type header - let the browser set it with the correct boundary

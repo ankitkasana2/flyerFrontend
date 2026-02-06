@@ -112,7 +112,7 @@ export class CartStore {
     this.error = null
 
     try {
-      const response = await fetch(getApiUrl(`/api/cart/${userId}`))
+      const response = await fetch(getApiUrl(`/cart/${userId}`))
       const data: CartResponse = await response.json()
 
 
@@ -139,7 +139,7 @@ export class CartStore {
     this.addError = null
 
     try {
-      const response = await fetch(getApiUrl('/api/cart/add'), {
+      const response = await fetch(getApiUrl('/cart/add'), {
         method: 'POST',
         body: formData
       })
@@ -172,7 +172,7 @@ export class CartStore {
 
     try {
       // You'll need to implement the remove endpoint
-      const response = await fetch(getApiUrl(`/api/cart/remove/${itemId}`), {
+      const response = await fetch(getApiUrl(`/cart/remove/${itemId}`), {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId })
@@ -192,7 +192,7 @@ export class CartStore {
 
     try {
       // You'll need to implement the clear endpoint
-      const response = await fetch(getApiUrl(`/api/cart/clear/${userId}`), {
+      const response = await fetch(getApiUrl(`/cart/clear/${userId}`), {
         method: "DELETE"
       })
 

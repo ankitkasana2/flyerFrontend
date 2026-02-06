@@ -88,7 +88,7 @@ const OrdersPage = observer(() => {
 
   const fetchFlyers = async () => {
     try {
-      const response = await fetch(getApiUrl('/api/flyers'))
+      const response = await fetch(getApiUrl('/flyers'))
       if (response.ok) {
         const data = await response.json()
         const map: Record<string, string> = {}
@@ -116,7 +116,7 @@ const OrdersPage = observer(() => {
     setLoading(true)
     loadingStore.startLoading("Loading orders...")
     try {
-      const response = await fetch(getApiUrl(`/api/orders/user/${authStore.user.id}`), {
+      const response = await fetch(getApiUrl(`/orders/user/${authStore.user.id}`), {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache'

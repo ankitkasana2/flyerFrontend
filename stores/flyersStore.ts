@@ -17,7 +17,7 @@ export class FlyersStore {
     this.error = null;
 
     try {
-      const response = await fetch(getApiUrl("/api/flyers"), {
+      const response = await fetch(getApiUrl("/flyers"), {
         cache: "no-store",
       });
 
