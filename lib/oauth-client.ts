@@ -30,8 +30,9 @@ export const signInWithGoogle = async (): Promise<OAuthResponse> => {
 
     try {
         // Build Google OAuth URL
-        // Using production redirect URI: https://grodify.com/auth/google/callback
-        const redirectUri = "https://grodify.com/auth/google/callback";
+        // Use dynamic redirect URI based on current location
+        const baseUrl = window.location.origin;
+        const redirectUri = `${baseUrl}/auth/google/callback`;
         const scope = "openid email profile";
         const responseType = "code";
 
@@ -98,58 +99,30 @@ export const signInWithApple = async (): Promise<OAuthResponse> => {
  */
 export const handleGoogleCallback = async (code: string): Promise<OAuthResponse> => {
     try {
-        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-        const clientSecret = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET;
-        // Using production redirect URI to match Google Cloud Console configuration
-        const redirectUri = "https://grodify.com/auth/google/callback";
+        // Use dynamic redirect URI based on current location to match the one used in signInWithGoogle
+        const baseUrl = window.location.origin;
+        const redirectUri = `${baseUrl}/auth/google/callback`;
 
-        if (!clientId || !clientSecret) {
-            throw new Error("Google OAuth credentials not configured");
+        // Exchange code for user info via our API route (server-side)
+        // This avoids exposing the client secret in the browser
+        const response = await fetch(`/api/auth/google/callback?code=${code}&redirect_uri=${encodeURIComponent(redirectUri)}`);
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to exchange code for token");
         }
 
-        // Exchange code for access token
-        const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-                code,
-                client_id: clientId,
-                client_secret: clientSecret,
-                redirect_uri: redirectUri,
-                grant_type: "authorization_code",
-            }),
-        });
+        const data = await response.json();
 
-        if (!tokenResponse.ok) {
-            throw new Error("Failed to exchange code for token");
+        if (!data.success || !data.user) {
+            throw new Error("Invalid response from server");
         }
-
-        const tokenData = await tokenResponse.json();
-        const accessToken = tokenData.access_token;
-
-        // Get user info
-        const userInfoResponse = await fetch(
-            "https://www.googleapis.com/oauth2/v2/userinfo",
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            }
-        );
-
-        if (!userInfoResponse.ok) {
-            throw new Error("Failed to get user info");
-        }
-
-        const userInfo = await userInfoResponse.json();
 
         const oauthUser: OAuthUserInfo = {
-            id: userInfo.id,
-            email: userInfo.email,
-            name: userInfo.name || userInfo.email,
-            picture: userInfo.picture,
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.name,
+            picture: data.user.picture,
             provider: "google",
         };
 
