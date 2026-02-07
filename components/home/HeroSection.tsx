@@ -81,8 +81,8 @@ const HeroSection = observer(() => {
 
   // No banners state - show skeleton as placeholder
   if (bannerStore.activeBanners.length === 0) {
-
-
+    console.warn('⚠️ No active banners found. Total banners:', bannerStore.banners.length);
+    console.warn('Banners data:', bannerStore.banners);
     return <BannerSkeleton />;
   }
 

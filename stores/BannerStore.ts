@@ -51,6 +51,7 @@ export class BannerStore {
       if (data.success) {
         runInAction(() => {
           this.banners = data.data
+          console.log('✅ Banners fetched successfully:', this.banners);
         })
       } else {
         throw new Error(data.message || 'Failed to fetch banners')
