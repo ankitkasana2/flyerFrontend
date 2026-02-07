@@ -35,7 +35,7 @@ export class BannerStore {
     this.error = null
 
     try {
-      const response = await fetch(`${getApiUrl()}/api/banners`, {
+      const response = await fetch(getApiUrl('/banners'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
