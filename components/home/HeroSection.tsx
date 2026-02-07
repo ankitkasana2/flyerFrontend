@@ -89,10 +89,9 @@ const HeroSection = observer(() => {
 
 
   const currentBanner = bannerStore.activeBanners[currentImageIndex];
-  const bannerImageUrl = currentBanner.image_url ||
-    (currentBanner.image.startsWith('http')
-      ? currentBanner.image
-      : `${API_BASE_URL}/uploads/banners/${currentBanner.image}`);
+  const bannerImageUrl = currentBanner.image.startsWith('http')
+    ? currentBanner.image
+    : `${API_BASE_URL}/uploads/banners/${currentBanner.image}`;
 
   return (
     <section className="relative w-full aspect-[2/1] sm:aspect-auto sm:min-h-[60vh] flex items-center bg-black">
