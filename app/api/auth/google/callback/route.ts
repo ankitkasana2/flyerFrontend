@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic'
+
 /**
  * Google OAuth Callback API Route
  * Handles the token exchange server-side for better security

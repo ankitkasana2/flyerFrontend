@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // Temporary in-memory storage (in production, use Redis or database)
 const orderDataStore = new Map<string, any>()
 
