@@ -7,7 +7,7 @@ export interface FlyerFormDetails {
     date?: Date | null;
     flyerInfo?: string;
     addressAndPhone?: string;
-    venueLogo?: File | null;
+    venueLogo?: File | string | null;
     venueText?: string;
   };
   extras?: {
@@ -16,12 +16,12 @@ export interface FlyerFormDetails {
     animatedFlyer?: boolean;
     instagramPostSize?: boolean;
   };
-  djsOrArtists?: Array<{ name: string; image?: File | null }>;
-  host?: Array<{ name: string; image?: File | null }> | null;
+  djsOrArtists?: Array<{ name: string; image?: File | string | null }>;
+  host?: Array<{ name: string; image?: File | string | null }> | null;
   sponsors?: {
-    sponsor1?: File | null;
-    sponsor2?: File | null;
-    sponsor3?: File | null;
+    sponsor1?: File | string | null;
+    sponsor2?: File | string | null;
+    sponsor3?: File | string | null;
   };
   customNotes?: string;
 }
@@ -92,7 +92,7 @@ export const createCartFormData = (
   if (options.imageUrl) {
     formData.append('image_url', options.imageUrl);
   }
-  
+
   // Venue logo or text
   if (data?.eventDetails?.venueLogo) {
     formData.append('venue_logo', data.eventDetails.venueLogo);
@@ -153,7 +153,7 @@ export const createCartFormData = (
 export const setUserIdInFormData = (formData: FormData, userId: string): FormData => {
   // Create a new FormData to avoid mutation issues
   const newFormData = new FormData();
-  
+
   // Copy all existing entries
   for (const [key, value] of formData.entries()) {
     if (key === 'user_id') {
@@ -162,6 +162,6 @@ export const setUserIdInFormData = (formData: FormData, userId: string): FormDat
       newFormData.append(key, value);
     }
   }
-  
+
   return newFormData;
 };

@@ -147,20 +147,20 @@ const FilterBar = () => {
     return (
         <div className='flex flex-col gap-6 h-full p-3'>
             {/* category  */}
-            <div className='flex flex-col gap-1'>
-                <h2>Category</h2>
-                <div className='p-2  rounded-md bg-gray-800/15 backdrop-blur-md shadow-[0_0_25px_rgba(0,0,0,0.8)] max-h-40 overflow-y-auto hide-scrollbar'>
+            <div className='flex flex-col gap-2'>
+                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500 px-1">Category</h3>
+                <div className='p-3 rounded-2xl bg-zinc-900/40 backdrop-blur-md border border-white/5 shadow-xl max-h-48 overflow-y-auto hide-scrollbar transition-all hover:border-primary/20'>
                     <ul className="space-y-3">
                         {availableCategories.map((cat) => (
-                            <li key={cat.name} className="flex items-center gap-3">
+                            <li key={cat.name} className="flex items-center gap-3 group">
                                 <Checkbox
                                     id={cat.name}
                                     checked={selectedCategories.includes(cat.name)}
                                     onCheckedChange={() => toggleCategory(cat.name)}
+                                    className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                 />
-                                <Label className='font-light cursor-pointer' htmlFor={cat.name}>
+                                <Label className='text-sm font-medium text-zinc-400 group-hover:text-white cursor-pointer transition-colors' htmlFor={cat.name}>
                                     {cat.name}
-                                    {/* {categoryCounts[cat.name] ? `(${categoryCounts[cat.name]})` : ''} */}
                                 </Label>
                             </li>
                         ))}
@@ -169,18 +169,19 @@ const FilterBar = () => {
             </div>
 
             {/* price range  */}
-            <div className='flex flex-col gap-1'>
-                <h2>Price</h2>
-                <div className='p-2 rounded-md bg-gray-700/15 backdrop-blur-md shadow-[0_0_25px_rgba(0,0,0,0.8)]'>
+            <div className='flex flex-col gap-2'>
+                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500 px-1">Price</h3>
+                <div className='p-3 rounded-2xl bg-zinc-900/40 backdrop-blur-md border border-white/5 shadow-xl transition-all hover:border-primary/20'>
                     <ul className="space-y-3">
                         {pricing.map((price) => (
-                            <li key={price.label} className="flex items-center gap-3">
+                            <li key={price.label} className="flex items-center gap-3 group">
                                 <Checkbox
                                     id={price.label}
                                     checked={selectedPrices.includes(price.id)}
                                     onCheckedChange={() => togglePrice(price.id)}
+                                    className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                 />
-                                <Label className='font-light cursor-pointer' htmlFor={price.label}>${price.label}</Label>
+                                <Label className='text-sm font-medium text-zinc-400 group-hover:text-white cursor-pointer transition-colors' htmlFor={price.label}>${price.label}</Label>
                             </li>
                         ))}
                     </ul>
@@ -188,25 +189,27 @@ const FilterBar = () => {
             </div>
 
             {/* type  */}
-            <div className='flex flex-col gap-1'>
-                <h2>Template Type</h2>
-                <div className='p-2  rounded-md bg-gray-700/15 backdrop-blur-md shadow-[0_0_25px_rgba(0,0,0,0.8)]'>
+            <div className='flex flex-col gap-2'>
+                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500 px-1">Template Type</h3>
+                <div className='p-3 rounded-2xl bg-zinc-900/40 backdrop-blur-md border border-white/5 shadow-xl transition-all hover:border-primary/20'>
                     <ul className="space-y-3">
-                        <li className="flex items-center gap-3">
+                        <li className="flex items-center gap-3 group">
                             <Checkbox
                                 id='info'
                                 checked={selectedTypes.includes('info')}
                                 onCheckedChange={() => toggleType('info')}
+                                className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                             />
-                            <Label className='font-light cursor-pointer' htmlFor='info'>Info Only</Label>
+                            <Label className='text-sm font-medium text-zinc-400 group-hover:text-white cursor-pointer transition-colors' htmlFor='info'>Info Only</Label>
                         </li>
-                        <li className="flex items-center gap-3">
+                        <li className="flex items-center gap-3 group">
                             <Checkbox
                                 id='photos'
                                 checked={selectedTypes.includes('photos')}
                                 onCheckedChange={() => toggleType('photos')}
+                                className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                             />
-                            <Label className='font-light cursor-pointer' htmlFor='photos'>With Photos</Label>
+                            <Label className='text-sm font-medium text-zinc-400 group-hover:text-white cursor-pointer transition-colors' htmlFor='photos'>With Photos</Label>
                         </li>
                     </ul>
                 </div>

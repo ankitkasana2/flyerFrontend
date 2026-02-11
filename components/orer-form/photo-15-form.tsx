@@ -15,6 +15,7 @@ import SponsorsBlock from "./sponser";
 import ExtrasBlock from "./extra-block";
 import DeliveryTimeBlock from "./delivery-time-block";
 import { FlyersCarousel } from "../home/FlyersCarousel";
+import { FlyerFrame } from "../flyer/flyer-frame";
 import EventDetails from "./event-details";
 import { FlyerRibbon } from "./flyer-ribbon";
 import { createCartFormData, setUserIdInFormData } from "@/lib/cart";
@@ -401,15 +402,11 @@ const Photo15Form: React.FC<Photo15FormProps> = ({ flyer }) => {
                         </div>
                     </div>
 
-                    <div className="aspect-[4/5] relative rounded-xl flex items-center justify-center overflow-hidden transition-all duration-300 hover:border-primary hover:scale-[1.02] border border-gray-800 shadow-2xl">
-                        <img
-                            src={flyerImage}
-                            alt={flyerName}
-                            className="w-full h-full object-cover"
-                        />
-                        {/* Dynamic Ribbon */}
-                        <FlyerRibbon flyer={flyer} />
-                    </div>
+                    <FlyerFrame
+                        flyer={flyer || { image_url: flyerImage, name: flyerName }}
+                        aspectRatio="aspect-[4/5]"
+                        className="hover:scale-[1.01]"
+                    />
                 </div>
 
                 {/* Right: $15 With Photo Form */}

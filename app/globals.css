@@ -122,12 +122,33 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring/50 transition-colors duration-200;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground selection:bg-primary selection:text-white;
   }
+}
+
+/* Premium Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.glow-primary {
+  box-shadow: 0 0 20px -5px var(--primary);
+}
+
+.glass-card {
+  @apply bg-zinc-900/60 backdrop-blur-xl border border-white/10;
 }
 
 /* Added custom Netflix-style scrollbar */

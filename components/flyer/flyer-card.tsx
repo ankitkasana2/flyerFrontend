@@ -14,6 +14,8 @@ import { toast } from "sonner"
 import { toJS } from "mobx"
 import { FlyerRibbon } from "../orer-form/flyer-ribbon"
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
+import { FlyerFrame } from "./flyer-frame"
 
 interface FlyerCardProps {
   flyer: Flyer
@@ -127,64 +129,49 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
 
   const CardContentWithInteraction = (
     <div
-      className={`group bg-card border rounded-xl overflow-hidden transition-all duration-300 
-             hover:scale-105 hover:shadow-xl hover:shadow-primary/20 cursor-pointer 
-             flex-[0_0_100%] sm:flex-[0_0_50%] md:flex-[0_0_33.33%] lg:flex-[0_0_25%] xl:flex-[0_0_20%]
-             ${selected ? 'ring-2 ring-primary ring-offset-2 ring-offset-black' : ''}`}
+      className={cn(
+        "group relative bg-zinc-900 border border-white/5 rounded-2xl overflow-hidden transition-all duration-500",
+        "hover:scale-[1.03] hover:shadow-[0_20px_40px_-15px_rgba(185,32,37,0.3)] cursor-pointer backdrop-blur-sm",
+        selected ? 'ring-2 ring-primary ring-offset-4 ring-offset-black' : ''
+      )}
       onClick={handleProtectedClick}
     >
-      <div className="relative aspect-[3/4] overflow-hidden">
-        {isLoading && (
-          <Skeleton className="absolute inset-0 z-10 w-full h-full rounded-none bg-gray-200 flex items-center justify-center">
-            <ImageIcon className="w-12 h-12 text-gray-400/50" />
-          </Skeleton>
-        )}
-        <Image
-          key={flyer.image_url}
-          src={flyer.image_url || "/placeholder.svg"}
-          alt={flyer.name}
-          fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          loading="lazy"
-          onLoad={() => setIsLoading(false)}
-          onError={() => setIsLoading(false)}
-          className={`object-cover transition-transform duration-300 group-hover:scale-102 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-        />
+      <FlyerFrame
+        flyer={flyer}
+        aspectRatio="aspect-[4/5]"
+        className="hover:scale-[1.01]"
+      />
 
-        {/* Selected Overlay */}
-        {selected && (
-          <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center">
-            <div className="bg-primary text-white p-2 rounded-full shadow-lg transform scale-125">
-              <Check className="w-8 h-8 stroke-[3px]" />
-            </div>
-            <div className="absolute bottom-4 text-white font-bold text-lg tracking-wider">SELECTED</div>
+      {/* Selected Overlay */}
+      {selected && (
+        <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px] z-20 flex items-center justify-center">
+          <div className="bg-primary text-white p-3 rounded-full shadow-[0_0_20px_rgba(185,32,37,0.5)] transform scale-110 animate-in zoom-in-50 duration-300">
+            <Check className="w-8 h-8 stroke-[3px]" />
           </div>
-        )}
-
-        {/* ❤️ Favorite Button */}
-        <button
-          type="button"
-          className="absolute top-2 right-2 bg-black/20 hover:bg-black/40 hover:cursor-pointer z-50 pointer-events-auto inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 size-9"
-          onClick={handleToggleFavorite}
-        >
-          <Heart
-            className={`w-6 h-6 ${isFavorited ? "fill-primary text-primary" : "text-white"}`}
-          />
-        </button>
-
-        {/* 💰 Price Badge */}
-        <div className="absolute bottom-2 right-2 z-30">
-          <Badge
-            className={`${getPriceColor(
-              flyer.priceType || (isPremium ? 'premium' : 'regular')
-            )} shadow-[0_0_10px_3px_rgba(0,0,0,0.6)]`}
-          >
-            ${price}
-          </Badge>
+          <div className="absolute bottom-6 text-white font-black text-xs tracking-[0.2em] uppercase">SELECTED</div>
         </div>
+      )}
 
-        {/* 🎀 Ribbons System */}
-        <FlyerRibbon flyer={flyer} />
+      {/* Favorite Button */}
+      <button
+        type="button"
+        onClick={handleToggleFavorite}
+        className={cn(
+          "absolute top-4 right-4 z-40 p-2.5 rounded-full transition-all duration-300",
+          "backdrop-blur-md border border-white/10 hover:scale-110 active:scale-95",
+          isFavorited ? "bg-primary text-white" : "bg-black/40 text-white hover:bg-black/60"
+        )}
+      >
+        <Heart className={cn("w-5 h-5", isFavorited && "fill-current")} />
+      </button>
+
+      {/* Price Tag */}
+      <div className="absolute bottom-4 left-4 z-40">
+        <div className="bg-black/60 backdrop-blur-xl border border-white/10 px-3 py-1.5 rounded-xl shadow-2xl">
+          <span className="text-white font-bold text-sm tracking-tight">
+            ${price || 0}
+          </span>
+        </div>
       </div>
     </div>
   )

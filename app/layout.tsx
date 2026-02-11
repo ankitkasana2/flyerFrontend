@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import { type Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
@@ -34,7 +34,9 @@ export default function RootLayout({
               <FavoritesSync />
               <PageTransitionLoader />
               <Header />
-              {children}
+              <main className="animate-fade-in flex-1">
+                {children}
+              </main>
               <Footer />
             </StoreProvider>
             <Toaster position="top-left" />

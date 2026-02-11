@@ -105,18 +105,22 @@ const UserMenu = observer(() => {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 bg-[#0f0f0f] border-0 shadow-lg" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium leading-none text-popover-foreground">
+      <DropdownMenuContent
+        className="w-64 bg-zinc-950 border border-white/10 shadow-2xl p-2 animate-in fade-in zoom-in-95 duration-200"
+        align="end"
+        forceMount
+      >
+        <DropdownMenuLabel className="font-normal px-2 py-3">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-bold text-white">
               {authStore.user.name}
             </p>
-            <p className="text-xs leading-none text-muted-foreground">
+            <p className="text-xs text-zinc-500 truncate">
               {authStore.user.email}
             </p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-white/5" />
         <DropdownMenuItem asChild>
           <Link href="/overview" onClick={handleLinkClick}>
             <User className="h-4 w-4 mr-2" />
