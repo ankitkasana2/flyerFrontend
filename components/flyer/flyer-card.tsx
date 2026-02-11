@@ -185,10 +185,10 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
   return (
     <Link
       href={`/flyer/${flyer.id}`}
+      scroll={true}
     >
       {CardContent}
     </Link>
-
   )
 }
 

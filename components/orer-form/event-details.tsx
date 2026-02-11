@@ -122,8 +122,8 @@ const EventDetails = observer(() => {
                         <Label htmlFor="presenting" className="text-sm block font-semibold">
                             Presenting
                         </Label>
-                        <RecentSuggestions 
-                            type="presenting" 
+                        <RecentSuggestions
+                            type="presenting"
                             onSelect={(val) => flyerFormStore.updateEventDetails("presenting", val)}
                         />
                     </div>
@@ -144,9 +144,15 @@ const EventDetails = observer(() => {
 
                 {/* Main Title */}
                 <div className="col-span-1">
-                    <Label htmlFor="eventTitle" className="text-sm mb-2 block font-semibold">
-                        Event Title
-                    </Label>
+                    <div className="flex items-center justify-between mb-2">
+                        <Label htmlFor="eventTitle" className="text-sm block font-semibold">
+                            Event Title
+                        </Label>
+                        <RecentSuggestions
+                            type="mainTitle"
+                            onSelect={(val) => flyerFormStore.updateEventDetails("mainTitle", val)}
+                        />
+                    </div>
                     <Input
                         id="eventTitle"
                         value={eventDetails.mainTitle}
@@ -224,9 +230,15 @@ const EventDetails = observer(() => {
 
                 {/* Flyer Information */}
                 <div className="col-span-1 md:col-span-2">
-                    <Label htmlFor="information" className="text-sm mb-2 block font-semibold">
-                        Flyer Information
-                    </Label>
+                    <div className="flex items-center justify-between mb-2">
+                        <Label htmlFor="information" className="text-sm block font-semibold">
+                            Flyer Information
+                        </Label>
+                        <RecentSuggestions
+                            type="flyerInfo"
+                            onSelect={(val) => flyerFormStore.updateEventDetails("flyerInfo", val)}
+                        />
+                    </div>
                     <Textarea
                         id="information"
                         value={eventDetails.flyerInfo}
@@ -248,8 +260,8 @@ const EventDetails = observer(() => {
                         <Label htmlFor="address" className="text-sm block font-semibold">
                             Address & Phone no.
                         </Label>
-                        <RecentSuggestions 
-                            type="address" 
+                        <RecentSuggestions
+                            type="address"
                             onSelect={(val) => flyerFormStore.updateEventDetails("addressAndPhone", val)}
                         />
                     </div>

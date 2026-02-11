@@ -656,6 +656,12 @@ const EventBookingForm = () => {
       if (apiBody.presenting) {
         saveRecentItem('presenting', apiBody.presenting);
       }
+      if (apiBody.event_title) {
+        saveRecentItem('mainTitle', apiBody.event_title);
+      }
+      if (apiBody.flyer_info) {
+        saveRecentItem('flyerInfo', apiBody.flyer_info);
+      }
       djsWithUrls.forEach(dj => {
         if (dj.name) saveRecentItem('dj', dj.name);
       });
@@ -835,6 +841,12 @@ const EventBookingForm = () => {
       }
       if (apiBody.presenting) {
         saveRecentItem('presenting', apiBody.presenting);
+      }
+      if (apiBody.event_title) {
+        saveRecentItem('mainTitle', apiBody.event_title);
+      }
+      if (apiBody.flyer_info) {
+        saveRecentItem('flyerInfo', apiBody.flyer_info);
       }
       apiBody.djs.forEach((dj: any) => {
         if (dj.name) saveRecentItem('dj', dj.name);

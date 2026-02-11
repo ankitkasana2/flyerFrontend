@@ -6,7 +6,7 @@ import { History, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface RecentSuggestionsProps {
-    type: 'address' | 'dj' | 'host' | 'presenting';
+    type: 'address' | 'dj' | 'host' | 'presenting' | 'mainTitle' | 'flyerInfo';
     onSelect: (value: string) => void;
     currentValue?: string;
 }
