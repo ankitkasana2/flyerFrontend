@@ -8,14 +8,26 @@ import { CheckCircle2, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { useStore } from '@/stores/StoreProvider';
 
 function ThankYouContent() {
+  const { cartStore, authStore } = useStore();
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
-  const { cartStore } = useStore();
 
   useEffect(() => {
     // Clear local cart store items on success
     cartStore.cartItems = [];
-  }, [cartStore]);
+
+    // Add notification
+    if (authStore.user?.id) {
+      import('@/lib/notifications').then(({ addNotification }) => {
+        addNotification(authStore.user!.id, {
+          type: 'order',
+          title: 'Order Confirmed',
+          message: `Your order ${orderId ? '#' + orderId : ''} has been received and is being processed.`,
+          link: '/orders'
+        });
+      });
+    }
+  }, [cartStore, authStore.user?.id, orderId]);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-black p-4 sm:p-6 lg:p-8 relative overflow-hidden">

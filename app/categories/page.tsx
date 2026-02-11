@@ -16,7 +16,6 @@ import { useSearchParams } from "next/navigation"
 
 
 const CategoriesPage = () => {
-
   const searchParams = useSearchParams()
   const { authStore, filterBarStore, categoryStore, flyersStore, favoritesStore } = useStore()
   const [filter, setFilter] = useState({
@@ -25,6 +24,7 @@ const CategoriesPage = () => {
     type: ''
   })
   const [searchQuery, setSearchQuery] = useState('')
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
   // Fetch flyers from API on mount
   useEffect(() => {
@@ -64,7 +64,38 @@ const CategoriesPage = () => {
     }
   }, [searchParams, flyersStore.flyers]) // Re-run when flyers are loaded
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!authStore.isLoggedIn && !authStore.loading) {
+        authStore.handleAuthModal()
+      }
+      setIsCheckingAuth(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [authStore.isLoggedIn, authStore.loading])
 
+  if (isCheckingAuth || authStore.loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (!authStore.isLoggedIn) {
+    return (
+      <main className="min-h-screen bg-black flex flex-col items-center justify-center p-4 text-center">
+        <h1 className="text-2xl font-bold text-white mb-4">Registration Required</h1>
+        <p className="text-gray-400 mb-8 max-w-md"> Please sign in or create an account to browse all categories and find your perfect flyer. </p>
+        <button
+          onClick={() => authStore.handleAuthModal()}
+          className="px-8 py-3 bg-primary text-white font-bold rounded-full hover:scale-105 transition-transform"
+        >
+          Sign In / Register
+        </button>
+      </main>
+    )
+  }
 
   return (
     <section className="min-h-[150vh] bg-background sm:grid sm:grid-cols-11">

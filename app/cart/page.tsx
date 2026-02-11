@@ -223,7 +223,7 @@ const CartPage = observer(() => {
                             <Link href="/categories">
                                 <Button variant="outline">Continue Shopping</Button>
                             </Link>
-                            <Button 
+                            <Button
                                 className="bg-primary text-primary-foreground"
                                 onClick={handleCheckout}
                                 disabled={isCheckingOut}
@@ -255,7 +255,7 @@ const CartPage = observer(() => {
                             </p>
                         </div>
 
-                        <Button 
+                        <Button
                             className="mt-5 w-full bg-primary text-primary-foreground"
                             onClick={handleCheckout}
                             disabled={isCheckingOut}
@@ -267,7 +267,6 @@ const CartPage = observer(() => {
                             <h3 className="text-sm font-medium">What's included</h3>
                             <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
                                 <li>• Instagram Post size</li>
-                                <li>• Professional PSD editing by our team</li>
                                 <li>• Delivery via Email, SMS, and Profile</li>
                             </ul>
                         </div>

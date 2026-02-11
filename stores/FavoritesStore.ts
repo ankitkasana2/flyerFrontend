@@ -75,6 +75,15 @@ export class FavoritesStore {
       throw new Error("User ID is required")
     }
 
+    // Optimistic update
+    const previousFavorites = [...this.favorites]
+    const previousFavoritesData = [...this.favoritesData]
+
+    runInAction(() => {
+      this.favorites = this.favorites.filter(id => id !== String(flyerId))
+      this.favoritesData = this.favoritesData.filter(f => f.id !== flyerId)
+    })
+
     try {
       const response = await fetch(getApiUrl(`/favorites/remove`), {
         method: "POST",
@@ -90,17 +99,20 @@ export class FavoritesStore {
       const data = await response.json()
 
       if (data.success) {
-        runInAction(() => {
-          // Remove from local favorites array
-          this.favorites = this.favorites.filter(id => id !== String(flyerId))
-          this.favoritesData = this.favoritesData.filter(f => f.id !== flyerId)
-        })
         return { success: true, message: data.message }
       } else {
+        // Rollback on failure
+        runInAction(() => {
+          this.favorites = previousFavorites
+          this.favoritesData = previousFavoritesData
+        })
         throw new Error(data.message || "Failed to remove from favorites")
       }
     } catch (error: any) {
+      // Rollback on error
       runInAction(() => {
+        this.favorites = previousFavorites
+        this.favoritesData = previousFavoritesData
         this.error = error.message
       })
       throw error

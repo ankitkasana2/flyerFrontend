@@ -9,10 +9,21 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import { useStore } from "@/stores/StoreProvider"
 
 export function FlyersCarousel({ flyers, onSelect, selectedIds }: { flyers: any[], onSelect?: (flyer: any) => void, selectedIds?: string[] }) {
+  const { authStore } = useStore()
+
+  const handleInteraction = (e: React.MouseEvent) => {
+    if (!authStore.isLoggedIn) {
+      e.preventDefault()
+      e.stopPropagation()
+      authStore.handleAuthModal()
+    }
+  }
+
   return (
-    <div className=" relative">
+    <div className="relative" onClickCapture={handleInteraction}>
       <Carousel
         opts={{
           align: "start",

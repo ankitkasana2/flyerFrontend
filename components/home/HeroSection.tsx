@@ -12,7 +12,7 @@ import { API_BASE_URL } from '@/config/api';
 
 const HeroSection = observer(() => {
   const router = useRouter();
-  const { bannerStore } = useStore();
+  const { bannerStore, authStore } = useStore();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Fetch banners on component mount
@@ -34,21 +34,37 @@ const HeroSection = observer(() => {
     return () => clearInterval(interval);
   }, [bannerStore.activeBanners.length]);
 
+  // Interaction check
+  const checkInteraction = (e?: React.MouseEvent) => {
+    if (!authStore.isLoggedIn) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      authStore.handleAuthModal();
+      return false;
+    }
+    return true;
+  };
+
   // Manual navigation
-  const nextSlide = () => {
+  const nextSlide = (e?: React.MouseEvent) => {
+    if (!checkInteraction(e)) return;
     setCurrentImageIndex(prevIndex =>
       (prevIndex + 1) % bannerStore.activeBanners.length
     );
   };
 
-  const prevSlide = () => {
+  const prevSlide = (e?: React.MouseEvent) => {
+    if (!checkInteraction(e)) return;
     setCurrentImageIndex(prevIndex =>
       prevIndex === 0 ? bannerStore.activeBanners.length - 1 : prevIndex - 1
     );
   };
 
   // Handle banner click
-  const handleBannerClick = () => {
+  const handleBannerClick = (e: React.MouseEvent) => {
+    if (!checkInteraction(e)) return;
     const currentBanner = bannerStore.activeBanners[currentImageIndex];
     const link = bannerStore.getBannerLink(currentBanner);
     if (link) {
@@ -57,7 +73,8 @@ const HeroSection = observer(() => {
   };
 
   // Handle button click
-  const handleButtonClick = () => {
+  const handleButtonClick = (e: React.MouseEvent) => {
+    if (!checkInteraction(e)) return;
     const currentBanner = bannerStore.activeBanners[currentImageIndex];
     const link = bannerStore.getBannerLink(currentBanner);
     if (link) {

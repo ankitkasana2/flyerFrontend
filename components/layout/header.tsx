@@ -50,11 +50,24 @@ export const Header = observer(() => {
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!authStore.isLoggedIn) {
+      authStore.handleAuthModal()
+      return
+    }
     if (searchQuery.trim()) {
       loadingStore.startLoading("Searching...")
       // Navigate to categories page with search query
       router.push(`/categories?search=${encodeURIComponent(searchQuery.trim())}`)
       setIsSearchOpen(false) // Close mobile search
+    }
+  }
+
+  const handleProtectedLink = (e: React.MouseEvent, href: string) => {
+    if (!authStore.isLoggedIn) {
+      e.preventDefault()
+      authStore.handleAuthModal()
+    } else {
+      loadingStore.startLoading("Loading...")
     }
   }
 
@@ -118,7 +131,11 @@ export const Header = observer(() => {
 
           {/* Links */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/categories" className="text-foreground hover:text-primary transition-colors">
+            <Link
+              href="/categories"
+              onClick={(e) => handleProtectedLink(e, "/categories")}
+              className="text-foreground hover:text-primary transition-colors"
+            >
               Categories
             </Link>
           </nav>
@@ -128,7 +145,13 @@ export const Header = observer(() => {
             {/* Mobile Search Icon */}
             <div
               className="sm:hidden cursor-pointer"
-              onClick={() => setIsSearchOpen((prev) => !prev)}
+              onClick={() => {
+                if (!authStore.isLoggedIn) {
+                  authStore.handleAuthModal()
+                } else {
+                  setIsSearchOpen((prev) => !prev)
+                }
+              }}
             >
               <Search
                 className={cn(
@@ -147,7 +170,10 @@ export const Header = observer(() => {
               </Link>
             </div> */}
             <div className="relative cursor-pointer">
-              <Link href="/cart">
+              <Link
+                href="/cart"
+                onClick={(e) => handleProtectedLink(e, "/cart")}
+              >
                 <ShoppingCart className="w-5 h-5 sm:h-6 sm:w-6" />
               </Link>
 

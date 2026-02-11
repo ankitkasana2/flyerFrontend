@@ -114,13 +114,23 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
     }
   }
 
-  const CardContent = (
+  const handleProtectedClick = (e: React.MouseEvent) => {
+    if (!user) {
+      e.preventDefault()
+      e.stopPropagation()
+      authStore.handleAuthModal()
+      return
+    }
+    handleClick(e)
+  }
+
+  const CardContentWithInteraction = (
     <div
       className={`group bg-card border rounded-xl overflow-hidden transition-all duration-300 
              hover:scale-105 hover:shadow-xl hover:shadow-primary/20 cursor-pointer 
              flex-[0_0_100%] sm:flex-[0_0_50%] md:flex-[0_0_33.33%] lg:flex-[0_0_25%] xl:flex-[0_0_20%]
              ${selected ? 'ring-2 ring-primary ring-offset-2 ring-offset-black' : ''}`}
-      onClick={handleClick}
+      onClick={handleProtectedClick}
     >
       <div className="relative aspect-[3/4] overflow-hidden">
         {isLoading && (
@@ -179,7 +189,11 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
   )
 
   if (onPreview) {
-    return CardContent
+    return CardContentWithInteraction
+  }
+
+  if (!user) {
+    return CardContentWithInteraction
   }
 
   return (
@@ -187,7 +201,7 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
       href={`/flyer/${flyer.id}`}
       scroll={true}
     >
-      {CardContent}
+      {CardContentWithInteraction}
     </Link>
   )
 }

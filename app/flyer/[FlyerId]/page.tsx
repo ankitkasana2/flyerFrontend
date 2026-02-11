@@ -10,28 +10,58 @@ import { toJS } from "mobx"
 
 
 const FlyerPage = () => {
-
   const { authStore, filterBarStore, flyerFormStore } = useStore()
   const { FlyerId } = useParams()
   const [isNavigating, setIsNavigating] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
   // Scroll to top when flyer ID changes
   useEffect(() => {
     // Show loading state to indicate page change
     setIsNavigating(true)
 
-    // Scroll to top immediately
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    // Scroll to top instantly for immediate visual feedback
+    window.scrollTo({ top: 0, behavior: 'auto' })
 
     // Fetch new flyer data
     flyerFormStore.fetchFlyer(FlyerId as string).finally(() => {
       // Clear loading state after data is fetched
-      setTimeout(() => setIsNavigating(false), 300)
+      setTimeout(() => setIsNavigating(false), 500)
     })
   }, [FlyerId, flyerFormStore])
 
-  // alert(JSON.stringify(flyerFormStore));
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!authStore.isLoggedIn && !authStore.loading) {
+        authStore.handleAuthModal()
+      }
+      setIsCheckingAuth(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [authStore.isLoggedIn, authStore.loading])
 
+  if (isCheckingAuth || authStore.loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (!authStore.isLoggedIn) {
+    return (
+      <main className="min-h-screen bg-black flex flex-col items-center justify-center p-4 text-center">
+        <h1 className="text-2xl font-bold text-white mb-4">Registration Required</h1>
+        <p className="text-gray-400 mb-8 max-w-md"> Please sign in or create an account to view flyer details and start your design. </p>
+        <button
+          onClick={() => authStore.handleAuthModal()}
+          className="px-8 py-3 bg-primary text-white font-bold rounded-full hover:scale-105 transition-transform"
+        >
+          Sign In / Register
+        </button>
+      </main>
+    )
+  }
 
   return (
     <main className="min-h-screen bg-black">
@@ -43,7 +73,8 @@ const FlyerPage = () => {
           </div>
         </div>
       )}
-      <EventBookingForm />
+      {/* Key prop forces complete remount when FlyerId changes */}
+      <EventBookingForm key={FlyerId as string} />
     </main>
   )
 }

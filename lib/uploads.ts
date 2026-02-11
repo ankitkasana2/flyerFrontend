@@ -76,14 +76,21 @@ export async function listLibrary(userId: string, type?: LibraryItem["type"]): P
             return []
         }
 
-        const items: LibraryItem[] = (data.media || []).map((m: any) => ({
-            id: String(m.id),
-            name: m.original_name,
-            type: m.is_logo ? "logo" : "image",
-            dataUrl: m.file_url,
-            createdAt: m.created_at || new Date().toISOString(),
-            size: undefined
-        }))
+        const items: LibraryItem[] = (data.media || []).map((m: any) => {
+            const fileUrl = m.file_url || ""
+            const fullUrl = fileUrl.startsWith('http')
+                ? fileUrl
+                : `${getApiUrl()}/${fileUrl.replace(/^\//, '')}`
+
+            return {
+                id: String(m.id),
+                name: m.original_name,
+                type: m.is_logo ? "logo" : "image",
+                dataUrl: fullUrl,
+                createdAt: m.created_at || new Date().toISOString(),
+                size: undefined
+            }
+        })
 
         // Sort by created desc (newest first)
         items.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))

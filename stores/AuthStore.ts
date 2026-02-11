@@ -364,8 +364,10 @@ export class AuthStore {
         }
       }
 
+      const formattedUserId = formatCognitoUserId(user.userId, providerFromToken)
+
       const normalized = this.normalizeUser({
-        id: user.userId,
+        id: formattedUserId,
         email: emailFromToken || user.signInDetails?.loginId || '',
         name: nameFromToken || user.username || emailFromToken || user.userId,
         provider: providerFromToken,
@@ -374,12 +376,10 @@ export class AuthStore {
 
       // Register user in backend database
       try {
-        const formattedUserId = formatCognitoUserId(user.userId, providerFromToken)
-
         const result = await registerUserInDatabase({
           fullname: normalized.name,
           email: normalized.email,
-          user_id: formattedUserId,
+          user_id: normalized.id,
         })
 
         if (result.success) {
@@ -446,12 +446,12 @@ export class AuthStore {
 
       // Register user in backend database immediately after Cognito registration
       try {
-        const formattedUserId = formatCognitoUserId(userId ?? '', 'cognito')
+        const formattedRegId = formatCognitoUserId(userId ?? '', 'cognito')
 
         const result = await registerUserInDatabase({
           fullname: fullname,
           email: email,
-          user_id: formattedUserId,
+          user_id: formattedRegId,
         })
 
         if (result.success) {

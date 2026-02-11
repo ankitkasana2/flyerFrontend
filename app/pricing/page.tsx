@@ -33,7 +33,7 @@ export default function PricingPage() {
                 "10 Flyer Downloads/Month",
                 "All Premium Templates",
                 "High-Resolution Downloads",
-                "PNG, PDF & PSD Formats",
+                "PNG & PDF Formats",
                 "Advanced Customization",
                 "Priority Email Support",
                 "Cancel Anytime",
@@ -86,8 +86,8 @@ export default function PricingPage() {
                             <div
                                 key={index}
                                 className={`relative bg-gray-900 border rounded-lg p-8 hover:border-red-500 transition-all duration-300 ${plan.popular
-                                        ? "border-red-500 scale-105 md:scale-110"
-                                        : "border-gray-800"
+                                    ? "border-red-500 scale-105 md:scale-110"
+                                    : "border-gray-800"
                                     }`}
                             >
                                 {/* Popular Badge */}
@@ -128,8 +128,8 @@ export default function PricingPage() {
                                 {/* CTA Button */}
                                 <Button
                                     className={`w-full ${plan.buttonVariant === "default"
-                                            ? "bg-red-500 hover:bg-red-600 text-white"
-                                            : "border-gray-700 hover:border-red-500 bg-transparent"
+                                        ? "bg-red-500 hover:bg-red-600 text-white"
+                                        : "border-gray-700 hover:border-red-500 bg-transparent"
                                         }`}
                                     variant={plan.buttonVariant}
                                     size="lg"

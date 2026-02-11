@@ -57,14 +57,21 @@ export async function fetchUserDownloads(userId: string): Promise<OrderDelivery[
                     if (filesResponse.ok) {
                         const filesData = await filesResponse.json()
                         if (filesData.success && Array.isArray(filesData.files)) {
-                            files = filesData.files.map((f: any) => ({
-                                id: f.id.toString(),
-                                fileName: f.original_name || `file-${f.id}.${f.file_type}`,
-                                type: mapFileType(f.file_type),
-                                size: 0, // Backend doesn't provide size yet
-                                url: f.file_url,
-                                unread: false, // Could implement unread logic if needed
-                            }))
+                            files = filesData.files.map((f: any) => {
+                                const fileUrl = f.file_url || ""
+                                const fullUrl = fileUrl.startsWith('http')
+                                    ? fileUrl
+                                    : `${getApiUrl()}/${fileUrl.replace(/^\//, '')}`
+
+                                return {
+                                    id: f.id.toString(),
+                                    fileName: f.original_name || `file-${f.id}.${f.file_type}`,
+                                    type: mapFileType(f.file_type),
+                                    size: 0, // Backend doesn't provide size yet
+                                    url: fullUrl,
+                                    unread: false,
+                                }
+                            })
                         }
                     }
                 } catch (err) {
@@ -89,7 +96,7 @@ export async function fetchUserDownloads(userId: string): Promise<OrderDelivery[
 
 function mapFileType(type: string): DeliveredFileType {
     const lower = type.toLowerCase()
-    if (lower.includes('image') ||  ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(lower)) return 'image'
+    if (lower.includes('image') || ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(lower)) return 'image'
     if (lower.includes('video') || ['mp4', 'mov', 'avi'].includes(lower)) return 'video'
     if (lower === 'pdf' || lower === 'doc' || lower === 'docx') return 'document'
     if (lower === 'psd' || lower === 'ai') return 'psd'
