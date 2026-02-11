@@ -18,9 +18,11 @@ import { observer } from "mobx-react-lite";
 
 export const Header = observer(() => {
   const router = useRouter()
-  const { authStore, cartStore, loadingStore } = useStore()
+  const { authStore, cartStore, loadingStore, flyersStore } = useStore()
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
   // const cart = CartStore((s) => s.cart);
 
   const handleHomeClick = () => {
@@ -72,12 +74,56 @@ export const Header = observer(() => {
   }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
+    const query = e.target.value
+    setSearchQuery(query)
+
+    if (query.trim().length > 0) {
+      const q = query.toLowerCase()
+      const filtered = flyersStore.flyers
+        .filter((flyer: any) =>
+          (flyer.title || flyer.name || "").toLowerCase().includes(q) ||
+          (flyer.category || "").toLowerCase().includes(q) ||
+          (flyer.tags || []).some((tag: string) => tag.toLowerCase().includes(q))
+        )
+        .slice(0, 4);
+      setResults(filtered);
+      setShowDropdown(true);
+    } else {
+      setResults([]);
+      setShowDropdown(false);
+    }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  // Handle outside click to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.search-container')) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch flyers if needed
+  useEffect(() => {
+    if (flyersStore.flyers.length === 0 && !flyersStore.loading) {
+      flyersStore.fetchFlyers();
+    }
+  }, [flyersStore]);
+
+  const handleResultClick = (flyerId: string) => {
+    setShowDropdown(false);
+    setSearchQuery("");
+    loadingStore.startLoading("Loading Flyer...");
+    router.push(`/flyer/${flyerId}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch(e as any)
+      setShowDropdown(false)
     }
   }
 
@@ -112,21 +158,56 @@ export const Header = observer(() => {
 
 
 
-          {/* Desktop Search Bar */}
-          <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
+          <div className="hidden md:flex items-center flex-1 max-w-md mx-8 relative search-container">
             <form onSubmit={handleSearch} className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 value={searchQuery}
                 onChange={handleSearchChange}
-                onKeyPress={handleKeyPress}
-                placeholder="Search flyers..."
-                className="pl-10 bg-card border-border text-white shadow-md
-                focus-visible:!ring-0 focus-visible:!outline-none
-                focus-visible:!shadow-[0_0_15px_rgba(185,32,37,0.8)]
+                onKeyDown={handleKeyDown}
+                onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                placeholder="Search premium flyers..."
+                className="pl-10 bg-zinc-900/50 border-white/5 text-white shadow-xl backdrop-blur-sm
+                focus-visible:!ring-primary/20 focus-visible:border-primary/50
                 transition-all duration-300"
               />
             </form>
+
+            {/* Desktop Autocomplete Dropdown */}
+            {showDropdown && results.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-3 bg-zinc-950/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="p-2 space-y-1">
+                  {results.map((flyer: any) => (
+                    <div
+                      key={flyer.id}
+                      onClick={() => handleResultClick(flyer.id)}
+                      className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-all group"
+                    >
+                      <div className="relative w-12 h-14 rounded-lg border border-white/10 overflow-hidden flex-shrink-0 shadow-lg">
+                        <Image
+                          src={flyer.image_url || flyer.imageUrl || "/placeholder.svg"}
+                          alt={flyer.title || flyer.name}
+                          fill
+                          className="object-cover transition-transform group-hover:scale-110"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-white truncate group-hover:text-primary transition-colors">
+                          {flyer.title || flyer.name}
+                        </p>
+                        <p className="text-xs text-zinc-500 font-medium">
+                          {flyer.category}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-4 py-3 bg-white/5 border-t border-white/5 flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Showing Top 4 Results</span>
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Press Enter to See All</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Links */}
@@ -197,11 +278,10 @@ export const Header = observer(() => {
         </div>
       </div>
 
-      {/* Mobile Search Bar (Dropdown style) */}
       <div
         className={cn(
-          "sm:hidden sm:bg-background/95 backdrop-blur-md border-b border-border transition-all duration-300 overflow-hidden",
-          isSearchOpen ? "max-h-20 opacity-100 px-3 pb-3 " : "max-h-0 opacity-0"
+          "sm:hidden sm:bg-background/95 backdrop-blur-md border-b border-white/5 transition-all duration-500 overflow-hidden relative search-container",
+          isSearchOpen ? "max-h-[500px] opacity-100 px-3 pb-3 pt-2" : "max-h-0 opacity-0"
         )}
       >
         <form onSubmit={handleSearch} className="relative">
@@ -209,14 +289,49 @@ export const Header = observer(() => {
           <Input
             value={searchQuery}
             onChange={handleSearchChange}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
+            onFocus={() => searchQuery.trim() && setShowDropdown(true)}
             placeholder="Search flyers..."
-            className="pl-10 bg-card border-border text-white shadow-md
-            focus-visible:!ring-0 focus-visible:!outline-none
-            focus-visible:!shadow-[0_0_15px_rgba(185,32,37,0.8)]
+            className="pl-10 bg-zinc-900/50 border-white/10 text-white shadow-md
+            focus-visible:!ring-primary/20 focus-visible:border-primary/50
             transition-all duration-300"
           />
         </form>
+
+        {/* Mobile Autocomplete Dropdown */}
+        {showDropdown && results.length > 0 && isSearchOpen && (
+          <div className="mt-3 bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-300">
+            <div className="p-2 space-y-1">
+              {results.map((flyer: any) => (
+                <div
+                  key={flyer.id}
+                  onClick={() => handleResultClick(flyer.id)}
+                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors active:scale-[0.98]"
+                >
+                  <div className="relative w-12 h-14 rounded-lg border border-white/10 overflow-hidden flex-shrink-0 shadow-lg">
+                    <Image
+                      src={flyer.image_url || flyer.imageUrl || "/placeholder.svg"}
+                      alt={flyer.title || flyer.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white truncate">
+                      {flyer.title || flyer.name}
+                    </p>
+                    <p className="text-xs text-zinc-500 font-medium">
+                      {flyer.category}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="px-4 py-2 bg-white/5 border-t border-white/5 flex justify-center">
+              <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Real-time matching</span>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   )
