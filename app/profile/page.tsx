@@ -1,8 +1,6 @@
 "use client"
 
-import { useState } from "react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,35 +8,46 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAuth } from "@/lib/auth"
+import { observer } from "mobx-react-lite"
+import { useStore } from "@/stores/StoreProvider"
 import { Camera, Save, User, Mail, Calendar, Shield, Phone } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
-export default function ProfilePage() {
-  const { user, updateProfile } = useAuth()
+const ProfilePage = observer(() => {
+  const { authStore } = useStore()
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
+    name: authStore.user?.name || "",
+    email: authStore.user?.email || "",
+    phone: authStore.user?.phone || "",
   })
 
-  if (!user) {
+  // Synchronize form data when user becomes available or changed
+  useEffect(() => {
+    if (authStore.user) {
+      setFormData({
+        name: authStore.user.name || "",
+        email: authStore.user.email || "",
+        phone: authStore.user.phone || "",
+      })
+    }
+  }, [authStore.user])
+
+  if (!authStore.user) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Please sign in to view your profile</h1>
-        </div>
-        <Footer />
+      <div className="container mx-auto px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold text-foreground mb-4">Please sign in to view your profile</h1>
+        <Button onClick={() => authStore.handleAuthModal()}>Sign In</Button>
       </div>
     )
   }
 
+  const user = authStore.user;
+
   const handleSave = async () => {
     try {
-      await updateProfile(formData)
+      await authStore.updateProfile(formData)
       setIsEditing(false)
       toast({
         title: "Profile updated",
@@ -220,4 +229,6 @@ export default function ProfilePage() {
       </main>
     </div>
   )
-}
+})
+
+export default ProfilePage

@@ -1259,10 +1259,6 @@ const EventBookingForm = () => {
               <FlyersCarousel
                 flyers={flyerFormStore.similarFlyers}
                 selectedIds={selectedFlyerIds}
-                onSelect={(selectedFlyer) => {
-                  flyerFormStore.setFlyerId(selectedFlyer.id);
-                  flyerFormStore.fetchFlyer(selectedFlyer.id, false);
-                }}
               />
             </div>
           </div>

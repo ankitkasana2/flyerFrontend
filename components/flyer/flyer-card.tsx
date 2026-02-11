@@ -108,6 +108,7 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
   const handleClick = (e: React.MouseEvent) => {
     if (!onPreview) {
       loadingStore.startLoading("Redirecting...");
+      window.scrollTo(0, 0);
     }
     if (onPreview) {
       onPreview(flyer);

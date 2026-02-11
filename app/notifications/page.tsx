@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ShoppingBag, CreditCard, Info, CheckCircle } from "lucide-react"
-import { useAuth } from "@/lib/auth"
+import { observer } from "mobx-react-lite"
+import { useStore } from "@/stores/StoreProvider"
 import {
   type AppNotification,
   getNotifications,
@@ -18,11 +19,12 @@ import {
   clearAll,
 } from "@/lib/notifications"
 
-export default function NotificationsPage() {
-  const { user } = useAuth()
+const NotificationsPage = observer(() => {
+  const { authStore } = useStore()
   const [items, setItems] = useState<AppNotification[]>([])
-  const [tab, setTab] = useState<"all" | "order" | "payment" | "system">("all")
+  const [tab, setTab] = useState<"all" | "order" | "payment" | "system" | string>("all")
 
+  const user = authStore.user;
   const unread = useMemo(() => (user ? items.filter((n) => !n.read).length : 0), [items, user])
 
   useEffect(() => {
@@ -31,22 +33,21 @@ export default function NotificationsPage() {
     const onUpdate = () => setItems(getNotifications(user.id))
     window.addEventListener("notifications:update", onUpdate as EventListener)
     return () => window.removeEventListener("notifications:update", onUpdate as EventListener)
-  }, [user]) // Updated dependency array
+  }, [user])
 
   if (!user) {
     return (
-      <>
-        <main className="container mx-auto px-4 py-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Please sign in to view your notifications.</p>
-            </CardContent>
-          </Card>
-        </main>
-      </>
+      <main className="container mx-auto px-4 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Notifications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">Please sign in to view your notifications.</p>
+            <Button onClick={() => authStore.handleAuthModal()}>Sign In</Button>
+          </CardContent>
+        </Card>
+      </main>
     )
   }
 
@@ -126,7 +127,9 @@ export default function NotificationsPage() {
       </main>
     </>
   )
-}
+})
+
+export default NotificationsPage
 
 function EmptyState() {
   return (
@@ -137,7 +140,8 @@ function EmptyState() {
 }
 
 function NotificationItem({ n }: { n: AppNotification }) {
-  const { user } = useAuth()
+  const { authStore } = useStore()
+  const user = authStore.user;
   if (!user) return null
   const icon =
     n.type === "order" ? (

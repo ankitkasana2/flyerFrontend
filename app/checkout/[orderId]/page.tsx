@@ -2,22 +2,23 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
+import { observer } from "mobx-react-lite"
+import { useStore } from "@/stores/StoreProvider"
+import { Button } from "@/components/ui/button"
 import { PaymentForm } from "@/components/payment/payment-form"
 import { PaymentSuccess } from "@/components/payment/payment-success"
-import { useAuth } from "@/lib/auth"
 import { SAMPLE_ORDERS } from "@/lib/orders"
 import { DELIVERY_OPTIONS } from "@/lib/orders"
 import type { PaymentIntent } from "@/lib/payments"
 
-export default function CheckoutPage() {
+const CheckoutPage = observer(() => {
   const params = useParams()
   const router = useRouter()
-  const { user } = useAuth()
+  const { authStore } = useStore()
   const [paymentIntent, setPaymentIntent] = useState<PaymentIntent | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  const user = authStore.user;
   const orderId = params.orderId as string
 
   // Mock order data - in real app, fetch from API
@@ -30,38 +31,27 @@ export default function CheckoutPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Please sign in to continue</h1>
-        </div>
-        <Footer />
+      <div className="container mx-auto px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold text-foreground mb-4">Please sign in to continue</h1>
+        <Button onClick={() => authStore.handleAuthModal()}>Sign In</Button>
       </div>
     )
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-4 py-20 text-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading checkout...</p>
-        </div>
-        <Footer />
+      <div className="container mx-auto px-4 py-20 text-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-muted-foreground">Loading checkout...</p>
       </div>
     )
   }
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Order not found</h1>
-          <p className="text-muted-foreground">The order you're looking for doesn't exist.</p>
-        </div>
-        <Footer />
+      <div className="container mx-auto px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold text-foreground mb-4">Order not found</h1>
+        <p className="text-muted-foreground">The order you're looking for doesn't exist.</p>
       </div>
     )
   }
@@ -106,8 +96,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="container mx-auto px-4 py-8">
         {!paymentIntent ? (
           <>
@@ -135,8 +123,8 @@ export default function CheckoutPage() {
           </>
         )}
       </main>
-
-      <Footer />
     </div>
   )
-}
+})
+
+export default CheckoutPage
