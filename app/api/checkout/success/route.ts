@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
     const sessionId = searchParams.get('session_id')
 
     if (!sessionId) {
-
       return NextResponse.redirect(
         new URL('/success?error=missing_session_id', baseUrl)
       )
@@ -39,21 +38,18 @@ export async function GET(request: NextRequest) {
     try {
       session = await stripe.checkout.sessions.retrieve(sessionId)
     } catch (stripeError: any) {
-
       return NextResponse.redirect(
         new URL(`/success?session_id=${sessionId}&error=${encodeURIComponent('Stripe error: ' + stripeError.message)}`, baseUrl)
       )
     }
 
     if (!session) {
-
       return NextResponse.redirect(
         new URL('/success?error=session_not_found', baseUrl)
       )
     }
 
     if (session.payment_status !== 'paid') {
-
       return NextResponse.redirect(
         new URL(`/success?session_id=${sessionId}&error=payment_failed`, baseUrl)
       )
@@ -61,7 +57,6 @@ export async function GET(request: NextRequest) {
 
 
     // Get order data from Stripe metadata
-
     let orderDataBase64 = session.metadata?.orderData
     const chunkCount = session.metadata?.chunkCount
 
@@ -78,7 +73,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (!orderDataBase64) {
-
       return NextResponse.redirect(
         new URL(`/success?session_id=${sessionId}&error=${encodeURIComponent('Order data not found in metadata')}`, baseUrl)
       )
@@ -86,13 +80,11 @@ export async function GET(request: NextRequest) {
 
 
     // Decode order data from base64
-    let orderData
+    let orderData: any
     try {
       const orderDataString = Buffer.from(orderDataBase64, 'base64').toString('utf-8')
       orderData = JSON.parse(orderDataString)
-
     } catch (decodeError: any) {
-
       return NextResponse.redirect(
         new URL(`/success?session_id=${sessionId}&error=${encodeURIComponent('Failed to decode order data: ' + decodeError.message)}`, baseUrl)
       )
@@ -102,8 +94,7 @@ export async function GET(request: NextRequest) {
     const itemsToProcess = orderData.items || [orderData.formData || orderData];
     const createdOrderIds: string[] = [];
     const allTempFilesToCleanup: string[] = [];
-
-
+    let lastBackendError = "";
 
     // Loop through each item and create a separate order
     for (let index = 0; index < itemsToProcess.length; index++) {
@@ -123,10 +114,10 @@ export async function GET(request: NextRequest) {
       formData.append('event_date', formattedDate);
       formData.append('flyer_info', formDataObj.flyer_info || '');
       formData.append('address_phone', formDataObj.address_phone || '');
-      formData.append('story_size_version', (formDataObj.story_size_version || false).toString());
-      formData.append('custom_flyer', (formDataObj.custom_flyer || false).toString());
-      formData.append('animated_flyer', (formDataObj.animated_flyer || false).toString());
-      formData.append('instagram_post_size', (formDataObj.instagram_post_size || true).toString());
+      formData.append('story_size_version', (formDataObj.story_size_version ?? false).toString());
+      formData.append('custom_flyer', (formDataObj.custom_flyer ?? false).toString());
+      formData.append('animated_flyer', (formDataObj.animated_flyer ?? false).toString());
+      formData.append('instagram_post_size', (formDataObj.instagram_post_size ?? true).toString());
       formData.append('delivery_time', formDataObj.delivery_time || '24 hours');
       formData.append('custom_notes', formDataObj.custom_notes || '');
 
@@ -134,7 +125,7 @@ export async function GET(request: NextRequest) {
       formData.append('flyer_is', flyerId.toString());
       formData.append('category_id', (formDataObj.category_id || 1).toString());
       formData.append('user_id', formDataObj.user_id || orderData.userId || '');
-      formData.append('web_user_id', formDataObj.user_id || orderData.userId || '');
+      formData.append('web_user_id', formDataObj.web_user_id || ''); // Explicitly prefer web_user_id if present
       formData.append('email', formDataObj.email || orderData.userEmail || 'user@example.com');
 
       const parsePrice = (p: any) => {
@@ -151,6 +142,7 @@ export async function GET(request: NextRequest) {
 
       // Sanitize JSON fields
       const sanitizeItem = (item: any) => {
+        if (!item) return { name: '' };
         const result: any = { name: item.name || '' };
         const img = item.image_url || item.image;
         if (img && typeof img === 'string' && img.startsWith('http')) {
@@ -203,18 +195,17 @@ export async function GET(request: NextRequest) {
                 formData.append(backendFieldName, blob as any, filepath.split(/[\\\/]/).pop());
                 tempFilesToCleanup.push(filepath);
               } catch (err) {
-
+                // Skip failed file reads
               }
             }
           }
         } catch (importErr) {
-
+          // Handle import errors
         }
       }
 
       // Submit THIS order to backend API
       try {
-
         const response = await fetch(getApiUrl('/orders'), {
           method: 'POST',
           body: formData
@@ -222,12 +213,12 @@ export async function GET(request: NextRequest) {
 
         if (!response.ok) {
           const errorText = await response.text();
-
+          lastBackendError = `Backend ${response.status}: ${errorText.substring(0, 100)}`;
           continue;
         }
 
         const responseData = await response.json();
-        const orderId = responseData.order?.id || responseData.orderId || responseData.id;
+        const orderId = responseData.order?.id || responseData.orderId || responseData.id || responseData.data?.id;
 
         if (orderId) {
           createdOrderIds.push(orderId.toString());
@@ -249,18 +240,18 @@ export async function GET(request: NextRequest) {
               imageUrl: formDataObj.image_url
             });
           } catch (emailError: any) {
-
+            // Non-blocking email error
           }
-
         }
-      } catch (fetchError) {
-
+      } catch (fetchError: any) {
+        lastBackendError = `Fetch error: ${fetchError.message}`;
       }
     }
 
     if (createdOrderIds.length === 0) {
+      const errorMsg = lastBackendError || 'No orders were created on backend';
       return NextResponse.redirect(
-        new URL(`/success?session_id=${sessionId}&order_created=false&error=${encodeURIComponent('No orders were created on backend')}`, baseUrl)
+        new URL(`/success?session_id=${sessionId}&order_created=false&error=${encodeURIComponent(errorMsg)}`, baseUrl)
       );
     }
 
@@ -273,16 +264,17 @@ export async function GET(request: NextRequest) {
           try { await unlink(filepath); } catch (err) { }
         }
         try {
+          // Attempt to remove the parent directory if empty
           const uploadDir = dirname(allTempFilesToCleanup[0]);
           await rmdir(uploadDir);
         } catch (err) { }
       }
     } catch (cleanupErr) { }
 
-    // Clear cart
-    if (session.metadata?.source === 'cart' && orderData.userId) {
+    // Clear cart (best effort)
+    if ((session.metadata?.source === 'cart' || orderData.userId) && orderData.userId) {
       try {
-        await fetch(`${BACKEND_API_URL}/api/cart/clear/${orderData.userId}`, { method: 'DELETE' });
+        await fetch(getApiUrl(`/cart/clear/${orderData.userId}`), { method: 'DELETE' });
       } catch (cartError) { }
     }
 
@@ -292,21 +284,17 @@ export async function GET(request: NextRequest) {
     )
 
   } catch (error: any) {
-
-
     // Resolve baseUrl again for the catch block
-    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-    if (baseUrl.includes('0.0.0.0')) {
+    let errUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    try {
       const host = request.headers.get('host')
-      if (host && !host.includes('0.0.0.0')) {
-        baseUrl = `http://${host}`
-      } else {
-        baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-      }
-    }
+      const protocol = request.headers.get('x-forwarded-proto') || 'http'
+      errUrl = host ? `${protocol}://${host}` : errUrl
+    } catch (e) { }
 
     return NextResponse.redirect(
-      new URL(`/success?order_created=false&error=${encodeURIComponent(error.message || 'Processing error')}`, baseUrl)
+      new URL(`/success?order_created=false&error=${encodeURIComponent(error.message || 'Processing error')}`, errUrl)
     )
   }
+}
 }
