@@ -73,9 +73,7 @@ const UserMenu = observer(() => {
     }
   }
 
-  const handleLinkClick = () => {
-    loadingStore.startLoading("Loading...")
-  }
+
 
   const getInitials = (name?: string) => {
     if (!name) return "U"
@@ -122,49 +120,49 @@ const UserMenu = observer(() => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-white/5" />
         <DropdownMenuItem asChild>
-          <Link href="/overview" onClick={handleLinkClick}>
+          <Link href="/overview">
             <User className="h-4 w-4 mr-2" />
             <span>Overview</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/orders" onClick={handleLinkClick}>
+          <Link href="/orders">
             <ShoppingBag className="h-4 w-4 mr-2" />
             <span>My Orders</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/favorites" onClick={handleLinkClick}>
+          <Link href="/favorites">
             <Heart className="h-4 w-4 mr-2" />
             <span>Favorites</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/downloads" onClick={handleLinkClick}>
+          <Link href="/downloads">
             <Download className="h-4 w-4 mr-2" />
             <span>Downloads</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/notifications" onClick={handleLinkClick}>
+          <Link href="/notifications">
             <Bell className="h-4 w-4 mr-2" />
             <span>Notifications</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/profile" onClick={handleLinkClick}>
+          <Link href="/profile">
             <Settings className="h-4 w-4 mr-2" />
             <span>Account Settings</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/media" onClick={handleLinkClick}>
+          <Link href="/media">
             <ImageDown className="h-4 w-4 mr-2" />
             <span>Media Library</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="sm:hidden">
-          <Link href="/categories" onClick={handleLinkClick}>
+          <Link href="/categories">
             <ChartBarStacked className="h-4 w-4 mr-2" />
             <span>Category</span>
           </Link>

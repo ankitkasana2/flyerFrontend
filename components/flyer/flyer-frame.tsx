@@ -17,10 +17,9 @@ interface FlyerFrameProps {
 export function FlyerFrame({
     flyer,
     className,
-    aspectRatio = "aspect-[3/4]",
+    aspectRatio = "aspect-[2/3]",
     showRibbon = true
 }: FlyerFrameProps) {
-    const [isLoading, setIsLoading] = useState(true)
     const imageUrl = flyer?.image_url || flyer?.imageUrl || "/placeholder.svg"
 
     return (
@@ -31,22 +30,14 @@ export function FlyerFrame({
                 className
             )}
         >
-            {isLoading && (
-                <Skeleton className="absolute inset-0 z-10 w-full h-full rounded-none bg-zinc-800 flex items-center justify-center">
-                    <ImageIcon className="w-12 h-12 text-zinc-700 animate-pulse" />
-                </Skeleton>
-            )}
+
 
             <Image
                 src={imageUrl}
                 alt={flyer?.name || "Flyer"}
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className={cn(
-                    "object-cover transition-all duration-700 group-hover:scale-110",
-                    isLoading ? "opacity-0" : "opacity-100"
-                )}
-                onLoad={() => setIsLoading(false)}
+                className="object-cover transition-all duration-700 group-hover:scale-110"
             />
 
             {/* Glass Overlay on Hover */}

@@ -25,9 +25,7 @@ export const Header = observer(() => {
   const [showDropdown, setShowDropdown] = useState(false);
   // const cart = CartStore((s) => s.cart);
 
-  const handleHomeClick = () => {
-    loadingStore.startLoading("Loading...")
-  }
+
 
   useEffect(() => {
     // Load cart for logged-in user only
@@ -57,7 +55,6 @@ export const Header = observer(() => {
       return
     }
     if (searchQuery.trim()) {
-      loadingStore.startLoading("Searching...")
       // Navigate to categories page with search query
       router.push(`/categories?search=${encodeURIComponent(searchQuery.trim())}`)
       setIsSearchOpen(false) // Close mobile search
@@ -68,8 +65,6 @@ export const Header = observer(() => {
     if (!authStore.isLoggedIn) {
       e.preventDefault()
       authStore.handleAuthModal()
-    } else {
-      loadingStore.startLoading("Loading...")
     }
   }
 
@@ -116,7 +111,6 @@ export const Header = observer(() => {
   const handleResultClick = (flyerId: string) => {
     setShowDropdown(false);
     setSearchQuery("");
-    loadingStore.startLoading("Loading Flyer...");
     router.push(`/flyer/${flyerId}`);
   };
 
@@ -143,7 +137,6 @@ export const Header = observer(() => {
 
           <Link
             href="/"
-            onClick={handleHomeClick}
             className="inline-flex items-center justify-center cursor-pointer transition-transform duration-200 hover:scale-110"
           >
             <Image

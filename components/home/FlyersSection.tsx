@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { observer } from "mobx-react-lite";
 import { FlyersCarousel } from "./FlyersCarousel";
+import { FlyersSkeleton } from "./FlyersSkeleton";
 import { useStore } from "@/stores/StoreProvider";
 
 type FlyersSectionProps = {
@@ -68,16 +69,12 @@ const FlyersSection: React.FC<FlyersSectionProps> = ({ type }) => {
     Flyers = shuffleArray(Flyers);
   }
 
+  // Limit to 15 items for performance
+  Flyers = Flyers.slice(0, 15);
+
   if (!Flyers.length) {
     if (flyersStore.loading) {
-      return (
-        <section className="py-4 px-5">
-          <div className="flex flex-col gap-3">
-            <div className="h-6 w-40 rounded bg-gray-800/30 animate-pulse" />
-            <div className="h-48 w-full rounded-xl bg-gray-900/40 animate-pulse" />
-          </div>
-        </section>
-      );
+      return <FlyersSkeleton />;
     }
     return null;
   }

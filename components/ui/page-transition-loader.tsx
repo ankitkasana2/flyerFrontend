@@ -12,16 +12,16 @@ const PageTransitionLoader = observer(() => {
     const { loadingStore } = useStore();
 
     useEffect(() => {
-        // Start loading when route changes
-        loadingStore.startLoading("Loading...");
+        // Disabled automatic loader on route change for smoother navigation
+        // loadingStore.startLoading("Loading...");
 
-        // Stop loading after a short delay to ensure smooth transition
-        const timer = setTimeout(() => {
-            loadingStore.stopLoading();
-        }, 500);
+        // const timer = setTimeout(() => {
+        //     loadingStore.stopLoading();
+        // }, 800);
 
         return () => {
-            clearTimeout(timer);
+            // clearTimeout(timer);
+            // loadingStore.stopLoading(); 
         };
     }, [pathname, searchParams, loadingStore]);
 

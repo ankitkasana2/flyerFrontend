@@ -5,6 +5,7 @@ import { Flyer } from "@/lib/types";
 export class FlyersStore {
   flyers: Flyer[] = [];
   loading = false;
+  hasFetched = false;
   error: string | null = null;
 
   constructor() {
@@ -26,12 +27,14 @@ export class FlyersStore {
       runInAction(() => {
         this.flyers = data;
         this.loading = false;
+        this.hasFetched = true;
       });
 
     } catch (err: any) {
       runInAction(() => {
         this.error = err.message;
         this.loading = false;
+        this.hasFetched = true;
       });
     }
   };

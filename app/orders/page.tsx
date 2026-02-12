@@ -114,7 +114,6 @@ const OrdersPage = observer(() => {
     if (!authStore.user?.id) return
 
     setLoading(true)
-    loadingStore.startLoading("Loading orders...")
     try {
       const response = await fetch(getApiUrl(`/orders/user/${authStore.user.id}`), {
         cache: 'no-store',
@@ -139,7 +138,6 @@ const OrdersPage = observer(() => {
       toast.error('Failed to load orders')
     } finally {
       setLoading(false)
-      loadingStore.stopLoading()
     }
   }
 

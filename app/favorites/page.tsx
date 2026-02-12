@@ -24,10 +24,7 @@ const FavoritesPage = () => {
   // Fetch favorites when user is logged in
   useEffect(() => {
     if (user?.id) {
-      loadingStore.startLoading("Loading favorites...")
-      favoritesStore.fetchFavorites(user.id).finally(() => {
-        loadingStore.stopLoading()
-      })
+      favoritesStore.fetchFavorites(user.id)
     }
   }, [user?.id, favoritesStore, loadingStore])
 

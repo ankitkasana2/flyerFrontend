@@ -25,7 +25,7 @@ interface FilterState {
 const FlyersPage = () => {
   const { flyersStore, categoryStore } = useStore()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  
+
   useEffect(() => {
     if (flyersStore.flyers.length === 0) flyersStore.fetchFlyers()
     if (categoryStore.categories.length === 0) categoryStore.fetchCategories()
@@ -39,11 +39,14 @@ const FlyersPage = () => {
     sortBy: "newest",
   })
 
+  const [page, setPage] = useState(1)
+  const ITEMS_PER_PAGE = 24
+
   const filteredFlyers = useMemo(() => {
     if (!flyersStore.flyers || flyersStore.flyers.length === 0) {
       return []
     }
-    
+
     let result = [...flyersStore.flyers]
 
     // Search filter
@@ -62,8 +65,8 @@ const FlyersPage = () => {
       result = result.filter((flyer: any) => {
         const catList = Array.isArray(flyer.categories) ? flyer.categories : [flyer.category]
         return catList.some((cat: string) => {
-           const slug = cat.toLowerCase().replace(/\s+/g, '-')
-           return filters.categories.includes(slug)
+          const slug = cat.toLowerCase().replace(/\s+/g, '-')
+          return filters.categories.includes(slug)
         })
       })
     }
@@ -118,6 +121,15 @@ const FlyersPage = () => {
 
     return result
   }, [filters, flyersStore.flyers])
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPage(1)
+  }, [filters])
+
+  const paginatedFlyers = useMemo(() => {
+    return filteredFlyers.slice(0, page * ITEMS_PER_PAGE)
+  }, [filteredFlyers, page])
 
   const clearFilters = () => {
     setFilters({
@@ -203,24 +215,39 @@ const FlyersPage = () => {
         </div>
 
         {/* Flyers Grid */}
-        {filteredFlyers.length > 0 ? (
-          <div
-            className={`grid gap-6 ${
-              viewMode === "grid"
-                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        {paginatedFlyers.length > 0 ? (
+          <>
+            <div
+              className={`grid gap-6 ${viewMode === "grid"
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
                 : "grid-cols-1 md:grid-cols-2 gap-4"
-            }`}
-          >
-            {filteredFlyers.map((flyer) => (
-              <FlyerCard
-                key={flyer.id}
-                flyer={flyer}
-                onPreview={handlePreview}
-                onAddToCart={handleAddToCart}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            ))}
-          </div>
+                }`}
+            >
+              {paginatedFlyers.map((flyer: any) => (
+                <FlyerCard
+                  key={flyer.id}
+                  flyer={flyer}
+                  onPreview={handlePreview}
+                  onAddToCart={handleAddToCart}
+                  onToggleFavorite={handleToggleFavorite}
+                />
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {paginatedFlyers.length < filteredFlyers.length && (
+              <div className="flex justify-center mt-12 mb-8">
+                <Button
+                  onClick={() => setPage((prev) => prev + 1)}
+                  variant="outline"
+                  size="lg"
+                  className="min-w-[200px]"
+                >
+                  Load More ({filteredFlyers.length - paginatedFlyers.length} remaining)
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-12">
             <p className="text-lg text-muted-foreground mb-4">No flyers found matching your criteria</p>

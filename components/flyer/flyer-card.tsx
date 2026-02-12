@@ -108,10 +108,6 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
   }, [flyer.image_url])
 
   const handleClick = (e: React.MouseEvent) => {
-    if (!onPreview) {
-      loadingStore.startLoading("Redirecting...");
-      window.scrollTo(0, 0);
-    }
     if (onPreview) {
       onPreview(flyer);
     }
@@ -138,9 +134,10 @@ const FlyerCardComponent = ({ flyer, selected, onPreview, onAddToCart, onToggleF
     >
       <FlyerFrame
         flyer={flyer}
-        aspectRatio="aspect-[4/5]"
+        aspectRatio="aspect-[2/3]"
         className="hover:scale-[1.01]"
       />
+
 
       {/* Selected Overlay */}
       {selected && (

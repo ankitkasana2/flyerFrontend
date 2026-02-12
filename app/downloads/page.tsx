@@ -40,13 +40,7 @@ const DownloadsPage = observer(() => {
         { revalidateOnFocus: false },
     )
 
-    useEffect(() => {
-        if (isSwrLoading) {
-            loadingStore.startLoading("Loading downloads...")
-        } else {
-            loadingStore.stopLoading()
-        }
-    }, [isSwrLoading, loadingStore])
+
 
     const filtered = useMemo(() => {
         if (!data) return []

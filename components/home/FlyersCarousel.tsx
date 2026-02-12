@@ -35,7 +35,7 @@ export function FlyersCarousel({ flyers, onSelect, selectedIds }: { flyers: any[
           {flyers.map((flyer) => (
             <CarouselItem
               key={flyer.id}
-              className="flex-[0_0_auto] w-[calc((100%_-_16px)_/_3)] sm:w-[230px]" // 3 cards on mobile, ~230px on larger screens
+              className="flex-[0_0_auto] w-[calc((100%_-_16px)_/_2)] sm:w-[280px]" // 2 cards on mobile, 280px on larger screens
             >
               <FlyerCard
                 flyer={flyer}

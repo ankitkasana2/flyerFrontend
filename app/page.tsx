@@ -2,6 +2,7 @@
 
 import FlyersSection from "@/components/home/FlyersSection"
 import HeroSection from "@/components/home/HeroSection"
+import { FlyersSkeleton } from "@/components/home/FlyersSkeleton"
 
 import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
@@ -26,7 +27,7 @@ const HomePage: React.FC<HomeSectionProps> = () => {
 
   // Fetch flyers on mount
   useEffect(() => {
-    if (!flyersStore.flyers.length && !flyersStore.loading) {
+    if (!flyersStore.flyers.length && !flyersStore.loading && !flyersStore.hasFetched) {
       flyersStore.fetchFlyers()
     }
   }, [flyersStore])
@@ -72,13 +73,23 @@ const HomePage: React.FC<HomeSectionProps> = () => {
         </section>
       )}
 
+      {/* Loading State */}
+      {/* Loading State */}
+      {(flyersStore.loading || (categoryStore.isLoading && categoryStore.categories.length === 0)) && !flyersStore.hasFetched && (
+        <div className="space-y-6">
+          <FlyersSkeleton />
+          <FlyersSkeleton />
+          <FlyersSkeleton />
+        </div>
+      )}
+
       {/* Categories with flyers */}
-      {!flyersStore.loading && categories.length > 0 &&
+      {categories.length > 0 &&
         categories.map(cat => <FlyersSection key={cat.id} type={cat} />)
       }
 
       {/* No flyers state */}
-      {!flyersStore.loading && !flyersStore.error && categories.length === 0 && (
+      {!flyersStore.loading && flyersStore.hasFetched && !categoryStore.isLoading && !flyersStore.error && categories.length === 0 && (
         <section className="py-8 px-5">
           <div className="text-center text-muted-foreground">
             <p>No flyers available at the moment.</p>
@@ -89,7 +100,7 @@ const HomePage: React.FC<HomeSectionProps> = () => {
 
 
 
-    
+
     </div>
   )
 }
