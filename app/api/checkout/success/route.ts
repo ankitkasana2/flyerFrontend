@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { API_BASE_URL } from '@/config/api'
+import { API_BASE_URL, getApiUrl } from '@/config/api'
 
 export const dynamic = 'force-dynamic'
 
@@ -215,7 +215,7 @@ export async function GET(request: NextRequest) {
       // Submit THIS order to backend API
       try {
 
-        const response = await fetch(`${BACKEND_API_URL}/api/orders`, {
+        const response = await fetch(getApiUrl('/orders'), {
           method: 'POST',
           body: formData
         });

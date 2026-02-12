@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { API_BASE_URL } from "@/config/api";
+import { API_BASE_URL, getApiUrl } from "@/config/api";
 
 const BACKEND_API_URL = API_BASE_URL;
 
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
 
     // Forward the request to the backend API
-    const response = await fetch(`${BACKEND_API_URL}/api/orders`, {
+    const response = await fetch(getApiUrl("/orders"), {
       method: "POST",
       body: backendFormData,
       // Don't set Content-Type header for FormData - let browser set it with boundary

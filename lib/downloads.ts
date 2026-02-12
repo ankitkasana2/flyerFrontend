@@ -40,7 +40,7 @@ import { getApiUrl } from "@/config/api"
 export async function fetchUserDownloads(userId: string): Promise<OrderDelivery[]> {
     try {
         // 1. Fetch user orders
-        const response = await fetch(getApiUrl(`/api/orders/user/${userId}`))
+        const response = await fetch(getApiUrl(`/orders/user/${userId}`))
         if (!response.ok) throw new Error("Failed to fetch orders")
 
         const data = await response.json()
@@ -53,7 +53,7 @@ export async function fetchUserDownloads(userId: string): Promise<OrderDelivery[
             orders.map(async (order: any) => {
                 let files: DeliveredFile[] = []
                 try {
-                    const filesResponse = await fetch(getApiUrl(`/api/order-files/order/${order.id}`))
+                    const filesResponse = await fetch(getApiUrl(`/order-files/order/${order.id}`))
                     if (filesResponse.ok) {
                         const filesData = await filesResponse.json()
                         if (filesData.success && Array.isArray(filesData.files)) {
