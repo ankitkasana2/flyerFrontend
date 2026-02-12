@@ -28,7 +28,7 @@ export interface CartResponse {
  */
 export async function fetchCartByUserId(userId: string): Promise<CartResponse> {
   try {
-    const response = await fetch(getApiUrl(`/cart/${userId}`), {
+    const response = await fetch(getApiUrl(`/api/cart/${userId}`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

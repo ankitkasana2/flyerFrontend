@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { API_BASE_URL, getApiUrl } from '@/config/api'
+import { API_BASE_URL } from '@/config/api'
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     if (!backendFormData.has(' total_price')) backendFormData.append(' total_price', '78')
 
 
-    const response = await fetch(getApiUrl("/orders"), {
+    const response = await fetch(`${API_BASE_URL}/api/orders`, {
       method: 'POST',
       body: backendFormData
     })
