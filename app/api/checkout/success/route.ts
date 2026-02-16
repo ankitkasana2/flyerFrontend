@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { API_BASE_URL, getApiUrl } from '@/config/api'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-10-29.clover',
@@ -63,7 +64,8 @@ export async function GET(request: NextRequest) {
     // Check if data was chunked
     if (chunkCount) {
       const chunks = []
-      for (let i = 0; i < parseInt(chunkCount); i++) {
+      const count = parseInt(chunkCount)
+      for (let i = 0; i < count; i++) {
         const chunk = session.metadata?.[`orderData_${i}`]
         if (chunk) {
           chunks.push(chunk)
@@ -91,10 +93,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Extract items to process (could be a single item or multiple from cart)
-    const itemsToProcess = orderData.items || [orderData.formData || orderData];
+    // Robust extraction: check for items array first, then formData, then the object itself
+    let itemsToProcess: any[] = []
+    if (orderData.items && Array.isArray(orderData.items)) {
+      itemsToProcess = orderData.items
+    } else if (orderData.formData) {
+      itemsToProcess = [orderData.formData]
+    } else {
+      // Fallback: check if the object itself looks like order data
+      itemsToProcess = [orderData]
+    }
+
     const createdOrderIds: string[] = [];
     const allTempFilesToCleanup: string[] = [];
     let lastBackendError = "";
+
+    if (itemsToProcess.length === 0) {
+      lastBackendError = "No items to process in order data";
+    }
 
     // Loop through each item and create a separate order
     for (let index = 0; index < itemsToProcess.length; index++) {
@@ -267,7 +283,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (createdOrderIds.length === 0) {
-      const errorMsg = lastBackendError || 'No orders were created on backend';
+      const diagInfo = `items=${itemsToProcess.length}, keys=${Object.keys(orderData).join('|').substring(0, 50)}`;
+      const errorMsg = lastBackendError || `No orders were created on backend (${diagInfo})`;
       return NextResponse.redirect(
         new URL(`/success?session_id=${sessionId}&order_created=false&error=${encodeURIComponent(errorMsg)}`, baseUrl)
       );
