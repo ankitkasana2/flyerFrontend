@@ -85,8 +85,10 @@ export async function GET(request: NextRequest) {
     let orderData: any
     try {
       const orderDataString = Buffer.from(orderDataBase64, 'base64').toString('utf-8')
+      console.log("📦 DECODED ORDER DATA:", orderDataString.substring(0, 200) + "...");
       orderData = JSON.parse(orderDataString)
     } catch (decodeError: any) {
+      console.error("❌ DECODE ERROR:", decodeError);
       return NextResponse.redirect(
         new URL(`/success?session_id=${sessionId}&error=${encodeURIComponent('Failed to decode order data: ' + decodeError.message)}`, baseUrl)
       )
@@ -104,6 +106,8 @@ export async function GET(request: NextRequest) {
       itemsToProcess = [orderData]
     }
 
+    console.log(`🛒 Processing ${itemsToProcess.length} items`);
+
     const createdOrderIds: string[] = [];
     const allTempFilesToCleanup: string[] = [];
     let lastBackendError = "";
@@ -115,6 +119,7 @@ export async function GET(request: NextRequest) {
     // Loop through each item and create a separate order
     for (let index = 0; index < itemsToProcess.length; index++) {
       const formDataObj = itemsToProcess[index];
+      console.log(`📝 Processing item ${index + 1}/${itemsToProcess.length}:`, formDataObj.event_title);
 
       // Create FormData for THIS specific item
       const formData = new FormData();
@@ -223,18 +228,24 @@ export async function GET(request: NextRequest) {
       // Submit THIS order to backend API
       try {
         const orderEndpoint = `${BACKEND_API_URL}/api/orders`;
+        console.log(`📡 Sending to backend: ${orderEndpoint}`);
+
         const response = await fetch(orderEndpoint, {
           method: 'POST',
           body: formData
         });
 
+        console.log(`📶 Backend response status: ${response.status}`);
+
         if (!response.ok) {
           const errorText = await response.text();
+          console.error(`❌ Backend error text:`, errorText);
           lastBackendError = `Backend ${response.status}: ${errorText.substring(0, 100)}`;
           continue;
         }
 
         const responseData = await response.json();
+        console.log(`✅ Backend response data:`, responseData);
 
         // Handle cases where backend returns 200 but success is false
         if (responseData.success === false) {
@@ -253,6 +264,7 @@ export async function GET(request: NextRequest) {
           (responseData.success && !isNaN(Number(responseData.data)) ? responseData.data : null);
 
         if (orderId) {
+          console.log(`🎉 Order created successfully! ID: ${orderId}`);
           createdOrderIds.push(orderId.toString());
           allTempFilesToCleanup.push(...tempFilesToCleanup);
 
