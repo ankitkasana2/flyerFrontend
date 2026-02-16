@@ -206,7 +206,8 @@ export async function GET(request: NextRequest) {
 
       // Submit THIS order to backend API
       try {
-        const response = await fetch(getApiUrl('/orders'), {
+        const orderEndpoint = `${BACKEND_API_URL}/api/orders`;
+        const response = await fetch(orderEndpoint, {
           method: 'POST',
           body: formData
         });
@@ -218,7 +219,22 @@ export async function GET(request: NextRequest) {
         }
 
         const responseData = await response.json();
-        const orderId = responseData.order?.id || responseData.orderId || responseData.id || responseData.data?.id;
+
+        // Handle cases where backend returns 200 but success is false
+        if (responseData.success === false) {
+          lastBackendError = `Backend logic error: ${responseData.message || JSON.stringify(responseData)}`;
+          continue;
+        }
+
+        // Broaden order ID extraction to handle various backend response formats
+        const orderId =
+          responseData.order?.id ||
+          responseData.orderId ||
+          responseData.id ||
+          responseData.data?.id ||
+          responseData.data?.order?.id ||
+          responseData.order_id ||
+          (responseData.success && !isNaN(Number(responseData.data)) ? responseData.data : null);
 
         if (orderId) {
           createdOrderIds.push(orderId.toString());
@@ -242,6 +258,8 @@ export async function GET(request: NextRequest) {
           } catch (emailError: any) {
             // Non-blocking email error
           }
+        } else {
+          lastBackendError = `Order created but no ID found in response: ${JSON.stringify(responseData).substring(0, 100)}`;
         }
       } catch (fetchError: any) {
         lastBackendError = `Fetch error: ${fetchError.message}`;
@@ -294,7 +312,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.redirect(
       new URL(`/success?order_created=false&error=${encodeURIComponent(error.message || 'Processing error')}`, errUrl)
-    )
+    );
   }
-}
 }

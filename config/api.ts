@@ -9,8 +9,3 @@ export const getApiUrl = (path = ""): string => {
   if (!path) return API_BASE_URL;
   return `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 };
-    ?path.replace("/api", "")
-    : path;
-
-return `${API_BASE_URL}${cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`}`;
-};
