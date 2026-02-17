@@ -227,7 +227,7 @@ export async function GET(request: NextRequest) {
 
       // Submit THIS order to backend API
       try {
-        const orderEndpoint = getApiUrl('/api/orders');
+        const orderEndpoint = new URL('/api/orders', baseUrl).toString();
         console.log(`📡 Sending to backend: ${orderEndpoint}`);
 
         const response = await fetch(orderEndpoint, {

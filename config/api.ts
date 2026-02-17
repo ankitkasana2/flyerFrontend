@@ -4,15 +4,20 @@ const DEFAULT_API_BASE_URL = "http://193.203.161.174:3007";
 const envBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL;
 
 // Helper to determine if we are on server
-const isServer = typeof window === 'undefined';
+const isServer = typeof window === 'undefined' || (typeof process !== 'undefined' && process.release?.name === 'node');
 
 // Determine the actual base URL
 let resolvedBaseUrl = envBaseUrl;
 
-// If we are on the server and the base URL is relative (e.g. starts with /), 
-// fallback to the default absolute URL to verify 'Failed to parse URL' errors in fetch.
-if (isServer && resolvedBaseUrl.startsWith('/')) {
-  resolvedBaseUrl = DEFAULT_API_BASE_URL;
+// If we are on the server and the base URL is relative (e.g. starts with /) OR empty, 
+// we must resolve it to an absolute URL for Node.js fetch.
+if (isServer && (resolvedBaseUrl.startsWith('/') || !resolvedBaseUrl)) {
+  // Priority:
+  // 1. BACKEND_API_BASE_URL (specific for server-side backend connection)
+  // 2. API_BASE_URL (server-side override)
+  // 3. DEFAULT_API_BASE_URL (fallback to hardcoded IP/Domain)
+  const overrideUrl = process.env.BACKEND_API_BASE_URL || process.env.API_BASE_URL;
+  resolvedBaseUrl = overrideUrl || DEFAULT_API_BASE_URL;
 }
 
 export const API_BASE_URL = resolvedBaseUrl.replace(/\/$/, "");
