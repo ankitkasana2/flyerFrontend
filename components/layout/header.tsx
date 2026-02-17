@@ -257,12 +257,7 @@ export const Header = observer(() => {
                 </span>
               )}
 
-              {/* Show loading indicator when cart is being loaded */}
-              {cartStore.isLoading && (
-                <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-                  ...
-                </span>
-              )}
+
             </div>
             <div className="flex items-center">
               <UserMenu />
