@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
   try {
-    const { item } = await req.json();
+    const { item, fees } = await req.json();
 
     const host = req.headers.get('host')
     const protocol = req.headers.get('x-forwarded-proto') || 'http'
@@ -56,36 +56,53 @@ export async function POST(req: NextRequest) {
       metadata.orderData = orderDataBase64;
     }
 
+    const line_items = itemsArray.map((i: any) => {
+      const priceStr = String(i.subtotal || i.total_price || 0);
+      const amount = parseFloat(priceStr.replace(/[^0-9.]/g, '')) || 0;
+
+      // Ensure image URL is valid for Stripe (must be absolute)
+      let imageUrl = i.image_url || i.flyer?.image || i.venue_logo;
+
+      if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+        const apiBaseUrl = API_BASE_URL;
+        imageUrl = `${apiBaseUrl.replace(/\/$/, '')}/${imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl}`;
+      }
+
+      const images = imageUrl ? [imageUrl] : [];
+
+      return {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: i?.eventDetails?.mainTitle || i?.event_title || "Flyer Order",
+            description: i?.presenting ? `Custom flyer for ${i.presenting}` : undefined,
+            images: images,
+          },
+          unit_amount: Math.round(amount * 100),
+        },
+        quantity: 1,
+      }
+    });
+
+    if (fees > 0) {
+      line_items.push({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Transaction Fee',
+            description: 'Processing fee for secure payment',
+            images: [],
+          },
+          unit_amount: Math.round(fees * 100),
+        },
+        quantity: 1,
+      });
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      line_items: itemsArray.map((i: any) => {
-        const priceStr = String(i.subtotal || i.total_price || 0);
-        const amount = parseFloat(priceStr.replace(/[^0-9.]/g, '')) || 0;
-
-        // Ensure image URL is valid for Stripe (must be absolute)
-        let imageUrl = i.image_url || i.flyer?.image || i.venue_logo;
-
-        if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
-          const apiBaseUrl = API_BASE_URL;
-          imageUrl = `${apiBaseUrl.replace(/\/$/, '')}/${imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl}`;
-        }
-
-        const images = imageUrl ? [imageUrl] : [];
-
-        return {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: i?.eventDetails?.mainTitle || i?.event_title || "Flyer Order",
-              description: i?.presenting ? `Custom flyer for ${i.presenting}` : undefined,
-              images: images,
-            },
-            unit_amount: Math.round(amount * 100),
-          },
-          quantity: 1,
-        }
-      }),
+      line_items: line_items,
       success_url: `${origin}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/cart`,
       metadata: metadata,

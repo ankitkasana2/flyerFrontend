@@ -55,12 +55,15 @@ const CartPage = observer(() => {
 
             console.log("🚀 ~ Proceeding to checkout with items ->", items)
 
+            const subtotal = cartStore.totalPrice
+            const fees = Math.round(subtotal * 0.05 * 100) / 100
+
             const response = await fetch('/api/checkout/session', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ item: items }),
+                body: JSON.stringify({ item: items, fees }),
             })
 
             const data = await response.json()
