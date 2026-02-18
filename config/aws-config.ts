@@ -16,8 +16,8 @@ export const awsConfig = {
   oauth: {
     domain: (process.env.NEXT_PUBLIC_AWS_COGNITO_DOMAIN || 'YOUR_COGNITO_DOMAIN.auth.us-east-1.amazoncognito.com').replace(/^https?:\/\//, ''),
     scopes: ['email', 'profile', 'openid'],
-    redirectSignIn: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_IN || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://grodify.com'}/auth/callback`,
-    redirectSignOut: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_OUT || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://grodify.com'}/login`,
+    redirectSignIn: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_IN || (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : `${process.env.NEXT_PUBLIC_BASE_URL || 'https://grodify.com'}/auth/callback`),
+    redirectSignOut: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_OUT || (typeof window !== 'undefined' ? `${window.location.origin}/login` : `${process.env.NEXT_PUBLIC_BASE_URL || 'https://grodify.com'}/login`),
     responseType: 'code' as const,
   },
 
