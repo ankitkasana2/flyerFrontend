@@ -421,17 +421,13 @@ const AuthModal = observer(({
       setIsLoading(true)
       loadingStore.startLoading(`Continuing with ${provider}...`)
 
-      // Use direct OAuth (not Cognito)
-      if (provider === "google") {
-        const { signInWithGoogle } = await import("@/lib/oauth-client")
-        await signInWithGoogle()
-      } else {
-        const { signInWithApple } = await import("@/lib/oauth-client")
-        await signInWithApple()
-      }
+      // Use Cognito-based social sign-in (Amplify)
+      // This is more robust as it keeps all users in the same User Pool
+      // and handles the complex OAuth flow through Cognito.
+      await authStore.signInWithProvider(provider)
 
-      // The redirect will happen in the OAuth client
-      // User will be redirected to /auth/callback/google or /auth/callback/apple
+      // The redirect will happen automatically via Amplify
+      // User will be redirected to /auth/callback as configured in aws-config.ts
     } catch (error: any) {
       toast({
         title: "Error",

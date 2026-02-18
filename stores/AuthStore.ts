@@ -612,7 +612,7 @@ export class AuthStore {
     try {
       // This will redirect to the Cognito Hosted UI
       const signInInput: SignInWithRedirectInput = {
-        provider: provider.toLowerCase() as 'Google' | 'Apple',
+        provider: (provider === 'google' ? 'Google' : 'Apple') as 'Google' | 'Apple',
       }
       await awsSignInWithRedirect(signInInput)
     } catch (error: any) {

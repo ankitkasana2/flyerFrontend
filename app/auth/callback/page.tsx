@@ -42,7 +42,7 @@ const CallbackPage = observer(() => {
 
                 if (!response.ok) {
                     console.error('Token exchange failed:', data);
-                    router.push("/login?error=auth_failed");
+                    router.push("/?error=auth_failed");
                     return;
                 }
 
@@ -100,14 +100,14 @@ const CallbackPage = observer(() => {
                         router.push("/");
                     } catch (decodeErr) {
                         console.error("Token decoding error:", decodeErr);
-                        router.push("/login?error=token_invalid");
+                        router.push("/?error=token_invalid");
                     }
                 } else {
-                    router.push("/login?error=no_token");
+                    router.push("/?error=no_token");
                 }
             } catch (error) {
                 console.error("Exchange error:", error);
-                router.push("/login?error=network_error");
+                router.push("/?error=network_error");
             }
         };
 
