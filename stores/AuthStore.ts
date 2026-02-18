@@ -182,7 +182,7 @@ export class AuthStore {
     }
   }
 
-  private setSession = (user: AuthUser | null, token: string | null = null) => {
+  setSession = (user: AuthUser | null, token: string | null = null) => {
     runInAction(() => {
       this.user = user
       this.token = token
@@ -398,9 +398,13 @@ export class AuthStore {
 
       return normalized
     } catch (error) {
-      runInAction(() => {
-        this.clearUser()
-      })
+      // Only clear if we don't already have a manual token set
+      // This prevents the manual session from being wiped by Amplify synchronization
+      if (!this.token) {
+        runInAction(() => {
+          this.clearUser()
+        })
+      }
       return null
     }
   }
