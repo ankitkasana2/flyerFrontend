@@ -146,7 +146,11 @@ export async function GET(request: NextRequest) {
       formData.append('flyer_is', flyerId.toString());
       formData.append('category_id', (formDataObj.category_id || 1).toString());
       formData.append('user_id', formDataObj.user_id || orderData.userId || '');
-      formData.append('web_user_id', formDataObj.web_user_id || ''); // Explicitly prefer web_user_id if present
+   // FIX - userId fallback chain
+const resolvedUserId = formDataObj.web_user_id || formDataObj.user_id || orderData.userId || ''
+formData.append('web_user_id', resolvedUserId)
+formData.append('user_id', resolvedUserId)
+
       formData.append('email', formDataObj.email || orderData.userEmail || 'user@example.com');
 
       const parsePrice = (p: any) => {
@@ -181,12 +185,47 @@ export async function GET(request: NextRequest) {
       formData.append('host', JSON.stringify(hostPayload));
       formData.append('sponsors', JSON.stringify(sponsorsSanitized));
 
+// Sponsor URLs from metadata
+for (let i = 0; i < 3; i++) {
+  const sponsorUrl = session.metadata?.[`sponsor_url_${i}`] 
+    || formDataObj[`sponsor_url_${i}`] 
+    || ''
+  if (sponsorUrl) {
+    formData.append(`sponsor_url_${i}`, sponsorUrl)
+  }
+}
+  // NEW - DJ URLs
+for (let i = 0; i < 5; i++) {
+  const djUrl = session.metadata?.[`dj_url_${i}`] || formDataObj[`dj_url_${i}`] || ''
+  if (djUrl) {
+    formData.append(`dj_url_${i}`, djUrl)
+  }
+}
+
+// Host URLs from metadata
+for (let i = 0; i < 2; i++) {
+  const hostUrl = session.metadata?.[`host_url_${i}`] || ''
+  if (hostUrl) {
+    formData.append(`host_url_${i}`, hostUrl)
+  }
+}
+
+
       formData.append('venue_text', formDataObj.venue_text || '');
-      const venueLogo = formDataObj.venue_logo_url || formDataObj.venue_logo || '';
-      formData.append('venue_logo_url', venueLogo);
-      if (venueLogo && typeof venueLogo === 'string' && venueLogo.startsWith('http')) {
-        formData.append('venue_logo', venueLogo);
-      }
+     // FIX - orderData se bhi check karo
+// Session metadata se directly lo - ye Stripe me save hota hai
+const venueLogo = session.metadata?.venue_logo_url
+  || formDataObj.venue_logo_url 
+  || formDataObj.venue_logo 
+  || ''
+
+console.log('🖼️ Venue Logo URL:', venueLogo) // ← Debug ke liye
+
+formData.append('venue_logo_url', venueLogo)
+if (venueLogo && venueLogo.startsWith('http')) {
+  formData.append('venue_logo', venueLogo)
+}
+    
 
       // Handle TEMP FILES upload for this item
       const tempFilesToCleanup: string[] = [];
@@ -227,7 +266,7 @@ export async function GET(request: NextRequest) {
 
       // Submit THIS order to backend API
       try {
-        const orderEndpoint = getApiUrl('/api/orders');
+    const orderEndpoint = 'http://127.0.0.1:3007/api/orders';
 
         console.log(`📡 Sending to backend: ${orderEndpoint}`);
 

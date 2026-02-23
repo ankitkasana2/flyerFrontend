@@ -3,6 +3,16 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 
+
+
+// export const config = {
+//     api: {
+//         bodyParser: {
+//             sizeLimit: '50mb',  // Apni zaroorat ke hisaab se badha sakte ho
+//         },
+//     },
+// }
+
 // Force Node.js runtime for filesystem access
 export const runtime = 'nodejs';
 
