@@ -57,15 +57,14 @@ export async function listLibrary(userId: string, type?: LibraryItem["type"]): P
 
     try {
         // Added timestamp AND Cache-Control headers to forcefully prevent caching
-        const res = await fetch(`${url}?_t=${Date.now()}`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-            }
-        })
+       // NAYA - Sirf Accept header, baki browser handle karega
+const res = await fetch(`${url}?_t=${Date.now()}`, {
+    method: 'GET',
+    headers: {
+        'Accept': 'application/json',
+    },
+    cache: 'no-store'   // Browser fetch API ka native way - CORS safe hai
+})
 
         if (!res.ok) {
             return []

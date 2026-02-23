@@ -619,6 +619,10 @@ const EventBookingForm = () => {
         flyer_info: flyerFormStore.flyerFormDetail.eventDetails.flyerInfo,
         address_phone: flyerFormStore.flyerFormDetail.eventDetails.addressAndPhone,
 
+
+ 
+
+
         djs: djsWithUrls,
         host: hostsWithUrls,
         sponsors: sponsorData,
@@ -641,11 +645,17 @@ const EventBookingForm = () => {
         stripe_fee: stripeFee,
         image_url: flyerImage,
         // IMPORTANT: Pass the temp file mapping so success handler can pick them up
-        temp_files: tempFiles
+        temp_files: tempFiles,
+                   // DJ library URLs alag pass karo
+dj_url_0: djsWithUrls[0]?.image_url || '',
+dj_url_1: djsWithUrls[1]?.image_url || '',
+dj_url_2: djsWithUrls[2]?.image_url || '',
+dj_url_3: djsWithUrls[3]?.image_url || '',
+dj_url_4: djsWithUrls[4]?.image_url || '',
+
+host_url_0: hostsWithUrls[0]?.image_url || '',
+host_url_1: hostsWithUrls[1]?.image_url || '',
       };
-
-
-
 
 
 

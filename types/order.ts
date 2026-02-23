@@ -39,10 +39,14 @@ export interface OrderFormData {
 }
 
 export interface OrderFiles {
-  venueLogoFile: File | null;
-  hostFile: File | null;
-  djFiles: File[];
-  sponsorFiles: File[];
+  venueLogoFile: File | null
+    venueLogoUrl?: string | null    // ← ADD KARO - library URL ke liye
+    hostFile: File | null
+   
+      djFiles: File[]
+  djUrls?: (string | null)[]  // ← NEW
+    sponsorFiles: File[]
+    sponsorUrls?: (string | null)[] // ← ADD KARO - sponsor library URLs ke liye
 }
 
 export interface OrderSubmission {

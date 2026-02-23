@@ -43,12 +43,30 @@ export async function POST(request: Request) {
 
 
       // Create metadata object with chunks
-      const metadata: any = {
-        userId: orderData.userId || '',
-        userEmail: orderData.userEmail || '',
-        totalPrice: amount.toString(),
-        chunkCount: chunks.length.toString()
-      }
+  const metadata: any = {
+  userId: orderData.userId || '',
+  userEmail: orderData.userEmail || '',
+  totalPrice: amount.toString(),
+  chunkCount: chunks.length.toString(),
+  venue_logo_url: orderData.files?.venueLogoUrl || '',        // ← ADD
+// NAYA
+sponsor_url_0: orderData.formData?.sponsors?.[0]?.image_url || '',
+sponsor_url_1: orderData.formData?.sponsors?.[1]?.image_url || '',
+sponsor_url_2: orderData.formData?.sponsors?.[2]?.image_url || '',   // ← ADD
+
+
+
+    // NEW - DJ URLs
+dj_url_0: orderData.formData?.dj_url_0 || '',
+dj_url_1: orderData.formData?.dj_url_1 || '',
+dj_url_2: orderData.formData?.dj_url_2 || '',
+dj_url_3: orderData.formData?.dj_url_3 || '',
+dj_url_4: orderData.formData?.dj_url_4 || '',
+
+host_url_0: orderData.formData?.host_url_0 || '',
+host_url_1: orderData.formData?.host_url_1 || '',
+}
+
 
       // Add each chunk (Stripe allows up to 50 metadata keys)
       chunks.forEach((chunk, index) => {
@@ -157,12 +175,32 @@ export async function POST(request: Request) {
       mode: 'payment',
       success_url: `${baseUrl}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/order/${orderData.formData.flyer_is}`,
-      metadata: {
-        orderData: orderDataBase64,
-        userId: orderData.userId || '',
-        userEmail: orderData.userEmail || '',
-        totalPrice: amount.toString(),
-      },
+  // NAYA - files URLs bhi save karo:
+metadata: {
+  orderData: orderDataBase64,
+  userId: orderData.userId || '',
+  userEmail: orderData.userEmail || '',
+  totalPrice: amount.toString(),
+  venue_logo_url: orderData.files?.venueLogoUrl || '',        // ← ADD
+// NAYA
+sponsor_url_0: orderData.formData?.sponsors?.[0]?.image_url || '',
+sponsor_url_1: orderData.formData?.sponsors?.[1]?.image_url || '',
+sponsor_url_2: orderData.formData?.sponsors?.[2]?.image_url || '',   // ← ADD
+
+
+
+    // NEW - DJ URLs
+dj_url_0: orderData.formData?.dj_url_0 || '',
+dj_url_1: orderData.formData?.dj_url_1 || '',
+dj_url_2: orderData.formData?.dj_url_2 || '',
+dj_url_3: orderData.formData?.dj_url_3 || '',
+dj_url_4: orderData.formData?.dj_url_4 || '',
+
+
+host_url_0: orderData.formData?.host_url_0 || '',
+host_url_1: orderData.formData?.host_url_1 || '',
+}
+
     })
 
     return NextResponse.json({ sessionId: session.id })

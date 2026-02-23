@@ -5,7 +5,9 @@ export function buildOrderFormData(submission: OrderSubmission): FormData {
   const { formData, files } = submission;
   const formDataObj = new FormData();
 
-
+const userId = formData.user_id || formData.web_user_id || ''
+formDataObj.append('user_id', userId)
+formDataObj.append('web_user_id', userId)
   // Required fields based on working Postman code
   formDataObj.append('presenting', formData.presenting || '')
   formDataObj.append('event_title', formData.event_title || '')
@@ -19,16 +21,17 @@ export function buildOrderFormData(submission: OrderSubmission): FormData {
   formDataObj.append('custom_notes', formData.custom_notes || '')
   formDataObj.append('flyer_is', String(formData.flyer_is || 26))
   formDataObj.append('category_id', String(formData.category_id || 9))
-  formDataObj.append('user_id', formData.user_id || '99ae0488-f0a1-70db-db50-da298fdef51esery')
+  // formDataObj.append('user_id', formData.user_id || '99ae0488-f0a1-70db-db50-da298fdef51esery')
+  
   formDataObj.append('delivery_time', formData.delivery_time || '1 Hour')
   formDataObj.append('total_price', String(formData.total_price || 10))
   formDataObj.append('subtotal', String(formData.subtotal || 10))
   formDataObj.append('image_url', formData.image_url || 'https://images.unsplash.com/photo.jpg')
   formDataObj.append('email', formData.email || 'user@example.com') // Use real email from form
-  formDataObj.append('web_user_id', '')
+  // formDataObj.append('web_user_id', '')
 
   // Add duplicate total_price with space (as seen in Postman)
-  formDataObj.append(' total_price', String(formData.total_price || 78))
+  // formDataObj.append(' total_price', String(formData.total_price || 78))
 
   // JSON fields
   formDataObj.append('djs', JSON.stringify(formData.djs || []))
@@ -38,9 +41,15 @@ export function buildOrderFormData(submission: OrderSubmission): FormData {
   formDataObj.append('sponsors', JSON.stringify(formData.sponsors || []))
 
   // Append files
-  if (files.venueLogoFile) {
+if (files.venueLogoFile) {
+    // Direct file upload (PC se)
     formDataObj.append('venue_logo', files.venueLogoFile);
-  }
+} else if (files.venueLogoUrl) {
+    // Library se select ki hui image URL
+    formDataObj.append('venue_logo_url', files.venueLogoUrl);
+}
+
+
   if (files.hostFile) {
     formDataObj.append('host_file', files.hostFile);
   }
@@ -50,10 +59,16 @@ export function buildOrderFormData(submission: OrderSubmission): FormData {
     formDataObj.append(`dj_${index}`, file);
   });
 
-  // Append sponsor files
-  files.sponsorFiles.forEach((file, index) => {
-    formDataObj.append(`sponsor_${index}`, file);
-  });
+  // Sponsor files (PC se upload)
+files.sponsorFiles?.forEach((file, index) => {
+  if (file) formDataObj.append(`sponsor_${index}`, file)
+})
+
+// Sponsor URLs (library se select)
+files.sponsorUrls?.forEach((url, index) => {
+  if (url) formDataObj.append(`sponsor_url_${index}`, url)
+})
+
 
   return formDataObj;
 }
