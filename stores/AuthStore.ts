@@ -1,7 +1,12 @@
 // stores/AuthStore.ts
 import { makeAutoObservable, runInAction, autorun } from "mobx"
 import { getApiUrl } from "@/config/api"
-import { registerUserInDatabase, formatCognitoUserId } from "@/lib/api-client"
+import {
+  registerUserInDatabase,
+  formatCognitoUserId,
+  updateUserProfileInDatabase,
+  changeUserPasswordInDatabase,
+} from "@/lib/api-client"
 import { Amplify } from 'aws-amplify'
 import { Hub } from '@aws-amplify/core'
 import {
@@ -9,6 +14,7 @@ import {
   signInWithRedirect as awsSignInWithRedirect,
   signUp as awsSignUp,
   signOut as awsSignOut,
+  updatePassword as awsUpdatePassword,
   getCurrentUser,
   fetchAuthSession,
   resetPassword as awsResetPassword,
@@ -330,6 +336,7 @@ export class AuthStore {
       const user = await getCurrentUser()
       const session = await fetchAuthSession()
       const token = session.tokens?.idToken?.toString() || ''
+      let backendToken = ''
 
 
       // Extract data from JWT token
@@ -383,6 +390,7 @@ export class AuthStore {
         })
 
         if (result.success) {
+          backendToken = result.data?.token || ''
         } else {
           console.error('❌ Failed to register user in database:', result.message);
         }
@@ -392,7 +400,7 @@ export class AuthStore {
       }
 
       runInAction(() => {
-        this.setSession(normalized, token)
+        this.setSession(normalized, backendToken || token)
         this.authModal = false
       })
 
@@ -602,10 +610,106 @@ export class AuthStore {
     }
   }
 
+  private getBackendToken = async () => {
+    if (!this.user) throw new Error("User not logged in")
+
+    const result = await registerUserInDatabase({
+      fullname: this.user.name,
+      email: this.user.email,
+      user_id: this.user.id,
+    })
+
+    if (result.success && result.data?.token) {
+      this.setSession(this.user, result.data.token)
+      return result.data.token as string
+    }
+
+    if (this.token) return this.token
+    throw new Error(result.message || "Unable to get backend session token")
+  }
+
   updateProfile = async (payload: Partial<AuthUser>) => {
     if (!this.user) return
-    const updated = { ...this.user, ...payload }
-    this.setSession(updated, this.token)
+    const backendToken = await this.getBackendToken()
+    const nextPhone = payload.phone ?? this.user.phone ?? ""
+
+    const response = await updateUserProfileInDatabase(
+      {
+        fullname: payload.name ?? this.user.name,
+        email: payload.email ?? this.user.email,
+        phone: nextPhone,
+        mobile: nextPhone,
+      },
+      backendToken
+    )
+
+    const updated = {
+      ...this.user,
+      ...payload,
+      name: response.user?.fullname ?? payload.name ?? this.user.name,
+      email: response.user?.email ?? payload.email ?? this.user.email,
+      phone: response.user?.phone ?? response.user?.mobile ?? payload.phone ?? this.user.phone,
+    }
+
+    this.setSession(updated, response.token ?? backendToken)
+  }
+
+  changePassword = async (currentPassword: string, newPassword: string) => {
+    if (!this.user) throw new Error("User not logged in")
+    if (!currentPassword || !newPassword) {
+      throw new Error("Current and new password are required")
+    }
+    if (currentPassword === newPassword) {
+      throw new Error("New password must be different from current password")
+    }
+
+    try {
+      // Source of truth for auth is Cognito, so update there first.
+      await awsUpdatePassword({
+        oldPassword: currentPassword,
+        newPassword,
+      })
+    } catch (error: any) {
+      const errorString = error?.message || error?.toString() || ""
+      let errorMessage = "Failed to change password"
+
+      if (errorString.includes("NotAuthorizedException") || errorString.includes("incorrect username or password")) {
+        errorMessage = "Current password is incorrect."
+      } else if (errorString.includes("InvalidPasswordException")) {
+        errorMessage = "New password does not meet security requirements."
+      } else if (errorString.includes("LimitExceededException") || errorString.includes("TooManyRequestsException")) {
+        errorMessage = "Too many attempts. Please try again later."
+      } else if (errorString.includes("UserNotFoundException")) {
+        errorMessage = "User session not found. Please sign in again."
+      } else if (error?.message) {
+        errorMessage = error.message
+      }
+
+      throw new Error(errorMessage)
+    }
+
+    // Optional backend sync: do not fail the full operation if this call fails.
+    try {
+      const backendToken = await this.getBackendToken()
+      const response = await changeUserPasswordInDatabase(
+        {
+          currentPassword,
+          newPassword,
+        },
+        backendToken
+      )
+
+      if (response?.token) {
+        this.setSession(this.user, response.token)
+      }
+
+      return response
+    } catch {
+      return {
+        success: true,
+        message: "Your password has been changed successfully.",
+      }
+    }
   }
 
   signInWithProvider = async (provider: "google" | "apple") => {

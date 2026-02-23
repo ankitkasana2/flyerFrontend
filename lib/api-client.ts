@@ -13,6 +13,32 @@ export interface RegisterUserResponse {
     data?: any;
 }
 
+export interface UpdateProfilePayload {
+    fullname: string;
+    email: string;
+    phone?: string;
+    mobile?: string;
+}
+
+export interface ChangePasswordPayload {
+    currentPassword: string;
+    newPassword: string;
+}
+
+export interface WebAuthApiResponse {
+    success: boolean;
+    message?: string;
+    token?: string;
+    user?: {
+        id: number;
+        user_id: string;
+        fullname: string;
+        email: string;
+        phone?: string;
+        mobile?: string;
+    };
+}
+
 /**
  * Register user in the backend database after successful Cognito registration
  * @param payload - User registration data
@@ -54,6 +80,46 @@ export const registerUserInDatabase = async (
             message: error.message || "Failed to register user in database",
         };
     }
+};
+
+export const updateUserProfileInDatabase = async (
+    payload: UpdateProfilePayload,
+    token: string
+): Promise<WebAuthApiResponse> => {
+    const response = await fetch(getApiUrl("/web/auth/profile"), {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data?.message || "Failed to update profile");
+    }
+    return data;
+};
+
+export const changeUserPasswordInDatabase = async (
+    payload: ChangePasswordPayload,
+    token: string
+): Promise<WebAuthApiResponse> => {
+    const response = await fetch(getApiUrl("/web/auth/change-password"), {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data?.message || "Failed to change password");
+    }
+    return data;
 };
 
 /**
