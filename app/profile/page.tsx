@@ -212,8 +212,8 @@ const ProfilePage = observer(() => {
                       <Input
                         id="email"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        disabled={!isEditing}
+                      
+                        disabled={true}
                         className="pl-10  border-border bg-gray-950 border text-white
               placeholder:text-gray-600 rounded-lg h-10 shadow-md
               focus-visible:!ring-0 focus-visible:!outline-none

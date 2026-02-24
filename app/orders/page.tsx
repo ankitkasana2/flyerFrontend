@@ -115,11 +115,9 @@ const OrdersPage = observer(() => {
 
     setLoading(true)
     try {
-      const response = await fetch(getApiUrl(`/orders/user/${authStore.user.id}`), {
+      const response = await fetch(getApiUrl(`/api/orders/user/${authStore.user.id}`), {
         cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
+      
       })
 
       if (!response.ok) {
