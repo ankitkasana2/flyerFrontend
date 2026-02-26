@@ -3,7 +3,7 @@ import { awsConfig } from '@/config/aws-config';
 
 export async function POST(request: NextRequest) {
     try {
-        const { code } = await request.json();
+        const { code, redirectUri } = await request.json();
 
         if (!code) {
             return NextResponse.json({ error: 'Authorization code is required' }, { status: 400 });
@@ -15,8 +15,12 @@ export async function POST(request: NextRequest) {
 
         const CLIENT_ID = process.env.NEXT_PUBLIC_AWS_USER_POOL_WEB_CLIENT_ID || awsConfig.userPoolWebClientId;
 
-        const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://grodify.com';
-        const REDIRECT_URI = `${BASE_URL}/auth/callback`;
+        const requestOrigin = request.nextUrl.origin;
+        const configuredRedirectUri =
+            process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_IN ||
+            process.env.NEXT_PUBLIC_REDIRECT_URI ||
+            `${process.env.NEXT_PUBLIC_BASE_URL || requestOrigin}/auth/callback`;
+        const REDIRECT_URI = redirectUri || configuredRedirectUri;
 
         const tokenEndpoint = `${COGNITO_DOMAIN}/oauth2/token`;
 
