@@ -50,7 +50,7 @@ import { RecentSuggestions } from "@/components/ui/recent-suggestions";
 // Cart fetching function
 const fetchCartByUserId = async (userId: string) => {
   try {
-    const response = await fetch(`${getApiUrl()}/api/cart/${userId}`, {
+     const response = await fetch(getApiUrl(`/api/cart/${userId}`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
