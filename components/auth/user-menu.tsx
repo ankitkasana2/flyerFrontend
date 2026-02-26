@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import AuthModal from "./auth-modal"
 import { User, Settings, Heart, ShoppingBag, LogOut, CreditCard, Download, Bell, ImageDown, ChartBarStacked, CircleDollarSign } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
 import { toast } from "sonner"
@@ -22,6 +23,7 @@ import { cn } from "@/lib/utils"
 
 const UserMenu = observer(() => {
   const { authStore, loadingStore } = useStore()
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -64,6 +66,7 @@ const UserMenu = observer(() => {
     loadingStore.startLoading("Signing out...")
     try {
       await authStore.logout()
+      router.replace("/")
       toast.success('Successfully signed out')
     } catch (error) {
       console.error('Error signing out:', error)

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/stores/StoreProvider";
 import { observer } from "mobx-react-lite";
-import { IOSLoader } from "@/components/ui/ios-loader";
+import { RefreshingDesignLoader } from "@/components/ui/refreshing-design-loader";
 import { registerUserInDatabase, formatCognitoUserId } from "@/lib/api-client";
 
 const CallbackPage = observer(() => {
@@ -165,12 +165,7 @@ const CallbackPage = observer(() => {
     }, [authStore, router]);
 
     return (
-        <IOSLoader
-            size="xl"
-            text="Logging you in..."
-            color="text-red-500"
-            fullScreen={true}
-        />
+        <RefreshingDesignLoader fullScreen />
     );
 });
 

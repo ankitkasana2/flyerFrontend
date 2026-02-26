@@ -28,7 +28,7 @@ import {
 } from 'aws-amplify/auth'
 import { awsConfig } from "@/config/aws-config"
 import { CookieStorage } from 'aws-amplify/utils';
-import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
+import { cognitoUserPoolsTokenProvider, tokenOrchestrator } from 'aws-amplify/auth/cognito';
 
 // Configure AWS Amplify
 const amplifyConfig = {
@@ -172,6 +172,80 @@ export class AuthStore {
   private clearSessionStorage = () => {
     if (typeof window === "undefined") return
     window.localStorage.removeItem(STORAGE_KEY)
+  }
+
+  private clearOAuthSignOutMarkers = () => {
+    if (typeof window === "undefined") return
+
+    const prefix = "CognitoIdentityServiceProvider"
+    const clientId = awsConfig.userPoolWebClientId
+
+    if (!clientId) return
+
+    const lastAuthUserKey = `${prefix}.${clientId}.LastAuthUser`
+    const lastAuthUser = window.localStorage.getItem(lastAuthUserKey) || "username"
+
+    const keys = [
+      `${prefix}.${clientId}.oauthSignIn`,
+      `${prefix}.${clientId}.${lastAuthUser}.oauthMetadata`,
+      "amplify-signin-with-hostedUI",
+    ]
+
+    for (const key of keys) {
+      window.localStorage.removeItem(key)
+      window.sessionStorage.removeItem(key)
+    }
+  }
+
+  private clearAllAmplifyAuthArtifacts = () => {
+    if (typeof window === "undefined") return
+
+    const shouldClearKey = (key: string) =>
+      key.startsWith("CognitoIdentityServiceProvider.") ||
+      key.startsWith("amplify-signin-with-hostedUI") ||
+      key.includes(".oauthSignIn") ||
+      key.includes(".oauthMetadata")
+
+    for (let i = window.localStorage.length - 1; i >= 0; i -= 1) {
+      const key = window.localStorage.key(i)
+      if (key && shouldClearKey(key)) {
+        window.localStorage.removeItem(key)
+      }
+    }
+
+    for (let i = window.sessionStorage.length - 1; i >= 0; i -= 1) {
+      const key = window.sessionStorage.key(i)
+      if (key && shouldClearKey(key)) {
+        window.sessionStorage.removeItem(key)
+      }
+    }
+
+    const cookies = document.cookie ? document.cookie.split("; ") : []
+    const host = window.location.hostname
+    const domainCandidates = [host, `.${host}`]
+
+    for (const raw of cookies) {
+      const [name] = raw.split("=")
+      if (!name) continue
+
+      if (
+        name.startsWith("CognitoIdentityServiceProvider.") ||
+        name.startsWith("amplify-signin-with-hostedUI")
+      ) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`
+        for (const domain of domainCandidates) {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${domain}`
+        }
+      }
+    }
+  }
+
+  private resetAmplifyOAuthMetadata = async () => {
+    try {
+      await tokenOrchestrator.setOAuthMetadata({ oauthSignIn: false })
+    } catch {
+      // Ignore if token store is unavailable during teardown.
+    }
   }
 
   private normalizeUser = (payload: any): AuthUser => {
@@ -588,12 +662,25 @@ export class AuthStore {
   }
 
   logout = async () => {
-    const userId = this.user?.id // Save userId before clearing
+    const provider = (this.user?.provider || "").toLowerCase()
+    const isSocialProvider = provider === "google" || provider === "apple"
 
     try {
-      await awsSignOut()
+      // Prevent Hosted UI sign-out redirect loop/errors by clearing OAuth markers first.
+      this.clearOAuthSignOutMarkers()
+      await this.resetAmplifyOAuthMetadata()
+
+      if (isSocialProvider) {
+        // For social logins, avoid Cognito Hosted UI /logout redirect completely.
+        await tokenOrchestrator.clearTokens()
+      } else {
+        await awsSignOut({ global: true })
+      }
     } catch (error) {
     } finally {
+      // Hard cleanup to prevent auto-login on refresh from leftover Amplify/Cognito artifacts.
+      this.clearAllAmplifyAuthArtifacts()
+
       // Clear user session
       this.clearUser()
 

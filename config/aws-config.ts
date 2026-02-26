@@ -21,7 +21,7 @@ export const awsConfig = {
     ).replace(/^https?:\/\//, ''),
     scopes: ['email', 'profile', 'openid'],
     redirectSignIn: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_IN || process.env.NEXT_PUBLIC_REDIRECT_URI || (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : `${process.env.NEXT_PUBLIC_BASE_URL || 'https://grodify.com'}/auth/callback`),
-    redirectSignOut: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_OUT || (typeof window !== 'undefined' ? `${window.location.origin}/login` : `${process.env.NEXT_PUBLIC_BASE_URL || 'https://grodify.com'}/login`),
+    redirectSignOut: process.env.NEXT_PUBLIC_OAUTH_REDIRECT_SIGN_OUT || (typeof window !== 'undefined' ? `${window.location.origin}` : `${process.env.NEXT_PUBLIC_BASE_URL || 'https://grodify.com'}`),
     responseType: 'code' as const,
   },
 

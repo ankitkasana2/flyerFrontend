@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
 import { Card, CardContent } from "@/components/ui/card"
@@ -81,6 +81,7 @@ const OrdersPage = observer(() => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [flyerMap, setFlyerMap] = useState<Record<string, string>>({})
+  const wasLoggedInRef = useRef(false)
 
   useEffect(() => {
     fetchFlyers()
@@ -104,11 +105,16 @@ const OrdersPage = observer(() => {
 
   useEffect(() => {
     if (authStore.user?.id) {
+      wasLoggedInRef.current = true
       fetchOrders()
     } else {
+      if (wasLoggedInRef.current) {
+        router.replace('/')
+        return
+      }
       setLoading(false)
     }
-  }, [authStore.user?.id])
+  }, [authStore.user?.id, router])
 
   const fetchOrders = async () => {
     if (!authStore.user?.id) return
