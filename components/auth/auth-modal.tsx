@@ -524,7 +524,7 @@ const AuthModal = observer(({
                       Continue with Google
                     </Button>
 
-                    <Button
+                    {/* <Button
                       variant="outline"
                       className="w-full bg-transparent hover:!bg-primary hover:!text-white"
                       onClick={() => handleSocialSignIn("apple")}
@@ -532,7 +532,7 @@ const AuthModal = observer(({
                     >
                       <Apple className="w-4 h-4 mr-2" />
                       Continue with Apple
-                    </Button>
+                    </Button> */}
                   </div>
 
                   <div className="relative">
