@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { handleGoogleCallback } from "@/lib/oauth-client";
 import { useStore } from "@/stores/StoreProvider";
-import { IOSLoader } from "@/components/ui/ios-loader";
+import { RefreshingDesignLoader } from "@/components/ui/refreshing-design-loader";
 
 export default function GoogleCallbackPage() {
     const router = useRouter();
@@ -80,19 +80,7 @@ export default function GoogleCallbackPage() {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-black">
-                <div className="text-center">
-                    <IOSLoader
-                        size="xl"
-                        text="Signing in with Google..."
-                        color="text-red-500"
-                        fullScreen={false}
-                    />
-                    {debugInfo && (
-                        <p className="mt-4 text-sm text-gray-400">{debugInfo}</p>
-                    )}
-                </div>
-            </div>
+            <RefreshingDesignLoader fullScreen />
         );
     }
 

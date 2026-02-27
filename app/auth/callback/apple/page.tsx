@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { handleAppleCallback } from "@/lib/oauth-client";
 import { useStore } from "@/stores/StoreProvider";
-import { IOSLoader } from "@/components/ui/ios-loader";
+import { RefreshingDesignLoader } from "@/components/ui/refreshing-design-loader";
 
 export default function AppleCallbackPage() {
     const router = useRouter();
@@ -69,14 +69,7 @@ export default function AppleCallbackPage() {
     }, [searchParams, router, authStore]);
 
     if (loading) {
-        return (
-            <IOSLoader
-                size="xl"
-                text="Signing in with Apple..."
-                color="text-red-500"
-                fullScreen={true}
-            />
-        );
+        return <RefreshingDesignLoader fullScreen />;
     }
 
     if (error) {

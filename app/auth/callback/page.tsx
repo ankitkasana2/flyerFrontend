@@ -4,9 +4,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/stores/StoreProvider";
 import { observer } from "mobx-react-lite";
-import { IOSLoader } from "@/components/ui/ios-loader";
+import { RefreshingDesignLoader } from "@/components/ui/refreshing-design-loader";
 import { registerUserInDatabase, formatCognitoUserId } from "@/lib/api-client";
-import { Hub } from 'aws-amplify/utils';
 
 const CallbackPage = observer(() => {
     const router = useRouter();
@@ -15,34 +14,76 @@ const CallbackPage = observer(() => {
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
+        const error = urlParams.get('error');
+        const errorDescription = urlParams.get('error_description');
+
+        const redirectHome = () => router.replace("/");
+
+        if (error) {
+            const encoded = encodeURIComponent(errorDescription || error);
+            router.replace(`/?error=${encoded}`);
+            return;
+        }
 
         if (!code) {
             // Check if already logged in
             if (authStore.user) {
-                router.push("/");
+                redirectHome();
             } else {
                 // If no code and not logged in, maybe it's just a direct access or failure
-                const error = urlParams.get('error');
-                if (error) {
-                    router.push(`/login?error=${error}`);
-                }
+                router.replace("/?error=missing_code");
             }
             return;
         }
 
+        const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        const syncAmplifySession = async () => {
+            for (let attempt = 0; attempt < 4; attempt += 1) {
+                const user = await authStore.updateUserFromAmplify();
+                if (user) {
+                    return true;
+                }
+                await wait(250);
+            }
+            return false;
+        };
+
         const exchangeCode = async () => {
+            const redirectUri = `${window.location.origin}/auth/callback`;
+
+            // Amplify can already process the code. Prefer that path first.
+            if (await syncAmplifySession()) {
+                redirectHome();
+                return;
+            }
+
             try {
-                const response = await fetch('/api/auth/cognito', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code }),
-                });
+                let response: Response | null = null;
+                let data: any = null;
 
-                const data = await response.json();
+                // Retry once for transient first-call failures seen in hosted UI redirects.
+                for (let attempt = 0; attempt < 2; attempt += 1) {
+                    response = await fetch('/api/auth/cognito', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code, redirectUri }),
+                    });
 
-                if (!response.ok) {
+                    data = await response.json();
+                    if (response.ok || attempt === 1) {
+                        break;
+                    }
+                    await wait(400);
+                }
+
+                if (!response || !response.ok) {
                     console.error('Token exchange failed:', data);
-                    router.push("/?error=auth_failed");
+                    if (await syncAmplifySession()) {
+                        redirectHome();
+                        return;
+                    }
+                    router.replace("/?error=auth_failed");
                     return;
                 }
 
@@ -97,17 +138,25 @@ const CallbackPage = observer(() => {
                         }
 
                         // Success!
-                        router.push("/");
+                        redirectHome();
                     } catch (decodeErr) {
                         console.error("Token decoding error:", decodeErr);
-                        router.push("/?error=token_invalid");
+                        router.replace("/?error=token_invalid");
                     }
                 } else {
-                    router.push("/?error=no_token");
+                    if (await syncAmplifySession()) {
+                        redirectHome();
+                        return;
+                    }
+                    router.replace("/?error=no_token");
                 }
             } catch (error) {
                 console.error("Exchange error:", error);
-                router.push("/?error=network_error");
+                if (await syncAmplifySession()) {
+                    redirectHome();
+                    return;
+                }
+                router.replace("/?error=network_error");
             }
         };
 
@@ -116,12 +165,7 @@ const CallbackPage = observer(() => {
     }, [authStore, router]);
 
     return (
-        <IOSLoader
-            size="xl"
-            text="Logging you in..."
-            color="text-red-500"
-            fullScreen={true}
-        />
+        <RefreshingDesignLoader fullScreen />
     );
 });
 

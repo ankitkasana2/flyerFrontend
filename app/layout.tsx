@@ -9,10 +9,9 @@ import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 import "react-multi-carousel/lib/styles.css"
 import { StoreProvider } from "@/stores/StoreProvider"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
 import PageTransitionLoader from "@/components/ui/page-transition-loader"
 import { FavoritesSync } from "@/components/favorites/FavoritesSync"
+import { AppShell } from "@/components/layout/app-shell"
 
 
 export const metadata: Metadata = {
@@ -33,11 +32,7 @@ export default function RootLayout({
             <StoreProvider>
               <FavoritesSync />
               <PageTransitionLoader />
-              <Header />
-              <main className="animate-fade-in flex-1">
-                {children}
-              </main>
-              <Footer />
+              <AppShell>{children}</AppShell>
             </StoreProvider>
             <Toaster position="top-left" />
             <Analytics />
