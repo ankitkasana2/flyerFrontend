@@ -197,17 +197,10 @@ const OrdersPage = observer(() => {
     return `${getApiUrl()}${url.startsWith('/') ? '' : '/'}${url}`
   }
 
-  if (!authStore.user) {
-    return (
-      <div className="min-h-screen bg-black text-white">
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold mb-4">Please sign in to view your orders</h1>
-          <Button onClick={() => router.push('/')} className="bg-primary hover:bg-red-600">
-            Go to Home
-          </Button>
-        </div>
-      </div>
-    )
+ if (!authStore.user) {
+    router.push('/')
+    return null 
+    
   }
 
   if (loading) {
