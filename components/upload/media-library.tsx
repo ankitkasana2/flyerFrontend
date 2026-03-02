@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { listLibrary, removeFromLibrary, type LibraryItem } from "@/lib/uploads"
-import { Trash2, Loader2, Check, ImageIcon } from "lucide-react"
 
+import { Trash2, Loader2, Check, ImageIcon, ZoomIn, ZoomOut } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface MediaLibraryProps {
@@ -26,7 +26,7 @@ export function MediaLibrary({ userId, type, multiple = true, maxSelect = 5, onC
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<string>("all") // Always default to "all" to show everything
-
+const [zoomLevel, setZoomLevel] = useState(3)
   const loadItems = async () => {
     setIsLoading(true)
     try {
@@ -97,11 +97,31 @@ export function MediaLibrary({ userId, type, multiple = true, maxSelect = 5, onC
   return (
     <Card className="bg-card border-border border-0 shadow-2xl">
       <CardHeader className="flex flex-col gap-4 pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-card-foreground text-xl">Media Library</CardTitle>
-          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-            {filtered.length} items
-          </Badge>
+      <div className="flex items-center justify-between w-full">
+  <CardTitle className="text-card-foreground text-xl">Media Library</CardTitle>
+        <div className="flex items-center gap-2">
+  <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+    {filtered.length} items
+  </Badge>
+  <div className="flex items-center gap-1 border border-border rounded-lg p-1">
+    <button
+      type="button"
+      onClick={() => setZoomLevel(prev => Math.max(prev - 1, 1))}
+      className="p-1 hover:bg-muted rounded transition-colors"
+      title="Zoom In"
+    >
+      <ZoomIn className="w-4 h-4 text-muted-foreground" />
+    </button>
+    <button
+      type="button"
+      onClick={() => setZoomLevel(prev => Math.min(prev + 1, 6))}
+      className="p-1 hover:bg-muted rounded transition-colors"
+      title="Zoom Out"
+    >
+      <ZoomOut className="w-4 h-4 text-muted-foreground" />
+    </button>
+  </div>
+</div>
         </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -149,7 +169,7 @@ export function MediaLibrary({ userId, type, multiple = true, maxSelect = 5, onC
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-1">
+            <div className="grid gap-4 p-1" style={{ gridTemplateColumns: `repeat(${zoomLevel}, minmax(0, 1fr))` }}>
               {filtered.map((item) => {
                 const isSelected = !!selected[item.id]
                 return (
@@ -169,7 +189,7 @@ export function MediaLibrary({ userId, type, multiple = true, maxSelect = 5, onC
                       <img
                         src={item.dataUrl || "/placeholder.svg"}
                         alt={item.name}
-                        className={`w-full h-full object-cover transition-transform duration-500 ${isSelected ? "scale-110" : "group-hover:scale-105"}`}
+                       className={`w-full h-full object-contain transition-transform duration-500`}
                       />
                       {isSelected && (
                         <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">

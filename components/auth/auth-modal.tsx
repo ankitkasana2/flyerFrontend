@@ -320,12 +320,13 @@ const AuthModal = observer(({
       })
       setUserEmail(emailToReset)
       setResetStep("verify")
-    } catch (error: any) {
+  } catch (error: any) {
       toast({
-        title: "Error",
-        description: error?.message || "Failed to send reset code",
+        title: "❌ Email Not Found",
+        description: error?.message || "This email is not registered. Please check your email or create a new account.",
         variant: "destructive",
       })
+    
     } finally {
       setIsLoading(false)
       loadingStore.stopLoading()
