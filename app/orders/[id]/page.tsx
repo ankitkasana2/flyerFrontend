@@ -85,7 +85,7 @@ const OrderDetailsPage = observer(() => {
 
   const fetchFlyers = async () => {
     try {
-    const response = await fetch(getApiUrl(`/api/flyers`))
+    const response = await fetch(getApiUrl(`/flyers`))
       if (response.ok) {
         const data = await response.json()
         const map: Record<string, string> = {}
@@ -104,7 +104,7 @@ const OrderDetailsPage = observer(() => {
     try {
       // Trying to fetch single order. If it fails, we might need to fetch all and filter
       // (though ideally there's a single order endpoint)
-     const response = await fetch(getApiUrl(`/api/orders/${id}`))
+     const response = await fetch(getApiUrl(`/orders/${id}`))
       
       if (response.ok) {
         const data = await response.json()
@@ -128,7 +128,8 @@ const OrderDetailsPage = observer(() => {
   const fetchFromUserOrders = async () => {
     if (!authStore.user?.id) return
     try {
-     const response = await fetch(getApiUrl(`/api/orders/user/${authStore.user.id}`))
+      const response = await fetch(getApiUrl(`/orders/user/${authStore.user.id}`))
+
       if (response.ok) {
         const data = await response.json()
         if (data.success) {

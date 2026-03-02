@@ -8,18 +8,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Calendar, Package, Clock, DollarSign, User, Users, Image as ImageIcon, MapPin, FileText, Info } from "lucide-react"
+import { Search, Calendar, Package, Clock, DollarSign } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { getApiUrl } from "@/config/api"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface DJ {
   name: string
@@ -72,20 +64,30 @@ interface OrdersResponse {
 }
 
 const OrdersPage = observer(() => {
-  const { authStore, loadingStore } = useStore()
+  const { authStore } = useStore()
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
+  const [ordersLoading, setOrdersLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [flyerMap, setFlyerMap] = useState<Record<string, string>>({})
-  const wasLoggedInRef = useRef(false)
 
   useEffect(() => {
     fetchFlyers()
   }, [])
+
+  useEffect(() => {
+    // Wait for auth to finish loading
+    if (authStore.loading) return
+    // If user is logged in, fetch orders
+    if (authStore.user?.id) {
+      fetchOrders()
+    }
+    // If not logged in and auth is done, redirect
+    if (!authStore.user && !authStore.loading) {
+      router.replace('/')
+    }
+  }, [authStore.user?.id, authStore.loading])
 
   const fetchFlyers = async () => {
     try {
@@ -99,49 +101,29 @@ const OrdersPage = observer(() => {
         setFlyerMap(map)
       }
     } catch (err) {
-      console.error('❌ Error fetching flyers for map:', err)
+      console.error('Error fetching flyers:', err)
     }
   }
 
-  useEffect(() => {
-    if (authStore.user?.id) {
-      wasLoggedInRef.current = true
-      fetchOrders()
-    } else {
-      if (wasLoggedInRef.current) {
-        router.replace('/')
-        return
-      }
-      setLoading(false)
-    }
-  }, [authStore.user?.id, router])
-
   const fetchOrders = async () => {
     if (!authStore.user?.id) return
-
-    setLoading(true)
+    setOrdersLoading(true)
     try {
-      const response = await fetch(getApiUrl(`/api/orders/user/${authStore.user.id}`), {
+      const response = await fetch(getApiUrl(`/orders/user/${authStore.user.id}`), {
         cache: 'no-store',
-      
       })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch orders')
-      }
-
+      if (!response.ok) throw new Error('Failed to fetch orders')
       const data: OrdersResponse = await response.json()
-
       if (data.success) {
         setOrders(data.orders)
       } else {
         toast.error('Failed to load orders')
       }
     } catch (error) {
-      console.error('❌ Error fetching orders:', error)
+      console.error('Error fetching orders:', error)
       toast.error('Failed to load orders')
     } finally {
-      setLoading(false)
+      setOrdersLoading(false)
     }
   }
 
@@ -156,11 +138,7 @@ const OrdersPage = observer(() => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
   }
 
   const getStatusColor = (status: string) => {
@@ -181,29 +159,14 @@ const OrdersPage = observer(() => {
     }
   }
 
-  const getSponsorName = (sponsor: Sponsor): string => {
-    if (typeof sponsor.name === 'string') {
-      return sponsor.name
-    } else if (sponsor.name && typeof sponsor.name === 'object' && 'name' in sponsor.name) {
-      return sponsor.name.name || ''
-    }
-    return ''
-  }
-
   const getImageUrl = (url: string | null | undefined) => {
     if (!url) return null
     if (url.startsWith('http') || url.startsWith('data:')) return url
-    // If it's a relative path, prepend the API base URL
     return `${getApiUrl()}${url.startsWith('/') ? '' : '/'}${url}`
   }
 
- if (!authStore.user) {
-    router.push('/')
-    return null 
-    
-  }
-
-  if (loading) {
+  // Show loading spinner while auth OR orders are loading
+  if (authStore.loading || ordersLoading) {
     return (
       <div className="min-h-screen bg-black text-white">
         <div className="container mx-auto px-4 py-20 text-center">
@@ -214,16 +177,19 @@ const OrdersPage = observer(() => {
     )
   }
 
+  // If auth done and no user - show nothing (redirect is happening)
+  if (!authStore.user) {
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       <main className="container mx-auto px-4 py-8">
-        {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-bold mb-2">My Orders</h1>
           <p className="text-gray-400">Track and manage your flyer orders ({orders.length} total)</p>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -248,33 +214,24 @@ const OrdersPage = observer(() => {
           </Select>
         </div>
 
-        {/* Orders List */}
         {filteredOrders.length > 0 ? (
           <div className="space-y-3">
             {filteredOrders.map((order) => (
               <Card key={order.id} className="bg-gray-900 border-gray-800 hover:border-primary/50 transition-all">
                 <CardContent className="p-4">
                   <div className="flex gap-4">
-                    {/* Flyer Image */}
                     <div className="flex-shrink-0">
                       <div className="w-24 h-32 rounded-lg overflow-hidden bg-gray-800 border border-gray-700">
-                        {/* 
-                          UI Hierarchy for Images:
-                          1. Direct image_url if provided (for custom orders)
-                          2. Template image from our pre-fetched map using flyer_is
-                          3. Venue Logo as literal fallback
-                          4. Placeholder icon
-                        */}
                         {getImageUrl(order.image_url || flyerMap[String(order.flyer_is || order.flyer_id)] || order.venue_logo) ? (
                           <img
                             src={getImageUrl(order.image_url || flyerMap[String(order.flyer_is || order.flyer_id)] || order.venue_logo) || ''}
                             alt={order.event_title}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              const target = e.currentTarget;
-                              target.style.display = 'none';
+                              const target = e.currentTarget
+                              target.style.display = 'none'
                               if (target.parentElement) {
-                                target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div>';
+                                target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div>'
                               }
                             }}
                           />
@@ -286,7 +243,6 @@ const OrdersPage = observer(() => {
                       </div>
                     </div>
 
-                    {/* Order Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex-1 min-w-0">
@@ -314,18 +270,15 @@ const OrdersPage = observer(() => {
                         <div className="flex items-center gap-1 text-gray-400">
                           <DollarSign className="w-3 h-3 text-primary flex-shrink-0" />
                           <span className="truncate font-semibold text-white">
-                            {order.total_price
-                              ? `$${Number(order.total_price).toFixed(2)}`
-                              : 'N/A'}
+                            {order.total_price ? `$${Number(order.total_price).toFixed(2)}` : 'N/A'}
                           </span>
                         </div>
                       </div>
 
-                      {/* Compact Details */}
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
                         {order.djs && order.djs.length > 0 && order.djs.some(dj => dj.name) && (
                           <span className="truncate">
-                            <span className="text-gray-500">DJs:</span> {order.djs.map(dj => dj.name).filter(name => name).join(', ')}
+                            <span className="text-gray-500">DJs:</span> {order.djs.map(dj => dj.name).filter(Boolean).join(', ')}
                           </span>
                         )}
                         {order.host && order.host.name && (
@@ -335,15 +288,12 @@ const OrdersPage = observer(() => {
                         )}
                       </div>
 
-                      {/* Actions */}
                       <div className="flex gap-2 mt-3">
                         <Button
                           variant="outline"
                           size="sm"
                           className="h-7 text-xs border-primary text-primary hover:bg-primary hover:text-white"
-                          onClick={() => {
-                            router.push(`/orders/${order.id}`)
-                          }}
+                          onClick={() => router.push(`/orders/${order.id}`)}
                         >
                           View Details
                         </Button>
@@ -352,9 +302,7 @@ const OrdersPage = observer(() => {
                             variant="outline"
                             size="sm"
                             className="h-7 text-xs border-gray-700 hover:bg-gray-800"
-                            onClick={() => {
-                              toast.info('Reorder functionality coming soon!')
-                            }}
+                            onClick={() => toast.info('Reorder functionality coming soon!')}
                           >
                             Reorder
                           </Button>
@@ -364,9 +312,7 @@ const OrdersPage = observer(() => {
                             variant="outline"
                             size="sm"
                             className="h-7 text-xs border-red-900/50 text-red-500 hover:bg-red-900/20"
-                            onClick={() => {
-                              toast.info('To cancel this order, please contact our support team at admin@grodify.com.')
-                            }}
+                            onClick={() => toast.info('To cancel this order, please contact our support team at admin@grodify.com.')}
                           >
                             Cancel Order
                           </Button>
@@ -389,10 +335,7 @@ const OrdersPage = observer(() => {
                   : "You haven't placed any orders yet"}
               </p>
               {!searchTerm && statusFilter === "all" && (
-                <Button
-                  className="bg-primary hover:bg-red-600"
-                  onClick={() => router.push('/categories')}
-                >
+                <Button className="bg-primary hover:bg-red-600" onClick={() => router.push('/categories')}>
                   Browse Flyers
                 </Button>
               )}

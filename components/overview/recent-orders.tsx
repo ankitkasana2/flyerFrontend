@@ -35,7 +35,7 @@ export function RecentOrders({
                 alt={`${order.title} preview`}
                 fill
                 sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                className="object-fill"   
+                className="object-fill"
                 priority
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/70 to-transparent" />
@@ -64,7 +64,8 @@ export function RecentOrders({
 }
 
 function StatusPill({ status }: { status: Status }) {
-  const label = status === "pending" ? "Pending" : status === "completed" ? "Completed" : "Delivered"
+  const label =
+    status === "pending" ? "Pending" : status === "completed" ? "Completed" : "Delivered"
   const color = cn(
     "bg-background/80 text-foreground/90",
     status === "pending" && "ring-1 ring-border/70",

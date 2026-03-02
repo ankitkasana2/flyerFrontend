@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
-import { Camera, Save, User, Mail, Calendar, Shield, Phone, LockKeyhole, Eye, EyeOff } from "lucide-react"
+import { Save, User, Mail, Calendar, Shield, Phone, LockKeyhole, Eye, EyeOff } from "lucide-react"
+
 import { useToast } from "@/hooks/use-toast"
 
 const ProfilePage = observer(() => {
@@ -157,18 +158,8 @@ const ProfilePage = observer(() => {
               {/* Avatar Section */}
               <div className="flex items-center space-x-4">
                 <div className="relative">
-                  <Avatar className="h-20 w-20">
-                    <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                      {getInitials(user.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Button
-                    size="icon"
-                    className="absolute -bottom-0 -right-0 h-6 w-6 rounded-full"
-                  >
-                    <Camera className="h-2 w-2" />
-                  </Button>
+                
+                
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-card-foreground">{user.name}</h3>

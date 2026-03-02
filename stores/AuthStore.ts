@@ -28,7 +28,7 @@ import {
 } from 'aws-amplify/auth'
 import { awsConfig } from "@/config/aws-config"
 import { CookieStorage } from 'aws-amplify/utils';
-import { cognitoUserPoolsTokenProvider, tokenOrchestrator } from 'aws-amplify/auth/cognito';
+import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
 
 // Configure AWS Amplify
 const amplifyConfig = {
@@ -240,12 +240,8 @@ export class AuthStore {
     }
   }
 
-  private resetAmplifyOAuthMetadata = async () => {
-    try {
-      await tokenOrchestrator.setOAuthMetadata({ oauthSignIn: false })
-    } catch {
-      // Ignore if token store is unavailable during teardown.
-    }
+ private resetAmplifyOAuthMetadata = async () => {
+    // tokenOrchestrator removed - not available in this version
   }
 
   private normalizeUser = (payload: any): AuthUser => {
@@ -799,13 +795,31 @@ export class AuthStore {
     }
   }
 
-  signInWithProvider = async (provider: "google" | "apple") => {
+ signInWithProvider = async (provider: "google" | "apple") => {
     try {
-      // This will redirect to the Cognito Hosted UI
+      // Clear any existing OAuth session so Google always shows account picker
+      if (typeof window !== 'undefined') {
+        // Remove Cognito OAuth markers to force fresh login
+        const clientId = awsConfig.userPoolWebClientId
+        const prefix = "CognitoIdentityServiceProvider"
+        const keysToRemove = [
+          `${prefix}.${clientId}.oauthSignIn`,
+          "amplify-signin-with-hostedUI",
+        ]
+        keysToRemove.forEach(key => {
+          window.localStorage.removeItem(key)
+          window.sessionStorage.removeItem(key)
+        })
+      }
+
       const signInInput: SignInWithRedirectInput = {
         provider: (provider === 'google' ? 'Google' : 'Apple') as 'Google' | 'Apple',
+        // 👇 Yeh line add karo — Google ko force karti hai account selection dikhane ke liye
+        customState: `prompt=select_account&ts=${Date.now()}`,
       }
       await awsSignInWithRedirect(signInInput)
+
+
     } catch (error: any) {
 
       let errorMessage = `Failed to sign in with ${provider}`
@@ -848,6 +862,25 @@ export class AuthStore {
         throw new Error('Please enter a valid email address')
       }
 
+
+
+      // Pehle check karo ki email database mein hai ya nahi
+const checkResponse = await fetch('http://localhost:3007/api/web/auth/check-email', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email })
+})
+
+const checkData = await checkResponse.json()
+
+if (!checkData.exists) {
+  throw new Error('No account found with this email address. Please register first.')
+}
+  // API not available — OTP bhejne do
+
+
+// Email database mein hai toh OTP bhejo
+
       const resetPasswordInput: ResetPasswordInput = { username: email }
       const result = await awsResetPassword(resetPasswordInput)
 
@@ -861,7 +894,10 @@ export class AuthStore {
         message: 'Password reset code sent to your email.',
         nextStep: result.nextStep
       }
-    } catch (error: any) {
+} catch (error: any) {
+      runInAction(() => {
+        this.error = error?.message || 'Failed to send password reset code'
+      })
 
       let errorMessage = 'Failed to send password reset code'
       const errorString = error?.message || error?.toString() || ''

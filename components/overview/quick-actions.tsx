@@ -37,7 +37,10 @@ function Action({
     <Button
       asChild
       variant="outline"
-      className="justify-start gap-3 rounded-xl border-border/60 bg-card/60 hover:border-primary hover:text-primary"
+      className="justify-start gap-3 rounded-xl 
+           border-border/60 bg-card/60 
+           hover:bg-red-600 hover:border-red-600 
+           hover:text-white transition-colors"
     >
       <Link href={href} aria-label={label}>
         <span className="inline-flex h-5 w-5 items-center justify-center">{children}</span>

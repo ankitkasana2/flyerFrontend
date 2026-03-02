@@ -44,13 +44,16 @@ export async function POST(request: NextRequest) {
     // Write file to temp storage
     await writeFile(filepath, buffer);
 
-    return NextResponse.json({
-      success: true,
-      filepath,
-      filename,
-      fieldName,
-      uploadId
-    });
+// Convert to URL so backend can access it
+const publicUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/serve-temp?path=${encodeURIComponent(filepath)}`
+
+return NextResponse.json({
+  success: true,
+  filepath: publicUrl,  // ← URL bhejo, local path nahi
+  filename,
+  fieldName,
+  uploadId
+});
 
   } catch (error: any) {
     return NextResponse.json(

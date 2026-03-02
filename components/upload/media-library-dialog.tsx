@@ -41,7 +41,7 @@ export function MediaLibraryDialog({
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="max-w-4xl p-0 border-none bg-transparent">
+           <DialogContent className="max-w-2xl p-0 border-none bg-transparent overflow-visible">
                 <MediaLibrary 
                     userId={userId} 
                     type={type} 
