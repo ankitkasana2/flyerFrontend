@@ -86,14 +86,26 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
         const storeDJs = flyerFormStore.flyerFormDetail.djsOrArtists;
         setDjList([0, 1, 2, 3].map((i) => ({
             name: storeDJs[i]?.name || "",
-            image: (storeDJs[i]?.image && typeof window !== 'undefined') ? URL.createObjectURL(storeDJs[i].image!) : null,
+            image: (() => {
+                const image = storeDJs[i]?.image;
+                if (typeof window === "undefined" || !image) return null;
+                if (image instanceof File) return URL.createObjectURL(image);
+                if (typeof image === "string") return image;
+                return null;
+            })(),
             hasPhoto: i < 2,
         })));
 
         const storeHosts = flyerFormStore.flyerFormDetail.host || [];
         setHostList([0, 1].map((i) => ({
             name: storeHosts[i]?.name || "",
-            image: (storeHosts[i]?.image && typeof window !== 'undefined') ? URL.createObjectURL(storeHosts[i].image!) : null,
+            image: (() => {
+                const image = storeHosts[i]?.image;
+                if (typeof window === "undefined" || !image) return null;
+                if (image instanceof File) return URL.createObjectURL(image);
+                if (typeof image === "string") return image;
+                return null;
+            })(),
             hasPhoto: i === 0,
         })));
     }, [flyerFormStore.flyerFormDetail]);
@@ -251,7 +263,7 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
 
             // 1. Upload Venue Logo
             let venueLogoUrl = "";
-            if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo) {
+            if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo instanceof File) {
                 // Determine if we should use saveToLibrary (permanent) or saveToTemp (checkout only)
                 // User asked for "temp folder". Let's use saveToTemp.
                 const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo");
@@ -259,17 +271,21 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
                     tempFiles['venue_logo'] = res.filepath;
                     venueLogoUrl = res.filepath; // Just storing path for now
                 }
+            } else if (typeof flyerFormStore.flyerFormDetail.eventDetails.venueLogo === "string") {
+                venueLogoUrl = flyerFormStore.flyerFormDetail.eventDetails.venueLogo;
             }
 
             // 2. Upload DJs
             const djsWithUrls = await Promise.all(flyerFormStore.flyerFormDetail.djsOrArtists.map(async (dj, idx) => {
                 let imageUrl = "";
-                if (dj.image) {
+                if (dj.image instanceof File) {
                     const res = await saveToTemp(dj.image, `dj_${idx}`);
                     if (res) {
                         tempFiles[`dj_${idx}`] = res.filepath;
                         imageUrl = res.filepath;
                     }
+                } else if (typeof dj.image === "string") {
+                    imageUrl = dj.image;
                 }
                 return { name: dj.name, image_url: imageUrl };
             }));
@@ -277,12 +293,14 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             // 3. Upload Hosts
             const hostsWithUrls = await Promise.all((flyerFormStore.flyerFormDetail.host || []).map(async (h, idx) => {
                 let imageUrl = "";
-                if (h.image) {
+                if (h.image instanceof File) {
                     const res = await saveToTemp(h.image, `host_${idx}`);
                     if (res) {
                         tempFiles[`host_${idx}`] = res.filepath;
                         imageUrl = res.filepath;
                     }
+                } else if (typeof h.image === "string") {
+                    imageUrl = h.image;
                 }
                 return { name: h.name, image_url: imageUrl };
             }));
@@ -291,32 +309,38 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             const sponsors = flyerFormStore.flyerFormDetail.sponsors;
             const sponsorData: Array<{ name: string; image_url: string }> = [];
 
-            if (sponsors.sponsor1) {
+            if (sponsors.sponsor1 instanceof File) {
                 const res = await saveToTemp(sponsors.sponsor1, "sponsor_0");
                 if (res) {
                     tempFiles['sponsor_0'] = res.filepath;
                     sponsorData.push({ name: sponsors.sponsor1.name || "Sponsor 1", image_url: res.filepath });
                 }
+            } else if (typeof sponsors.sponsor1 === "string") {
+                sponsorData.push({ name: "Sponsor 1", image_url: sponsors.sponsor1 });
             } else {
                 sponsorData.push({ name: "", image_url: "" });
             }
 
-            if (sponsors.sponsor2) {
+            if (sponsors.sponsor2 instanceof File) {
                 const res = await saveToTemp(sponsors.sponsor2, "sponsor_1");
                 if (res) {
                     tempFiles['sponsor_1'] = res.filepath;
                     sponsorData.push({ name: sponsors.sponsor2.name || "Sponsor 2", image_url: res.filepath });
                 }
+            } else if (typeof sponsors.sponsor2 === "string") {
+                sponsorData.push({ name: "Sponsor 2", image_url: sponsors.sponsor2 });
             } else {
                 sponsorData.push({ name: "", image_url: "" });
             }
 
-            if (sponsors.sponsor3) {
+            if (sponsors.sponsor3 instanceof File) {
                 const res = await saveToTemp(sponsors.sponsor3, "sponsor_2");
                 if (res) {
                     tempFiles['sponsor_2'] = res.filepath;
                     sponsorData.push({ name: sponsors.sponsor3.name || "Sponsor 3", image_url: res.filepath });
                 }
+            } else if (typeof sponsors.sponsor3 === "string") {
+                sponsorData.push({ name: "Sponsor 3", image_url: sponsors.sponsor3 });
             } else {
                 sponsorData.push({ name: "", image_url: "" });
             }

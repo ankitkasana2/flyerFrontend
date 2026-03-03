@@ -10,7 +10,7 @@ import { Upload, Check, X } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
 import { toast } from "sonner";
-import { saveToLibrary, saveToTemp } from "@/lib/uploads";
+import { saveToTemp } from "@/lib/uploads";
 
 import ExtrasBlock from "./extra-block";
 import DeliveryTimeBlock from "./delivery-time-block";
@@ -55,15 +55,26 @@ const formatCurrency = (value: number | string | null | undefined) => {
 const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
     const { flyerFormStore, cartStore, authStore } = useStore();
 
-    const [birthdayPersonPhoto, setBirthdayPersonPhoto] = useState<File | null>(null);
+    const [birthdayPersonPhoto, setBirthdayPersonPhoto] = useState<File | string | null>(null);
     const [birthdayPhotoPreview, setBirthdayPhotoPreview] = useState<string | null>(null);
 
     // Sync from MobX store after mount to be SSR-safe
     useEffect(() => {
-        const file = flyerFormStore.flyerFormDetail.eventDetails.venueLogo;
-        if (file) {
-            setBirthdayPersonPhoto(file);
-            setBirthdayPhotoPreview(typeof window !== 'undefined' ? URL.createObjectURL(file) : null);
+        const image = flyerFormStore.flyerFormDetail.eventDetails.venueLogo;
+        if (image) {
+            setBirthdayPersonPhoto(image);
+            if (typeof window === "undefined") {
+                setBirthdayPhotoPreview(null);
+            } else if (image instanceof File) {
+                setBirthdayPhotoPreview(URL.createObjectURL(image));
+            } else if (typeof image === "string") {
+                setBirthdayPhotoPreview(image);
+            } else {
+                setBirthdayPhotoPreview(null);
+            }
+        } else {
+            setBirthdayPersonPhoto(null);
+            setBirthdayPhotoPreview(null);
         }
     }, [flyerFormStore.flyerFormDetail.eventDetails.venueLogo]);
 
@@ -216,12 +227,14 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
 
             // 1. Upload Birthday Person Photo (stored in venueLogo) to TEMP
             let venueLogoUrl = "";
-            if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo) {
+            if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo instanceof File) {
                 const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo");
                 if (res) {
                     tempFiles['venue_logo'] = res.filepath;
                     venueLogoUrl = res.filepath;
                 }
+            } else if (typeof flyerFormStore.flyerFormDetail.eventDetails.venueLogo === "string") {
+                venueLogoUrl = flyerFormStore.flyerFormDetail.eventDetails.venueLogo;
             }
 
             // Construct API Body
@@ -350,7 +363,7 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
                                         className="w-16 h-16 rounded-lg object-cover border-2 border-primary"
                                     />
                                     <span className="text-sm text-gray-300 flex-1">
-                                        {birthdayPersonPhoto?.name || "Photo uploaded"}
+                                        {(birthdayPersonPhoto instanceof File) ? birthdayPersonPhoto.name : "Photo selected"}
                                     </span>
                                     <button
                                         type="button"
