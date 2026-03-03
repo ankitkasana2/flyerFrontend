@@ -267,7 +267,13 @@ export async function GET(request: NextRequest) {
 
       // Submit THIS order to backend API
       try {
-        const orderEndpoint = getApiUrl('/orders');
+        let orderEndpoint = getApiUrl('/orders');
+
+        // Ensure absolute URL for Node.js fetch
+        if (!orderEndpoint.startsWith('http')) {
+          const apiPath = orderEndpoint.startsWith('/') ? orderEndpoint : `/${orderEndpoint}`;
+          orderEndpoint = `${baseUrl}${apiPath}`;
+        }
 
         console.log(`📡 Sending to backend: ${orderEndpoint}`);
 

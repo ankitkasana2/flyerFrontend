@@ -15,9 +15,21 @@ if (isServer && (resolvedBaseUrl.startsWith('/') || !resolvedBaseUrl)) {
   // Priority:
   // 1. BACKEND_API_BASE_URL (specific for server-side backend connection)
   // 2. API_BASE_URL (server-side override)
-  // 3. DEFAULT_API_BASE_URL (fallback to hardcoded IP/Domain)
+  // 3. NEXT_PUBLIC_BASE_URL + '/api'
+  // 4. DEFAULT_API_BASE_URL (if it's absolute)
   const overrideUrl = process.env.BACKEND_API_BASE_URL || process.env.API_BASE_URL;
-  resolvedBaseUrl = overrideUrl || DEFAULT_API_BASE_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  if (overrideUrl) {
+    resolvedBaseUrl = overrideUrl;
+  } else if (baseUrl && baseUrl.startsWith('http')) {
+    resolvedBaseUrl = `${baseUrl.replace(/\/$/, "")}/api`;
+  } else if (DEFAULT_API_BASE_URL && DEFAULT_API_BASE_URL.startsWith('http')) {
+    resolvedBaseUrl = DEFAULT_API_BASE_URL;
+  } else {
+    // Last resort fallback
+    resolvedBaseUrl = "http://127.0.0.1:3007";
+  }
 }
 
 export const API_BASE_URL = resolvedBaseUrl.replace(/\/$/, "");
