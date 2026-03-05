@@ -48,7 +48,8 @@ export async function POST(request: Request) {
   userEmail: orderData.userEmail || '',
   totalPrice: amount.toString(),
   chunkCount: chunks.length.toString(),
-  venue_logo_url: orderData.files?.venueLogoUrl || '',        // ← ADD
+  venue_logo_url: orderData.files?.venueLogoUrl || orderData.formData?.venue_logo_url || '',        // ← ADD
+  birthday_person_photo_url: orderData.formData?.birthday_person_photo_url || '',
 // NAYA
 sponsor_url_0: orderData.formData?.sponsors?.[0]?.image_url || '',
 sponsor_url_1: orderData.formData?.sponsors?.[1]?.image_url || '',
@@ -57,14 +58,14 @@ sponsor_url_2: orderData.formData?.sponsors?.[2]?.image_url || '',   // ← ADD
 
 
     // NEW - DJ URLs
-dj_url_0: orderData.formData?.dj_url_0 || '',
-dj_url_1: orderData.formData?.dj_url_1 || '',
-dj_url_2: orderData.formData?.dj_url_2 || '',
-dj_url_3: orderData.formData?.dj_url_3 || '',
-dj_url_4: orderData.formData?.dj_url_4 || '',
+dj_url_0: orderData.formData?.dj_url_0 || orderData.formData?.djs?.[0]?.image_url || '',
+dj_url_1: orderData.formData?.dj_url_1 || orderData.formData?.djs?.[1]?.image_url || '',
+dj_url_2: orderData.formData?.dj_url_2 || orderData.formData?.djs?.[2]?.image_url || '',
+dj_url_3: orderData.formData?.dj_url_3 || orderData.formData?.djs?.[3]?.image_url || '',
+dj_url_4: orderData.formData?.dj_url_4 || orderData.formData?.djs?.[4]?.image_url || '',
 
-host_url_0: orderData.formData?.host_url_0 || '',
-host_url_1: orderData.formData?.host_url_1 || '',
+host_url_0: orderData.formData?.host_url_0 || orderData.formData?.host?.[0]?.image_url || '',
+host_url_1: orderData.formData?.host_url_1 || orderData.formData?.host?.[1]?.image_url || '',
 }
 
 
@@ -181,7 +182,8 @@ metadata: {
   userId: orderData.userId || '',
   userEmail: orderData.userEmail || '',
   totalPrice: amount.toString(),
-  venue_logo_url: orderData.files?.venueLogoUrl || '',        // ← ADD
+  venue_logo_url: orderData.files?.venueLogoUrl || orderData.formData?.venue_logo_url || '',        // ← ADD
+  birthday_person_photo_url: orderData.formData?.birthday_person_photo_url || '',
 // NAYA
 sponsor_url_0: orderData.formData?.sponsors?.[0]?.image_url || '',
 sponsor_url_1: orderData.formData?.sponsors?.[1]?.image_url || '',
@@ -190,15 +192,15 @@ sponsor_url_2: orderData.formData?.sponsors?.[2]?.image_url || '',   // ← ADD
 
 
     // NEW - DJ URLs
-dj_url_0: orderData.formData?.dj_url_0 || '',
-dj_url_1: orderData.formData?.dj_url_1 || '',
-dj_url_2: orderData.formData?.dj_url_2 || '',
-dj_url_3: orderData.formData?.dj_url_3 || '',
-dj_url_4: orderData.formData?.dj_url_4 || '',
+dj_url_0: orderData.formData?.dj_url_0 || orderData.formData?.djs?.[0]?.image_url || '',
+dj_url_1: orderData.formData?.dj_url_1 || orderData.formData?.djs?.[1]?.image_url || '',
+dj_url_2: orderData.formData?.dj_url_2 || orderData.formData?.djs?.[2]?.image_url || '',
+dj_url_3: orderData.formData?.dj_url_3 || orderData.formData?.djs?.[3]?.image_url || '',
+dj_url_4: orderData.formData?.dj_url_4 || orderData.formData?.djs?.[4]?.image_url || '',
 
 
-host_url_0: orderData.formData?.host_url_0 || '',
-host_url_1: orderData.formData?.host_url_1 || '',
+host_url_0: orderData.formData?.host_url_0 || orderData.formData?.host?.[0]?.image_url || '',
+host_url_1: orderData.formData?.host_url_1 || orderData.formData?.host?.[1]?.image_url || '',
 }
 
     })

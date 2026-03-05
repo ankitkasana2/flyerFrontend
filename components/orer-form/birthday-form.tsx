@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Check, X } from "lucide-react";
+import { Upload, Check, X, ImageIcon } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
 import { toast } from "sonner";
-import { saveToTemp } from "@/lib/uploads";
+import { LibraryItem, saveToTemp } from "@/lib/uploads";
 
 import ExtrasBlock from "./extra-block";
 import DeliveryTimeBlock from "./delivery-time-block";
@@ -18,6 +18,7 @@ import { FlyersCarousel } from "../home/FlyersCarousel";
 import { FlyerFrame } from "../flyer/flyer-frame";
 import EventDetails from "./event-details";
 import { createCartFormData, setUserIdInFormData } from "@/lib/cart";
+import { MediaLibraryDialog } from "../upload/media-library-dialog";
 
 type Flyer = {
     id: string;
@@ -54,13 +55,14 @@ const formatCurrency = (value: number | string | null | undefined) => {
 
 const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
     const { flyerFormStore, cartStore, authStore } = useStore();
+    const userId = authStore.user?.id;
 
     const [birthdayPersonPhoto, setBirthdayPersonPhoto] = useState<File | string | null>(null);
     const [birthdayPhotoPreview, setBirthdayPhotoPreview] = useState<string | null>(null);
 
-    // Sync from MobX store after mount to be SSR-safe
+    // Sync birthday photo from store after mount
     useEffect(() => {
-        const image = flyerFormStore.flyerFormDetail.eventDetails.venueLogo;
+        const image = flyerFormStore.flyerFormDetail.birthdayPersonPhoto;
         if (image) {
             setBirthdayPersonPhoto(image);
             if (typeof window === "undefined") {
@@ -76,7 +78,7 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
             setBirthdayPersonPhoto(null);
             setBirthdayPhotoPreview(null);
         }
-    }, [flyerFormStore.flyerFormDetail.eventDetails.venueLogo]);
+    }, [flyerFormStore.flyerFormDetail.birthdayPersonPhoto]);
 
     const [hostList, setHostList] = useState<{ name: string }[]>(() => {
         const storeHosts = flyerFormStore.flyerFormDetail.host || [];
@@ -98,7 +100,7 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
         const file = e.target.files?.[0];
         if (file) {
             setBirthdayPersonPhoto(file);
-            flyerFormStore.updateEventDetails("venueLogo", file);
+            flyerFormStore.updateBirthdayPersonPhoto(file);
 
             const reader = new FileReader();
             reader.onload = () => {
@@ -108,11 +110,21 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
         }
     };
 
+    // Handle Birthday Person photo from Media Library
+    const handleBirthdayPhotoLibrarySelect = (items: LibraryItem[]) => {
+        if (items.length > 0) {
+            const imageUrl = items[0].dataUrl;
+            setBirthdayPersonPhoto(imageUrl);
+            setBirthdayPhotoPreview(imageUrl);
+            flyerFormStore.updateBirthdayPersonPhoto(imageUrl);
+        }
+    };
+
     // Remove Birthday Person Photo
     const handleRemoveBirthdayPhoto = () => {
         setBirthdayPersonPhoto(null);
         setBirthdayPhotoPreview(null);
-        flyerFormStore.updateEventDetails("venueLogo", null);
+        flyerFormStore.updateBirthdayPersonPhoto(null);
     };
 
 
@@ -178,10 +190,7 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
 
         const formDetailForCart = {
             ...flyerFormStore.flyerFormDetail,
-            eventDetails: {
-                ...flyerFormStore.flyerFormDetail.eventDetails,
-                venueLogo: birthdayPersonPhoto || undefined
-            }
+            birthdayPersonPhoto: birthdayPersonPhoto || undefined
         };
 
         const cartFormData = createCartFormData(formDetailForCart, {
@@ -225,7 +234,19 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
             // Track temp files to send to backend later
             const tempFiles: Record<string, string> = {};
 
-            // 1. Upload Birthday Person Photo (stored in venueLogo) to TEMP
+            // 1. Upload Birthday Person Photo to TEMP
+            let birthdayPersonPhotoUrl = "";
+            if (flyerFormStore.flyerFormDetail.birthdayPersonPhoto instanceof File) {
+                const res = await saveToTemp(flyerFormStore.flyerFormDetail.birthdayPersonPhoto, "birthday_person_photo");
+                if (res) {
+                    tempFiles['birthday_person_photo'] = res.filepath;
+                    birthdayPersonPhotoUrl = res.filepath;
+                }
+            } else if (typeof flyerFormStore.flyerFormDetail.birthdayPersonPhoto === "string") {
+                birthdayPersonPhotoUrl = flyerFormStore.flyerFormDetail.birthdayPersonPhoto;
+            }
+
+            // 2. Upload Venue Logo to TEMP
             let venueLogoUrl = "";
             if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo instanceof File) {
                 const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo");
@@ -237,6 +258,11 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
                 venueLogoUrl = flyerFormStore.flyerFormDetail.eventDetails.venueLogo;
             }
 
+            const birthdayHosts = (flyerFormStore.flyerFormDetail.host || []).map((h, idx) => ({
+                name: h.name,
+                image_url: idx === 0 ? birthdayPersonPhotoUrl : "",
+            }));
+
             // Construct API Body
             const apiBody = {
                 presenting: flyerFormStore.flyerFormDetail.eventDetails.presenting,
@@ -247,11 +273,12 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
                 flyer_info: flyerFormStore.flyerFormDetail.eventDetails.flyerInfo,
                 address_phone: flyerFormStore.flyerFormDetail.eventDetails.addressAndPhone,
 
-                // Birthday form has no DJ photos or Host photos, just names
+                // Birthday form: first host image path carries birthday person photo for backend compatibility
                 djs: [],
-                host: (flyerFormStore.flyerFormDetail.host || []).map(h => ({ name: h.name })),
+                host: birthdayHosts,
                 sponsors: [], // Birthday form has no sponsors
                 venue_logo_url: venueLogoUrl,
+                birthday_person_photo_url: birthdayPersonPhotoUrl,
                 venue_text: flyerFormStore.flyerFormDetail.eventDetails.venueText,
 
                 story_size_version: flyerFormStore.flyerFormDetail.extras.storySizeVersion,
@@ -269,6 +296,9 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
                 subtotal: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_BIRTHDAY_PRICE,
                 stripe_fee: ((flyerFormStore.subtotal + 0.30) / (1 - 0.029)) - flyerFormStore.subtotal,
                 image_url: flyer?.image_url || flyer?.imageUrl || "",
+                temp_files: tempFiles,
+                host_url_0: birthdayPersonPhotoUrl || "",
+                host_url_1: "",
             };
 
 
@@ -340,6 +370,18 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
                         <h2 className="text-xl font-bold">Birthday Person Photo</h2>
                         <div className="space-y-3">
                             <div className="flex items-center gap-4">
+                                {userId && (
+                                    <MediaLibraryDialog
+                                        userId={userId}
+                                        onSelect={handleBirthdayPhotoLibrarySelect}
+                                        trigger={
+                                            <button type="button" className="flex items-center gap-2 text-primary">
+                                                <span className="text-sm font-semibold">Media Library</span>
+                                                <ImageIcon className="w-4 h-4" />
+                                            </button>
+                                        }
+                                    />
+                                )}
                                 <label htmlFor="birthday-photo-upload" className="cursor-pointer">
                                     <div className="flex items-center gap-2 text-primary">
                                         <span className="text-sm font-semibold">Upload Photo</span>

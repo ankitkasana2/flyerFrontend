@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Music, Check, X } from "lucide-react";
+import { Upload, Music, Check, X, ImageIcon } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
 import { toast } from "sonner";
-import { saveToTemp } from "@/lib/uploads";
+import { LibraryItem, saveToTemp } from "@/lib/uploads";
 import { createCartFormData, setUserIdInFormData } from "@/lib/cart";
 import SponsorsBlock from "./sponser";
 import ExtrasBlock from "./extra-block";
@@ -18,6 +18,7 @@ import DeliveryTimeBlock from "./delivery-time-block";
 import { FlyersCarousel } from "../home/FlyersCarousel";
 import { FlyerFrame } from "../flyer/flyer-frame";
 import EventDetails from "./event-details";
+import { MediaLibraryDialog } from "../upload/media-library-dialog";
 
 
 type Flyer = {
@@ -56,8 +57,9 @@ const formatCurrency = (value: number | string | null | undefined) => {
 
 const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
     const { flyerFormStore, cartStore, authStore } = useStore();
+    const userId = authStore.user?.id;
 
-    const [venueLogo, setVenueLogo] = useState<File | null>(null);
+    const [venueLogo, setVenueLogo] = useState<File | string | null>(null);
     const [venueLogoPreview, setVenueLogoPreview] = useState<string | null>(null);
     const [showVenueText, setShowVenueText] = useState(false);
     const [venueText, setVenueText] = useState("");
@@ -86,6 +88,17 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
             reader.readAsDataURL(file);
 
             flyerFormStore.updateEventDetails("venueLogo", file);
+        }
+    };
+
+    // Handle Venue Logo from Media Library
+    const handleVenueLogoLibrarySelect = (items: LibraryItem[]) => {
+        if (items.length > 0) {
+            const imageUrl = items[0].dataUrl;
+            setVenueLogo(imageUrl);
+            setVenueLogoPreview(imageUrl);
+            setShowVenueText(false);
+            flyerFormStore.updateEventDetails("venueLogo", imageUrl);
         }
     };
 
@@ -361,6 +374,19 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
                         {!showVenueText ? (
                             <div className="space-y-3">
                                 <div className="flex items-center gap-4">
+                                    {userId && (
+                                        <MediaLibraryDialog
+                                            userId={userId}
+                                            type="logo"
+                                            onSelect={handleVenueLogoLibrarySelect}
+                                            trigger={
+                                                <button type="button" className="flex items-center gap-2 text-primary">
+                                                    <span className="text-sm font-semibold">Media Library</span>
+                                                    <ImageIcon className="w-4 h-4" />
+                                                </button>
+                                            }
+                                        />
+                                    )}
                                     <label htmlFor="venue-logo-upload" className="cursor-pointer">
                                         <div className="flex items-center gap-2 text-primary">
                                             <span className="text-sm font-semibold">Upload Logo</span>
@@ -384,7 +410,7 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
                                             className="w-16 h-16 rounded-lg object-cover border-2 border-primary"
                                         />
                                         <span className="text-sm text-gray-300 flex-1">
-                                            {venueLogo?.name || "Logo uploaded"}
+                                            {(venueLogo instanceof File) ? venueLogo.name : "Logo selected"}
                                         </span>
                                         <button
                                             type="button"

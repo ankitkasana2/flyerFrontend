@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Music, Check, X } from "lucide-react";
+import { Upload, Music, Check, X, ImageIcon } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
 import { toast } from "sonner";
-import { saveToLibrary, saveToTemp } from "@/lib/uploads";
+import { LibraryItem, saveToTemp } from "@/lib/uploads";
 import SponsorsBlock from "./sponser";
 import ExtrasBlock from "./extra-block";
 import DeliveryTimeBlock from "./delivery-time-block";
@@ -19,6 +19,7 @@ import { FlyerFrame } from "../flyer/flyer-frame";
 import EventDetails from "./event-details";
 import { FlyerRibbon } from "./flyer-ribbon";
 import { createCartFormData, setUserIdInFormData } from "@/lib/cart";
+import { MediaLibraryDialog } from "../upload/media-library-dialog";
 
 type Flyer = {
     id: string;
@@ -55,6 +56,7 @@ const formatCurrency = (value: number | string | null | undefined) => {
 
 const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
     const { flyerFormStore, cartStore, authStore } = useStore();
+    const userId = authStore.user?.id;
 
     const FIXED_PRICE = 10; // $10 With Photo
 
@@ -150,6 +152,19 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
         });
     };
 
+    // Handle DJ photo from Media Library
+    const handleDjLibrarySelect = (items: LibraryItem[], index: number) => {
+        if (items.length > 0 && djList[index].hasPhoto) {
+            const imageUrl = items[0].dataUrl;
+            flyerFormStore.updateDJ(index, "image", imageUrl);
+            setDjList((prev) => {
+                const newList = [...prev];
+                newList[index].image = imageUrl;
+                return newList;
+            });
+        }
+    };
+
     // Ensure store has enough DJs (4) and Hosts (2)
     useEffect(() => {
         // Expand DJs to 4
@@ -202,6 +217,19 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             newList[index].image = null;
             return newList;
         });
+    };
+
+    // Handle Host photo from Media Library
+    const handleHostLibrarySelect = (items: LibraryItem[], index: number) => {
+        if (items.length > 0 && hostList[index].hasPhoto) {
+            const imageUrl = items[0].dataUrl;
+            flyerFormStore.updateHost(index, "image", imageUrl);
+            setHostList((prev) => {
+                const newList = [...prev];
+                newList[index].image = imageUrl;
+                return newList;
+            });
+        }
     };
 
     // Add to cart
@@ -376,6 +404,14 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
                 subtotal: flyerFormStore.subtotal > 0 ? flyerFormStore.subtotal : FIXED_PRICE,
                 stripe_fee: ((flyerFormStore.subtotal + 0.30) / (1 - 0.029)) - flyerFormStore.subtotal,
                 image_url: flyer?.image_url || flyer?.imageUrl || "",
+                temp_files: tempFiles,
+                dj_url_0: djsWithUrls[0]?.image_url || '',
+                dj_url_1: djsWithUrls[1]?.image_url || '',
+                dj_url_2: djsWithUrls[2]?.image_url || '',
+                dj_url_3: djsWithUrls[3]?.image_url || '',
+                dj_url_4: djsWithUrls[4]?.image_url || '',
+                host_url_0: hostsWithUrls[0]?.image_url || '',
+                host_url_1: hostsWithUrls[1]?.image_url || '',
             };
 
 
@@ -505,18 +541,35 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
 
                                                 {/* Upload button (only show if hasPhoto and NO image) */}
                                                 {dj.hasPhoto && !dj.image && (
-                                                    <label htmlFor={`dj-upload-${index}`} className="cursor-pointer flex-shrink-0">
-                                                        <div className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all">
-                                                            <Upload className="w-4 h-4 text-primary" />
-                                                        </div>
-                                                        <input
-                                                            id={`dj-upload-${index}`}
-                                                            type="file"
-                                                            accept="image/*"
-                                                            onChange={(e) => handleDjPhotoUpload(e, index)}
-                                                            className="hidden"
-                                                        />
-                                                    </label>
+                                                    <div className="flex items-center gap-1">
+                                                        {userId && (
+                                                            <MediaLibraryDialog
+                                                                userId={userId}
+                                                                onSelect={(items) => handleDjLibrarySelect(items, index)}
+                                                                trigger={
+                                                                    <button
+                                                                        type="button"
+                                                                        className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all text-primary"
+                                                                        title="Choose from library"
+                                                                    >
+                                                                        <ImageIcon className="w-4 h-4" />
+                                                                    </button>
+                                                                }
+                                                            />
+                                                        )}
+                                                        <label htmlFor={`dj-upload-${index}`} className="cursor-pointer flex-shrink-0">
+                                                            <div className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all">
+                                                                <Upload className="w-4 h-4 text-primary" />
+                                                            </div>
+                                                            <input
+                                                                id={`dj-upload-${index}`}
+                                                                type="file"
+                                                                accept="image/*"
+                                                                onChange={(e) => handleDjPhotoUpload(e, index)}
+                                                                className="hidden"
+                                                            />
+                                                        </label>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -584,18 +637,35 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
 
                                             {/* Upload button (only show if hasPhoto and NO image) */}
                                             {host.hasPhoto && !host.image && (
-                                                <label htmlFor={`host-upload-${index}`} className="cursor-pointer flex-shrink-0">
-                                                    <div className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all">
-                                                        <Upload className="w-4 h-4 text-primary" />
-                                                    </div>
-                                                    <input
-                                                        id={`host-upload-${index}`}
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) => handleHostPhotoUpload(e, index)}
-                                                        className="hidden"
-                                                    />
-                                                </label>
+                                                <div className="flex items-center gap-1">
+                                                    {userId && (
+                                                        <MediaLibraryDialog
+                                                            userId={userId}
+                                                            onSelect={(items) => handleHostLibrarySelect(items, index)}
+                                                            trigger={
+                                                                <button
+                                                                    type="button"
+                                                                    className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all text-primary"
+                                                                    title="Choose from library"
+                                                                >
+                                                                    <ImageIcon className="w-4 h-4" />
+                                                                </button>
+                                                            }
+                                                        />
+                                                    )}
+                                                    <label htmlFor={`host-upload-${index}`} className="cursor-pointer flex-shrink-0">
+                                                        <div className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 hover:bg-primary/20 transition-all">
+                                                            <Upload className="w-4 h-4 text-primary" />
+                                                        </div>
+                                                        <input
+                                                            id={`host-upload-${index}`}
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={(e) => handleHostPhotoUpload(e, index)}
+                                                            className="hidden"
+                                                        />
+                                                    </label>
+                                                </div>
                                             )}
                                         </div>
                                     </div>

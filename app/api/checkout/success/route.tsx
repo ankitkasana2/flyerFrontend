@@ -171,7 +171,7 @@ export async function GET(request: NextRequest) {
         if (!item) return { name: '' };
         const result: any = { name: item.name || '' };
         const img = item.image_url || item.image;
-        if (img && typeof img === 'string' && img.startsWith('http')) {
+        if (img && typeof img === 'string') {
           result.image_url = img;
         }
         return result;
@@ -205,10 +205,18 @@ export async function GET(request: NextRequest) {
 
       // Host URLs from metadata
       for (let i = 0; i < 2; i++) {
-        const hostUrl = session.metadata?.[`host_url_${i}`] || ''
+        const hostUrl = session.metadata?.[`host_url_${i}`] || formDataObj[`host_url_${i}`] || ''
         if (hostUrl) {
           formData.append(`host_url_${i}`, hostUrl)
         }
+      }
+
+      // Birthday person photo URL from metadata / payload
+      const birthdayPersonPhotoUrl = session.metadata?.birthday_person_photo_url
+        || formDataObj.birthday_person_photo_url
+        || ''
+      if (birthdayPersonPhotoUrl) {
+        formData.append('birthday_person_photo_url', birthdayPersonPhotoUrl)
       }
 
 

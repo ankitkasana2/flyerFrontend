@@ -99,6 +99,7 @@ export class FlyerFormStore {
     deliveryTime: "",
     customNote: "",
     subtotal: 0,
+    birthdayPersonPhoto: null,
   }
 
   constructor() {
@@ -135,6 +136,7 @@ export class FlyerFormStore {
       deliveryTime: "",
       customNote: "",
       subtotal: 0,
+      birthdayPersonPhoto: null,
     }
   }
 
@@ -322,6 +324,10 @@ export class FlyerFormStore {
   // -----------------------------
   updateCustomNote(value: string) {
     this.flyerFormDetail.customNote = value
+  }
+
+  updateBirthdayPersonPhoto(value: File | string | null) {
+    this.flyerFormDetail.birthdayPersonPhoto = value
   }
 
   setUserId(userId: string | null) {
