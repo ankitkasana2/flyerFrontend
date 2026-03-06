@@ -166,46 +166,97 @@ export async function GET(request: NextRequest) {
       formData.append('subtotal', parsePrice(formDataObj.subtotal || 0).toString());
       formData.append('image_url', formDataObj.image_url || '');
 
-      // Sanitize JSON fields
+      // Sanitize JSON fields.
+      // Cart/production payloads often return these fields as JSON strings.
+      const parseMaybeJson = (value: any) => {
+        if (typeof value !== 'string') return value;
+        const trimmed = value.trim();
+        if (!trimmed) return value;
+        if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+          try {
+            return JSON.parse(trimmed);
+          } catch {
+            return value;
+          }
+        }
+        return value;
+      };
+
+      const asArray = (value: any): any[] => {
+        if (Array.isArray(value)) return value;
+        if (value === null || value === undefined || value === '') return [];
+        return [value];
+      };
+
       const sanitizeItem = (item: any) => {
         if (!item) return { name: '' };
-        const result: any = { name: item.name || '' };
-        const img = item.image_url || item.image;
+
+        // If backend/cart sent only URL string, preserve it as image_url.
+        if (typeof item === 'string') {
+          const raw = item.trim();
+          if (!raw) return { name: '' };
+          if (raw.startsWith('http') || raw.startsWith('/') || raw.includes('/')) {
+            return { name: '', image_url: raw };
+          }
+          return { name: raw };
+        }
+
+        const result: any = { name: item.name || item.title || '' };
+        const img =
+          item.image_url ||
+          item.imageUrl ||
+          item.image ||
+          item.file_url ||
+          item.url;
+
         if (img && typeof img === 'string') {
           result.image_url = img;
         }
         return result;
       };
 
-      const djsSanitized = Array.isArray(formDataObj.djs) ? formDataObj.djs.map(sanitizeItem) : (formDataObj.djs ? [sanitizeItem(formDataObj.djs)] : []);
-      const hostsSanitized = Array.isArray(formDataObj.host) ? formDataObj.host.map(sanitizeItem) : (formDataObj.host ? [sanitizeItem(formDataObj.host)] : []);
-      const sponsorsSanitized = Array.isArray(formDataObj.sponsors) ? formDataObj.sponsors.map(sanitizeItem) : (formDataObj.sponsors ? [sanitizeItem(formDataObj.sponsors)] : []);
+      const parsedDjs = parseMaybeJson(formDataObj.djs);
+      const parsedHosts = parseMaybeJson(formDataObj.host);
+      const parsedSponsors = parseMaybeJson(formDataObj.sponsors);
+
+      const djsSanitized = asArray(parsedDjs).map(sanitizeItem);
+      const hostsSanitized = asArray(parsedHosts).map(sanitizeItem);
+      const sponsorsSanitized = asArray(parsedSponsors).map(sanitizeItem);
 
       formData.append('djs', JSON.stringify(djsSanitized));
       const hostPayload = hostsSanitized.length > 0 ? hostsSanitized[0] : { name: '' };
       formData.append('host', JSON.stringify(hostPayload));
       formData.append('sponsors', JSON.stringify(sponsorsSanitized));
 
-      // Sponsor URLs from metadata
+      // Sponsor URLs from metadata/form payload/sanitized payload
       for (let i = 0; i < 3; i++) {
         const sponsorUrl = session.metadata?.[`sponsor_url_${i}`]
           || formDataObj[`sponsor_url_${i}`]
+          || sponsorsSanitized[i]?.image_url
           || ''
         if (sponsorUrl) {
           formData.append(`sponsor_url_${i}`, sponsorUrl)
         }
       }
-      // NEW - DJ URLs
+      // DJ URLs from metadata/form payload/sanitized payload
       for (let i = 0; i < 5; i++) {
-        const djUrl = session.metadata?.[`dj_url_${i}`] || formDataObj[`dj_url_${i}`] || ''
+        const djUrl =
+          session.metadata?.[`dj_url_${i}`] ||
+          formDataObj[`dj_url_${i}`] ||
+          djsSanitized[i]?.image_url ||
+          ''
         if (djUrl) {
           formData.append(`dj_url_${i}`, djUrl)
         }
       }
 
-      // Host URLs from metadata
+      // Host URLs from metadata/form payload/sanitized payload
       for (let i = 0; i < 2; i++) {
-        const hostUrl = session.metadata?.[`host_url_${i}`] || formDataObj[`host_url_${i}`] || ''
+        const hostUrl =
+          session.metadata?.[`host_url_${i}`] ||
+          formDataObj[`host_url_${i}`] ||
+          hostsSanitized[i]?.image_url ||
+          ''
         if (hostUrl) {
           formData.append(`host_url_${i}`, hostUrl)
         }
