@@ -188,6 +188,9 @@ export async function GET(request: NextRequest) {
         return [value];
       };
 
+      // Helper to filter out temporary Next.js URLs that shouldn't be sent as strings
+      const isTempUrlStr = (url: string) => url && typeof url === 'string' && url.includes('/api/serve-temp');
+
       const sanitizeItem = (item: any) => {
         if (!item) return { name: '' };
 
@@ -196,7 +199,7 @@ export async function GET(request: NextRequest) {
           const raw = item.trim();
           if (!raw) return { name: '' };
           if (raw.startsWith('http') || raw.startsWith('/') || raw.includes('/')) {
-            return { name: '', image_url: raw };
+            return { name: '', image_url: isTempUrlStr(raw) ? '' : raw };
           }
           return { name: raw };
         }
@@ -210,7 +213,7 @@ export async function GET(request: NextRequest) {
           item.url;
 
         if (img && typeof img === 'string') {
-          result.image_url = img;
+          result.image_url = isTempUrlStr(img) ? '' : img;
         }
         return result;
       };
@@ -223,6 +226,7 @@ export async function GET(request: NextRequest) {
       const hostsSanitized = asArray(parsedHosts).map(sanitizeItem);
       const sponsorsSanitized = asArray(parsedSponsors).map(sanitizeItem);
 
+
       formData.append('djs', JSON.stringify(djsSanitized));
       const hostPayload = hostsSanitized.length > 0 ? hostsSanitized[0] : { name: '' };
       formData.append('host', JSON.stringify(hostPayload));
@@ -234,7 +238,7 @@ export async function GET(request: NextRequest) {
           || formDataObj[`sponsor_url_${i}`]
           || sponsorsSanitized[i]?.image_url
           || ''
-        if (sponsorUrl) {
+        if (sponsorUrl && !isTempUrlStr(sponsorUrl)) {
           formData.append(`sponsor_url_${i}`, sponsorUrl)
         }
       }
@@ -245,7 +249,7 @@ export async function GET(request: NextRequest) {
           formDataObj[`dj_url_${i}`] ||
           djsSanitized[i]?.image_url ||
           ''
-        if (djUrl) {
+        if (djUrl && !isTempUrlStr(djUrl)) {
           formData.append(`dj_url_${i}`, djUrl)
         }
       }
@@ -257,7 +261,7 @@ export async function GET(request: NextRequest) {
           formDataObj[`host_url_${i}`] ||
           hostsSanitized[i]?.image_url ||
           ''
-        if (hostUrl) {
+        if (hostUrl && !isTempUrlStr(hostUrl)) {
           formData.append(`host_url_${i}`, hostUrl)
         }
       }
@@ -266,7 +270,7 @@ export async function GET(request: NextRequest) {
       const birthdayPersonPhotoUrl = session.metadata?.birthday_person_photo_url
         || formDataObj.birthday_person_photo_url
         || ''
-      if (birthdayPersonPhotoUrl) {
+      if (birthdayPersonPhotoUrl && !isTempUrlStr(birthdayPersonPhotoUrl)) {
         formData.append('birthday_person_photo_url', birthdayPersonPhotoUrl)
       }
 
@@ -281,9 +285,8 @@ export async function GET(request: NextRequest) {
 
       console.log('🖼️ Venue Logo URL:', venueLogo) // ← Debug ke liye
 
-      formData.append('venue_logo_url', venueLogo)
-      if (venueLogo && venueLogo.startsWith('http')) {
-        formData.append('venue_logo', venueLogo)
+      if (venueLogo && !isTempUrlStr(venueLogo)) {
+        formData.append('venue_logo_url', venueLogo)
       }
 
 
@@ -345,6 +348,8 @@ export async function GET(request: NextRequest) {
                 if (fieldName.startsWith('host_')) {
                   const hostIndex = parseInt(fieldName.split('_')[1]);
                   backendFieldName = hostIndex === 0 ? 'host_file' : `host_file_${hostIndex}`;
+                } else if (fieldName === 'birthday_person_photo') {
+                  backendFieldName = 'host_file';
                 }
 
                 formData.append(backendFieldName, blob as any, fileName);
