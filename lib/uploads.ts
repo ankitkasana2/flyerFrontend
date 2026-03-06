@@ -137,6 +137,15 @@ export async function saveToTemp(
     fieldName: string = "file",
     userId?: string
 ): Promise<{ filepath: string, filename: string } | null> {
+    // For authenticated users, prefer persistent library upload first.
+    // This makes system uploads behave like "Choose from Library".
+    if (userId) {
+        const libraryUrl = await saveToLibrary(userId, file)
+        if (libraryUrl) {
+            return { filepath: libraryUrl, filename: file.name }
+        }
+    }
+
     const formData = new FormData()
     formData.append("file", file)
     formData.append("field", fieldName)
@@ -151,12 +160,6 @@ export async function saveToTemp(
         })
 
         if (!res.ok) {
-            if (userId) {
-                const libraryUrl = await saveToLibrary(userId, file)
-                if (libraryUrl) {
-                    return { filepath: libraryUrl, filename: file.name }
-                }
-            }
             return null
         }
 
@@ -166,12 +169,6 @@ export async function saveToTemp(
         }
         return { filepath: data.filepath, filename: data.filename }
     } catch (error) {
-        if (userId) {
-            const libraryUrl = await saveToLibrary(userId, file)
-            if (libraryUrl) {
-                return { filepath: libraryUrl, filename: file.name }
-            }
-        }
         return null
     }
 }
