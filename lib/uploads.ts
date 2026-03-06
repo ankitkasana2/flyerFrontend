@@ -1,4 +1,5 @@
 import { getApiUrl } from "@/config/api"
+import { resolveMediaUrl } from "@/lib/media-url"
 
 export type LibraryItem = {
     id: string
@@ -77,9 +78,7 @@ const res = await fetch(`${url}?_t=${Date.now()}`, {
 
         const items: LibraryItem[] = (data.media || []).map((m: any) => {
             const fileUrl = m.file_url || ""
-            const fullUrl = fileUrl.startsWith('http')
-                ? fileUrl
-                : `${getApiUrl()}/${fileUrl.replace(/^\//, '')}`
+            const fullUrl = resolveMediaUrl(fileUrl) || ""
 
             return {
                 id: String(m.id),
@@ -125,7 +124,8 @@ export async function saveToLibrary(userId: string, file: File): Promise<string 
         if (!data.success) {
             return null
         }
-        return data.file_url || data.media?.file_url || data.url || null
+        const fileUrl = data.file_url || data.media?.file_url || data.url || null
+        return resolveMediaUrl(fileUrl)
     } catch (error) {
         return null
     }
@@ -135,17 +135,8 @@ export async function saveToLibrary(userId: string, file: File): Promise<string 
 export async function saveToTemp(
     file: File,
     fieldName: string = "file",
-    userId?: string
+    _userId?: string
 ): Promise<{ filepath: string, filename: string } | null> {
-    // For authenticated users, prefer persistent library upload first.
-    // This makes system uploads behave like "Choose from Library".
-    if (userId) {
-        const libraryUrl = await saveToLibrary(userId, file)
-        if (libraryUrl) {
-            return { filepath: libraryUrl, filename: file.name }
-        }
-    }
-
     const formData = new FormData()
     formData.append("file", file)
     formData.append("field", fieldName)

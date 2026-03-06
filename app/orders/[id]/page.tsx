@@ -24,6 +24,7 @@ import {
   ExternalLink
 } from "lucide-react"
 import { getApiUrl } from "@/config/api"
+import { resolveMediaUrl } from "@/lib/media-url"
 import { toast } from "sonner"
 
 interface DJ {
@@ -149,9 +150,7 @@ const OrderDetailsPage = observer(() => {
 
 
   const getImageUrl = (url: string | null | undefined) => {
-    if (!url) return null
-    if (url.startsWith('http') || url.startsWith('data:')) return url
-    return `${getApiUrl()}${url.startsWith('/') ? '' : '/'}${url}`
+    return resolveMediaUrl(url)
   }
 
   const formatDate = (dateString: string) => {

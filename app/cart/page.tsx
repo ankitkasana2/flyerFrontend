@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/stores/StoreProvider";
-import { getApiUrl } from "@/config/api"
+import { resolveMediaUrl } from "@/lib/media-url"
 import { toast } from "sonner"
 
 function currency(n?: number | string) {
@@ -17,10 +17,7 @@ function currency(n?: number | string) {
 }
 
 function getImageUrl(url: string | null | undefined) {
-    if (!url) return null
-    if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('/')) return url
-    // If it's a relative path and doesn't start with /, it's likely a backend path
-    return `${getApiUrl()}/${url}`
+    return resolveMediaUrl(url)
 }
 
 const CartPage = observer(() => {

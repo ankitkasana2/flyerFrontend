@@ -12,6 +12,7 @@ import { Search, Calendar, Package, Clock, DollarSign } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { getApiUrl } from "@/config/api"
+import { resolveMediaUrl } from "@/lib/media-url"
 
 interface DJ {
   name: string
@@ -160,9 +161,7 @@ const OrdersPage = observer(() => {
   }
 
   const getImageUrl = (url: string | null | undefined) => {
-    if (!url) return null
-    if (url.startsWith('http') || url.startsWith('data:')) return url
-    return `${getApiUrl()}${url.startsWith('/') ? '' : '/'}${url}`
+    return resolveMediaUrl(url)
   }
 
   // Show loading spinner while auth OR orders are loading

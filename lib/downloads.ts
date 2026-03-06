@@ -36,6 +36,7 @@ function setDownloads(userId: string, data: OrderDelivery[]) {
 }
 
 import { getApiUrl } from "@/config/api"
+import { resolveMediaUrl } from "@/lib/media-url"
 
 export async function fetchUserDownloads(userId: string): Promise<OrderDelivery[]> {
     try {
@@ -59,9 +60,7 @@ export async function fetchUserDownloads(userId: string): Promise<OrderDelivery[
                         if (filesData.success && Array.isArray(filesData.files)) {
                             files = filesData.files.map((f: any) => {
                                 const fileUrl = f.file_url || ""
-                                const fullUrl = fileUrl.startsWith('http')
-                                    ? fileUrl
-                                    : `${getApiUrl()}/${fileUrl.replace(/^\//, '')}`
+                                const fullUrl = resolveMediaUrl(fileUrl) || ""
 
                                 return {
                                     id: f.id.toString(),
