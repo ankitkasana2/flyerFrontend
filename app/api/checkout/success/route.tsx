@@ -190,6 +190,31 @@ export async function GET(request: NextRequest) {
 
       // Helper to filter out temporary Next.js URLs that shouldn't be sent as strings
       const isTempUrlStr = (url: string) => url && typeof url === 'string' && url.includes('/api/serve-temp');
+      const normalizeMediaUrlForBackend = (url: string) => {
+        if (!url || typeof url !== 'string') return '';
+        const raw = url.trim();
+        if (!raw) return '';
+        if (isTempUrlStr(raw)) return raw;
+
+        if (raw.startsWith('/uploads/') || raw.startsWith('/api/uploads/')) {
+          return getApiUrl(raw);
+        }
+
+        if (raw.startsWith('http://') || raw.startsWith('https://')) {
+          try {
+            const parsed = new URL(raw);
+            if (parsed.pathname.startsWith('/uploads/') || parsed.pathname.startsWith('/api/uploads/')) {
+              return getApiUrl(`${parsed.pathname}${parsed.search}`);
+            }
+          } catch {
+            return raw;
+          }
+          return raw;
+        }
+
+        if (raw.startsWith('/')) return raw;
+        return raw.includes('uploads/') ? getApiUrl(`/${raw.replace(/^\/+/, '')}`) : raw;
+      };
 
       const sanitizeItem = (item: any) => {
         if (!item) return { name: '' };
@@ -199,7 +224,7 @@ export async function GET(request: NextRequest) {
           const raw = item.trim();
           if (!raw) return { name: '' };
           if (raw.startsWith('http') || raw.startsWith('/') || raw.includes('/')) {
-            return { name: '', image_url: isTempUrlStr(raw) ? '' : raw };
+            return { name: '', image_url: isTempUrlStr(raw) ? '' : normalizeMediaUrlForBackend(raw) };
           }
           return { name: raw };
         }
@@ -213,7 +238,7 @@ export async function GET(request: NextRequest) {
           item.url;
 
         if (img && typeof img === 'string') {
-          result.image_url = isTempUrlStr(img) ? '' : img;
+          result.image_url = isTempUrlStr(img) ? '' : normalizeMediaUrlForBackend(img);
         }
         return result;
       };
@@ -238,8 +263,9 @@ export async function GET(request: NextRequest) {
           || formDataObj[`sponsor_url_${i}`]
           || sponsorsSanitized[i]?.image_url
           || ''
-        if (sponsorUrl && !isTempUrlStr(sponsorUrl)) {
-          formData.append(`sponsor_url_${i}`, sponsorUrl)
+        const normalizedSponsorUrl = normalizeMediaUrlForBackend(sponsorUrl)
+        if (normalizedSponsorUrl && !isTempUrlStr(normalizedSponsorUrl)) {
+          formData.append(`sponsor_url_${i}`, normalizedSponsorUrl)
         }
       }
       // DJ URLs from metadata/form payload/sanitized payload
@@ -249,8 +275,9 @@ export async function GET(request: NextRequest) {
           formDataObj[`dj_url_${i}`] ||
           djsSanitized[i]?.image_url ||
           ''
-        if (djUrl && !isTempUrlStr(djUrl)) {
-          formData.append(`dj_url_${i}`, djUrl)
+        const normalizedDjUrl = normalizeMediaUrlForBackend(djUrl)
+        if (normalizedDjUrl && !isTempUrlStr(normalizedDjUrl)) {
+          formData.append(`dj_url_${i}`, normalizedDjUrl)
         }
       }
 
@@ -261,8 +288,9 @@ export async function GET(request: NextRequest) {
           formDataObj[`host_url_${i}`] ||
           hostsSanitized[i]?.image_url ||
           ''
-        if (hostUrl && !isTempUrlStr(hostUrl)) {
-          formData.append(`host_url_${i}`, hostUrl)
+        const normalizedHostUrl = normalizeMediaUrlForBackend(hostUrl)
+        if (normalizedHostUrl && !isTempUrlStr(normalizedHostUrl)) {
+          formData.append(`host_url_${i}`, normalizedHostUrl)
         }
       }
 
@@ -270,8 +298,9 @@ export async function GET(request: NextRequest) {
       const birthdayPersonPhotoUrl = session.metadata?.birthday_person_photo_url
         || formDataObj.birthday_person_photo_url
         || ''
-      if (birthdayPersonPhotoUrl && !isTempUrlStr(birthdayPersonPhotoUrl)) {
-        formData.append('birthday_person_photo_url', birthdayPersonPhotoUrl)
+      const normalizedBirthdayPhotoUrl = normalizeMediaUrlForBackend(birthdayPersonPhotoUrl)
+      if (normalizedBirthdayPhotoUrl && !isTempUrlStr(normalizedBirthdayPhotoUrl)) {
+        formData.append('birthday_person_photo_url', normalizedBirthdayPhotoUrl)
       }
 
 
@@ -285,8 +314,10 @@ export async function GET(request: NextRequest) {
 
       console.log('🖼️ Venue Logo URL:', venueLogo) // ← Debug ke liye
 
-      if (venueLogo && !isTempUrlStr(venueLogo)) {
-        formData.append('venue_logo_url', venueLogo)
+      const normalizedVenueLogo = normalizeMediaUrlForBackend(venueLogo)
+      const hasVenueLogoTempFile = Boolean(formDataObj?.temp_files?.venue_logo)
+      if (normalizedVenueLogo && !isTempUrlStr(normalizedVenueLogo) && !hasVenueLogoTempFile) {
+        formData.append('venue_logo_url', normalizedVenueLogo)
       }
 
 
