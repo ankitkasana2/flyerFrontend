@@ -315,21 +315,49 @@ export async function GET(request: NextRequest) {
       console.log('🖼️ Venue Logo URL:', venueLogo) // ← Debug ke liye
 
       const normalizedVenueLogo = normalizeMediaUrlForBackend(venueLogo)
-      const hasVenueLogoTempFile = Boolean(formDataObj?.temp_files?.venue_logo)
-      if (normalizedVenueLogo && !isTempUrlStr(normalizedVenueLogo) && !hasVenueLogoTempFile) {
+      const tempFilesForVenue = (() => {
+        const value = formDataObj.temp_files
+        if (!value) return null
+        if (typeof value === 'string') {
+          try {
+            const parsed = JSON.parse(value)
+            return parsed && typeof parsed === 'object' ? parsed : null
+          } catch {
+            return null
+          }
+        }
+        return typeof value === 'object' ? value : null
+      })()
+      const venueLogoTempPath = (tempFilesForVenue as Record<string, string> | null)?.venue_logo
+      const hasVenueLogoLocalTemp = typeof venueLogoTempPath === 'string' && isTempUrlStr(venueLogoTempPath)
+      if (normalizedVenueLogo && !isTempUrlStr(normalizedVenueLogo) && !hasVenueLogoLocalTemp) {
         formData.append('venue_logo_url', normalizedVenueLogo)
       }
 
 
       // Handle TEMP FILES upload for this item
       const tempFilesToCleanup: string[] = [];
-      if (formDataObj.temp_files) {
+      const parsedTempFiles = (() => {
+        const value = formDataObj.temp_files
+        if (!value) return null
+        if (typeof value === 'string') {
+          try {
+            const parsed = JSON.parse(value)
+            return parsed && typeof parsed === 'object' ? parsed : null
+          } catch {
+            return null
+          }
+        }
+        return (typeof value === 'object') ? value : null
+      })()
+
+      if (parsedTempFiles) {
         try {
           const { readFile } = await import('fs/promises');
           const { existsSync } = await import('fs');
           const isHttpUrl = (value: string) => /^https?:\/\//i.test(value);
 
-          for (const [fieldName, filepath] of Object.entries(formDataObj.temp_files as Record<string, string>)) {
+          for (const [fieldName, filepath] of Object.entries(parsedTempFiles as Record<string, string>)) {
             if (!filepath) continue;
 
             let buffer: Buffer | null = null;

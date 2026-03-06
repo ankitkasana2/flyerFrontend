@@ -135,8 +135,18 @@ export async function saveToLibrary(userId: string, file: File): Promise<string 
 export async function saveToTemp(
     file: File,
     fieldName: string = "file",
-    _userId?: string
+    userId?: string
 ): Promise<{ filepath: string, filename: string } | null> {
+    // Production reliability:
+    // Stripe success callback can run on a different instance where local temp files do not exist.
+    // If user is authenticated, prefer persistent media URL first.
+    if (userId) {
+        const libraryUrl = await saveToLibrary(userId, file)
+        if (libraryUrl) {
+            return { filepath: libraryUrl, filename: file.name }
+        }
+    }
+
     const formData = new FormData()
     formData.append("file", file)
     formData.append("field", fieldName)
