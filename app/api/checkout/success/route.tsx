@@ -354,7 +354,31 @@ export async function GET(request: NextRequest) {
                 'X-Entity-Ref-ID': orderId.toString(),
               },
             });
+
+
             console.log(`📧 Resend confirmation sent for order: ${orderId}`);
+             // Purchase Receiving Email
+           const { PurchaseReceivingEmail } = await import('@/emails/Purchasereceiving');
+            const purchaseHtml = await render(
+              <PurchaseReceivingEmail
+                name={formDataObj.name || (formDataObj.email ? formDataObj.email.split('@')[0] : "Valued Customer")}
+                orderId={orderId.toString()}
+                flyerName={formDataObj.event_title || "Professional Flyer"}
+                total={formDataObj.total_price?.toString() || "0"}
+                date={new Date().toLocaleDateString('en-IN', {
+                  day: 'numeric', month: 'long', year: 'numeric'
+                })}
+              />
+            );
+            await resend.emails.send({
+              from: "Grodify <support@mail.grodify.com>",
+              to: formDataObj.email || orderData.userEmail,
+              replyTo: "admin@grodify.com",
+              subject: `Purchase Received - #${orderId}`,
+              html: purchaseHtml,
+            });
+            console.log(`📧 Purchase receiving email sent for order: ${orderId}`);
+
           } catch (emailError: any) {
             console.error(`❌ Resend email failed:`, emailError.message);
             // Non-blocking email error
