@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { tmpdir } from 'os';
 
 
 
@@ -30,8 +31,9 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Create temp directory with subfolder for this upload session
-    const tempDir = join(process.cwd(), 'tmp', 'uploads', uploadId);
+    // Use OS temp directory for better production compatibility.
+    const tempRoot = join(tmpdir(), 'flyer-uploads');
+    const tempDir = join(tempRoot, uploadId);
     if (!existsSync(tempDir)) {
       await mkdir(tempDir, { recursive: true });
     }
@@ -52,11 +54,13 @@ export async function POST(request: NextRequest) {
         ? `${protocol}://${host}`
         : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-    const publicUrl = `${dynamicBaseUrl}/api/serve-temp?path=${encodeURIComponent(filepath)}`;
+    const tempKey = join(uploadId, filename).replace(/\\/g, '/');
+    const publicUrl = `${dynamicBaseUrl}/api/serve-temp?key=${encodeURIComponent(tempKey)}`;
 
     return NextResponse.json({
       success: true,
       filepath: publicUrl,
+      key: tempKey,
       filename,
       fieldName,
       uploadId

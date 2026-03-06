@@ -550,7 +550,7 @@ const EventBookingForm = () => {
       if (typeof flyerFormStore.flyerFormDetail.eventDetails.venueLogo === 'string') {
         venueLogoUrl = flyerFormStore.flyerFormDetail.eventDetails.venueLogo;
       } else if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo instanceof File) {
-        const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo");
+        const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo", authStore.user.id);
         if (res) {
           tempFiles['venue_logo'] = res.filepath;
           venueLogoUrl = res.filepath;
@@ -563,7 +563,7 @@ const EventBookingForm = () => {
         if (typeof dj.image === 'string') {
           imageUrl = dj.image;
         } else if (dj.image instanceof File) {
-          const res = await saveToTemp(dj.image, `dj_${idx}`);
+          const res = await saveToTemp(dj.image, `dj_${idx}`, authStore.user.id);
           if (res) {
             tempFiles[`dj_${idx}`] = res.filepath;
             imageUrl = res.filepath;
@@ -578,7 +578,7 @@ const EventBookingForm = () => {
         if (typeof h.image === 'string') {
           imageUrl = h.image;
         } else if (h.image instanceof File) {
-          const res = await saveToTemp(h.image, `host_${idx}`);
+          const res = await saveToTemp(h.image, `host_${idx}`, authStore.user.id);
           if (res) {
             tempFiles[`host_${idx}`] = res.filepath;
             imageUrl = res.filepath;
@@ -595,7 +595,7 @@ const EventBookingForm = () => {
         if (typeof sponsor === 'string') {
           return { name: `Sponsor ${idx + 1}`, image_url: sponsor };
         } else if (sponsor instanceof File) {
-          const res = await saveToTemp(sponsor, `sponsor_${idx}`);
+          const res = await saveToTemp(sponsor, `sponsor_${idx}`, authStore.user.id);
           if (res) {
             tempFiles[`sponsor_${idx}`] = res.filepath;
             return { name: sponsor.name || `Sponsor ${idx + 1}`, image_url: res.filepath };

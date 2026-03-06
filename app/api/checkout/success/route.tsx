@@ -310,8 +310,11 @@ export async function GET(request: NextRequest) {
                   try {
                     const parsed = new URL(filepath);
                     const queryPath = parsed.searchParams.get('path');
+                    const queryKey = parsed.searchParams.get('key');
                     if (queryPath) {
                       fileName = queryPath.split(/[\\\/]/).pop() || fileName;
+                    } else if (queryKey) {
+                      fileName = queryKey.split(/[\\\/]/).pop() || fileName;
                     }
                   } catch {
                     // keep default fileName

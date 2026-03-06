@@ -294,7 +294,7 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo instanceof File) {
                 // Determine if we should use saveToLibrary (permanent) or saveToTemp (checkout only)
                 // User asked for "temp folder". Let's use saveToTemp.
-                const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo");
+                const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo", authStore.user.id);
                 if (res) {
                     tempFiles['venue_logo'] = res.filepath;
                     venueLogoUrl = res.filepath; // Just storing path for now
@@ -307,7 +307,7 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             const djsWithUrls = await Promise.all(flyerFormStore.flyerFormDetail.djsOrArtists.map(async (dj, idx) => {
                 let imageUrl = "";
                 if (dj.image instanceof File) {
-                    const res = await saveToTemp(dj.image, `dj_${idx}`);
+                    const res = await saveToTemp(dj.image, `dj_${idx}`, authStore.user.id);
                     if (res) {
                         tempFiles[`dj_${idx}`] = res.filepath;
                         imageUrl = res.filepath;
@@ -322,7 +322,7 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             const hostsWithUrls = await Promise.all((flyerFormStore.flyerFormDetail.host || []).map(async (h, idx) => {
                 let imageUrl = "";
                 if (h.image instanceof File) {
-                    const res = await saveToTemp(h.image, `host_${idx}`);
+                    const res = await saveToTemp(h.image, `host_${idx}`, authStore.user.id);
                     if (res) {
                         tempFiles[`host_${idx}`] = res.filepath;
                         imageUrl = res.filepath;
@@ -338,7 +338,7 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             const sponsorData: Array<{ name: string; image_url: string }> = [];
 
             if (sponsors.sponsor1 instanceof File) {
-                const res = await saveToTemp(sponsors.sponsor1, "sponsor_0");
+                const res = await saveToTemp(sponsors.sponsor1, "sponsor_0", authStore.user.id);
                 if (res) {
                     tempFiles['sponsor_0'] = res.filepath;
                     sponsorData.push({ name: sponsors.sponsor1.name || "Sponsor 1", image_url: res.filepath });
@@ -350,7 +350,7 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             }
 
             if (sponsors.sponsor2 instanceof File) {
-                const res = await saveToTemp(sponsors.sponsor2, "sponsor_1");
+                const res = await saveToTemp(sponsors.sponsor2, "sponsor_1", authStore.user.id);
                 if (res) {
                     tempFiles['sponsor_1'] = res.filepath;
                     sponsorData.push({ name: sponsors.sponsor2.name || "Sponsor 2", image_url: res.filepath });
@@ -362,7 +362,7 @@ const Photo10Form: React.FC<Photo10FormProps> = ({ flyer }) => {
             }
 
             if (sponsors.sponsor3 instanceof File) {
-                const res = await saveToTemp(sponsors.sponsor3, "sponsor_2");
+                const res = await saveToTemp(sponsors.sponsor3, "sponsor_2", authStore.user.id);
                 if (res) {
                     tempFiles['sponsor_2'] = res.filepath;
                     sponsorData.push({ name: sponsors.sponsor3.name || "Sponsor 3", image_url: res.filepath });

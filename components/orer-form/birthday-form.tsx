@@ -237,7 +237,7 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
             // 1. Upload Birthday Person Photo to TEMP
             let birthdayPersonPhotoUrl = "";
             if (flyerFormStore.flyerFormDetail.birthdayPersonPhoto instanceof File) {
-                const res = await saveToTemp(flyerFormStore.flyerFormDetail.birthdayPersonPhoto, "birthday_person_photo");
+                const res = await saveToTemp(flyerFormStore.flyerFormDetail.birthdayPersonPhoto, "birthday_person_photo", authStore.user.id);
                 if (res) {
                     tempFiles['birthday_person_photo'] = res.filepath;
                     birthdayPersonPhotoUrl = res.filepath;
@@ -249,7 +249,7 @@ const BirthdayForm: React.FC<BirthdayFormProps> = ({ flyer }) => {
             // 2. Upload Venue Logo to TEMP
             let venueLogoUrl = "";
             if (flyerFormStore.flyerFormDetail.eventDetails.venueLogo instanceof File) {
-                const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo");
+                const res = await saveToTemp(flyerFormStore.flyerFormDetail.eventDetails.venueLogo, "venue_logo", authStore.user.id);
                 if (res) {
                     tempFiles['venue_logo'] = res.filepath;
                     venueLogoUrl = res.filepath;

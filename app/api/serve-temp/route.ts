@@ -1,13 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
 import { existsSync } from 'fs'
+import { join } from 'path'
+import { tmpdir } from 'os'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const filePath = searchParams.get('path')
+    const key = searchParams.get('key')
+    const pathParam = searchParams.get('path')
+    const tempRoot = join(tmpdir(), 'flyer-uploads')
+
+    let filePath = ''
+
+    if (key) {
+      // Prevent traversal and force files inside OS temp root.
+      const normalizedKey = key.replace(/\\/g, '/')
+      if (normalizedKey.includes('..') || normalizedKey.includes(':')) {
+        return NextResponse.json({ error: 'Invalid key' }, { status: 400 })
+      }
+      filePath = join(tempRoot, normalizedKey)
+    } else if (pathParam) {
+      // Backward compatibility for older URLs that passed full path.
+      filePath = pathParam
+    }
 
     if (!filePath) {
       return NextResponse.json({ error: 'No path provided' }, { status: 400 })

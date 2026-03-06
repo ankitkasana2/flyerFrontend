@@ -256,7 +256,7 @@ const NoPhotoForm: React.FC<NoPhotoFormProps> = ({ flyer, fixedPrice }) => {
             // 1. Upload Venue Logo if it's a File
             let venueLogoUrl = "";
             if (venueLogo instanceof File) {
-                const res = await saveToTemp(venueLogo, "venue_logo");
+                const res = await saveToTemp(venueLogo, "venue_logo", authStore.user.id);
                 if (res) {
                     tempFiles['venue_logo'] = res.filepath;
                     venueLogoUrl = res.filepath;

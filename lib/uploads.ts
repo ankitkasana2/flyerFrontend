@@ -132,7 +132,11 @@ export async function saveToLibrary(userId: string, file: File): Promise<string 
 }
 
 // 1.1 Upload to Local Temp
-export async function saveToTemp(file: File, fieldName: string = "file"): Promise<{ filepath: string, filename: string } | null> {
+export async function saveToTemp(
+    file: File,
+    fieldName: string = "file",
+    userId?: string
+): Promise<{ filepath: string, filename: string } | null> {
     const formData = new FormData()
     formData.append("file", file)
     formData.append("field", fieldName)
@@ -147,6 +151,12 @@ export async function saveToTemp(file: File, fieldName: string = "file"): Promis
         })
 
         if (!res.ok) {
+            if (userId) {
+                const libraryUrl = await saveToLibrary(userId, file)
+                if (libraryUrl) {
+                    return { filepath: libraryUrl, filename: file.name }
+                }
+            }
             return null
         }
 
@@ -156,6 +166,12 @@ export async function saveToTemp(file: File, fieldName: string = "file"): Promis
         }
         return { filepath: data.filepath, filename: data.filename }
     } catch (error) {
+        if (userId) {
+            const libraryUrl = await saveToLibrary(userId, file)
+            if (libraryUrl) {
+                return { filepath: libraryUrl, filename: file.name }
+            }
+        }
         return null
     }
 }
