@@ -305,29 +305,57 @@ export async function GET(request: NextRequest) {
             let fileName = filepath.split(/[\\\/]/).pop() || `${fieldName}.jpg`;
 
             if (isHttpUrl(filepath)) {
-              try {
-                const tempResp = await fetch(filepath);
-                if (tempResp.ok) {
-                  const arr = await tempResp.arrayBuffer();
-                  buffer = Buffer.from(arr);
-                  try {
-                    const parsed = new URL(filepath);
-                    const queryPath = parsed.searchParams.get('path');
-                    const queryKey = parsed.searchParams.get('key');
-                    if (queryPath) {
-                      fileName = queryPath.split(/[\\\/]/).pop() || fileName;
-                    } else if (queryKey) {
+              if (filepath.includes('/api/serve-temp')) {
+                try {
+                  const { tmpdir } = await import('os');
+                  const { join } = await import('path');
+                  const parsed = new URL(filepath);
+                  const queryKey = parsed.searchParams.get('key');
+                  const queryPath = parsed.searchParams.get('path');
+                  if (queryKey) {
+                    const localPath = join(tmpdir(), 'flyer-uploads', queryKey);
+                    if (existsSync(localPath)) {
+                      const { readFile } = await import('fs/promises');
+                      buffer = await readFile(localPath);
                       fileName = queryKey.split(/[\\\/]/).pop() || fileName;
                     }
-                  } catch {
-                    // keep default fileName
+                  } else if (queryPath && existsSync(queryPath)) {
+                    const { readFile } = await import('fs/promises');
+                    buffer = await readFile(queryPath);
+                    fileName = queryPath.split(/[\\\/]/).pop() || fileName;
                   }
+                } catch {
+                  // Fallback to fetch if direct read fails
                 }
-              } catch {
-                // Skip unreadable temp URL
+              }
+
+              // Fallback fetch if buffer still null
+              if (!buffer) {
+                try {
+                  const tempResp = await fetch(filepath);
+                  if (tempResp.ok) {
+                    const arr = await tempResp.arrayBuffer();
+                    buffer = Buffer.from(arr);
+                    try {
+                      const parsed = new URL(filepath);
+                      const queryPath = parsed.searchParams.get('path');
+                      const queryKey = parsed.searchParams.get('key');
+                      if (queryPath) {
+                        fileName = queryPath.split(/[\\\/]/).pop() || fileName;
+                      } else if (queryKey) {
+                        fileName = queryKey.split(/[\\\/]/).pop() || fileName;
+                      }
+                    } catch {
+                      // keep default fileName
+                    }
+                  }
+                } catch {
+                  // Skip unreadable temp URL
+                }
               }
             } else if (existsSync(filepath)) {
               try {
+                const { readFile } = await import('fs/promises');
                 buffer = await readFile(filepath);
               } catch {
                 buffer = null;
