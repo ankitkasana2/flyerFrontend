@@ -44,16 +44,23 @@ export async function POST(request: NextRequest) {
     // Write file to temp storage
     await writeFile(filepath, buffer);
 
-// Convert to URL so backend can access it
-const publicUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/serve-temp?path=${encodeURIComponent(filepath)}`
+    // Build absolute URL from current request host to avoid localhost links in production.
+    const host = request.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const dynamicBaseUrl =
+      host && !host.includes('0.0.0.0')
+        ? `${protocol}://${host}`
+        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-return NextResponse.json({
-  success: true,
-  filepath: publicUrl,  // ← URL bhejo, local path nahi
-  filename,
-  fieldName,
-  uploadId
-});
+    const publicUrl = `${dynamicBaseUrl}/api/serve-temp?path=${encodeURIComponent(filepath)}`;
+
+    return NextResponse.json({
+      success: true,
+      filepath: publicUrl,
+      filename,
+      fieldName,
+      uploadId
+    });
 
   } catch (error: any) {
     return NextResponse.json(

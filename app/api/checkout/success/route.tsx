@@ -293,12 +293,44 @@ export async function GET(request: NextRequest) {
         try {
           const { readFile } = await import('fs/promises');
           const { existsSync } = await import('fs');
+          const isHttpUrl = (value: string) => /^https?:\/\//i.test(value);
 
           for (const [fieldName, filepath] of Object.entries(formDataObj.temp_files as Record<string, string>)) {
-            if (filepath && existsSync(filepath)) {
+            if (!filepath) continue;
+
+            let buffer: Buffer | null = null;
+            let fileName = filepath.split(/[\\\/]/).pop() || `${fieldName}.jpg`;
+
+            if (isHttpUrl(filepath)) {
               try {
-                const buffer = await readFile(filepath);
-                const ext = filepath.split('.').pop()?.toLowerCase();
+                const tempResp = await fetch(filepath);
+                if (tempResp.ok) {
+                  const arr = await tempResp.arrayBuffer();
+                  buffer = Buffer.from(arr);
+                  try {
+                    const parsed = new URL(filepath);
+                    const queryPath = parsed.searchParams.get('path');
+                    if (queryPath) {
+                      fileName = queryPath.split(/[\\\/]/).pop() || fileName;
+                    }
+                  } catch {
+                    // keep default fileName
+                  }
+                }
+              } catch {
+                // Skip unreadable temp URL
+              }
+            } else if (existsSync(filepath)) {
+              try {
+                buffer = await readFile(filepath);
+              } catch {
+                buffer = null;
+              }
+            }
+
+            if (buffer) {
+              try {
+                const ext = fileName.split('.').pop()?.toLowerCase();
                 let mimeType = 'application/octet-stream';
                 if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
                 else if (ext === 'png') mimeType = 'image/png';
@@ -312,8 +344,10 @@ export async function GET(request: NextRequest) {
                   backendFieldName = hostIndex === 0 ? 'host_file' : `host_file_${hostIndex}`;
                 }
 
-                formData.append(backendFieldName, blob as any, filepath.split(/[\\\/]/).pop());
-                tempFilesToCleanup.push(filepath);
+                formData.append(backendFieldName, blob as any, fileName);
+                if (!isHttpUrl(filepath)) {
+                  tempFilesToCleanup.push(filepath);
+                }
               } catch (err) {
                 // Skip failed file reads
               }
