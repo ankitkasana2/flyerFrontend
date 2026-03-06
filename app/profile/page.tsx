@@ -120,6 +120,31 @@ const ProfilePage = observer(() => {
         title: "Password updated",
         description: successMessage,
       })
+
+      // Password Change Email
+try {
+  const { resend } = await import('@/lib/resend');
+  const { render } = await import('@react-email/render');
+  const { PasswordChangeEmail } = await import('@/emails/PasswordChange');
+  const emailHtml = await render(
+    <PasswordChangeEmail
+      name={authStore.user?.name || authStore.user?.email?.split('@')[0] || 'User'}
+      customerEmail={authStore.user?.email || ''}
+      changedAt={new Date().toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      })}
+    />
+  );
+  await resend.emails.send({
+    from: "Grodify <support@mail.grodify.com>",
+    to: authStore.user?.email || '',
+    replyTo: "admin@grodify.com",
+    subject: "Your Password Has Been Changed - Grodify 🔐",
+    html: emailHtml,
+  });
+} catch (emailErr) {
+  console.error('Password change email failed:', emailErr);
+}
     } catch (error: any) {
       toast({
         title: "Error",
@@ -167,7 +192,7 @@ const ProfilePage = observer(() => {
                   <div className="flex items-center gap-2 mt-2">
                     <Badge >{user.provider}</Badge>
                     <Badge variant="outline" className="text-xs">
-                      Member since {new Date(user.createdAt).getFullYear()}
+                    Member since {user.createdAt ? new Date(user.createdAt).getFullYear() : '2024'}
                     </Badge>
                   </div>
                 </div>
@@ -241,7 +266,7 @@ const ProfilePage = observer(() => {
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                       <Input
-                        value={new Date(user.createdAt).toLocaleDateString()}
+                      value={(user as any).createdAt ? new Date((user as any).createdAt).toLocaleDateString() : 'N/A'}
                         disabled
                         className="pl-10 border-border bg-gray-950 border text-white
               placeholder:text-gray-600 rounded-lg h-10 shadow-md

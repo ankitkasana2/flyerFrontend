@@ -251,6 +251,31 @@ const AuthModal = observer(({
               password: userPassword,
             })
 
+
+
+// Registration Verification Email
+try {
+  const { resend } = await import('@/lib/resend');
+  const { render } = await import('@react-email/render');
+const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVerification');
+  const emailHtml = await render(
+    <RegistrationVerificationEmail
+      name={userEmail.split('@')[0]}
+      verificationUrl="https://grodify.com/profile"
+    />
+  );
+  await resend.emails.send({
+    from: "Grodify <support@mail.grodify.com>",
+    to: userEmail,
+    replyTo: "admin@grodify.com",
+    subject: "Welcome to Grodify - Email Verified! ✅",
+    html: emailHtml,
+  });
+} catch (emailErr) {
+  console.error('Verification email failed:', emailErr);
+}
+
+
             toast({
               title: "🎉 Welcome to Grodify!",
               description: "Your email has been verified and you're now logged in.",
