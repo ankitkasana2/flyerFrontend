@@ -15,7 +15,7 @@ import {
     Tailwind,
 } from "@react-email/components";
 import * as React from "react";
-
+// console.log
 interface PurchaseReceivingEmailProps {
     name: string;
     orderId: string;
@@ -34,7 +34,10 @@ export const PurchaseReceivingEmail = ({
     downloadUrl,
 }: PurchaseReceivingEmailProps) => {
     const previewText = `Your Grodify purchase #${orderId} has been received!`;
+// Console.log/
 
+
+// Console
     return (
         <Html>
             <Head />
