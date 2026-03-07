@@ -95,7 +95,7 @@ export const OrderConfirmationEmail = ({
 
                         <Section className="text-center mt-[32px] mb-[32px]">
                             <Link
-                                href={`https://grodify.com/profile/orders`}
+                                href={`https://grodify.com/orders`}
                                 className="bg-[#000000] rounded-full text-white text-[12px] font-semibold no-underline text-center px-8 py-3"
                             >
                                 View Order Status

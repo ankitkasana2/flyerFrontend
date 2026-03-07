@@ -543,7 +543,7 @@ export async function GET(request: NextRequest) {
 
             const emailHtml = await render(
               <OrderConfirmationEmail
-                name={formDataObj.name || (formDataObj.email ? formDataObj.email.split('@')[0] : "Valued Customer")}
+              name={formDataObj.presenting || formDataObj.name || (formDataObj.email ? formDataObj.email.split('@')[0] : "Valued Customer")}
                 orderId={orderId.toString()}
                 flyerName={formDataObj.event_title || "Professional Flyer"}
                 total={formDataObj.total_price?.toString() || "0"}
@@ -573,7 +573,7 @@ export async function GET(request: NextRequest) {
            const { PurchaseReceivingEmail } = await import('@/emails/Purchasereceiving');
             const purchaseHtml = await render(
               <PurchaseReceivingEmail
-                name={formDataObj.name || (formDataObj.email ? formDataObj.email.split('@')[0] : "Valued Customer")}
+               name={formDataObj.presenting || formDataObj.name || (formDataObj.email ? formDataObj.email.split('@')[0] : "Valued Customer")}
                 orderId={orderId.toString()}
                 flyerName={formDataObj.event_title || "Professional Flyer"}
                 total={formDataObj.total_price?.toString() || "0"}
