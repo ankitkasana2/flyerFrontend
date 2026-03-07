@@ -34,7 +34,10 @@ export const PurchaseReceivingEmail = ({
     downloadUrl,
 }: PurchaseReceivingEmailProps) => {
     const previewText = `Your Grodify purchase #${orderId} has been received!`;
+// Console.log/
 
+
+// Console
     return (
         <Html>
             <Head />
