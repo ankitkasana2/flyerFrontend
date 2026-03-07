@@ -85,9 +85,11 @@ const OrdersPage = observer(() => {
       fetchOrders()
     }
     // If not logged in and auth is done, redirect
-    if (!authStore.user && !authStore.loading) {
-      router.replace('/')
-    }
+if (!authStore.user && !authStore.loading) {
+  authStore.handleAuthModal()
+  router.replace('/?redirect=/orders')
+}
+
   }, [authStore.user?.id, authStore.loading])
 
   const fetchFlyers = async () => {

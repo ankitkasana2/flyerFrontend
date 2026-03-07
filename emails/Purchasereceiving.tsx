@@ -15,7 +15,7 @@ import {
     Tailwind,
 } from "@react-email/components";
 import * as React from "react";
-// console.log
+
 interface PurchaseReceivingEmailProps {
     name: string;
     orderId: string;
@@ -34,10 +34,7 @@ export const PurchaseReceivingEmail = ({
     downloadUrl,
 }: PurchaseReceivingEmailProps) => {
     const previewText = `Your Grodify purchase #${orderId} has been received!`;
-// Console.log/
 
-
-// Console
     return (
         <Html>
             <Head />
@@ -96,8 +93,14 @@ export const PurchaseReceivingEmail = ({
                         </Section>
 
                         <Section className="text-center mt-[32px] mb-[32px]">
+<Text className="text-[#666666] text-[12px] text-center">
+    Please login to your account to view your order details.
+</Text>
+
                             <Link
-                                href={downloadUrl || `https://grodify.com/profile/orders`}
+
+                            
+                         href={downloadUrl || `https://grodify.com/orders?redirect=true`}
                                 className="bg-[#000000] rounded-full text-white text-[12px] font-semibold no-underline text-center px-8 py-3"
                             >
                                 View Your Order
