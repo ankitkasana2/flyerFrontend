@@ -501,7 +501,7 @@ export async function GET(request: NextRequest) {
           method: 'POST',
           body: formData
         });
-
+// console.log
         console.log(`📶 Backend response status: ${response.status}`);
 
         if (!response.ok) {
