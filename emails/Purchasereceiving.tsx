@@ -15,7 +15,7 @@ import {
     Tailwind,
 } from "@react-email/components";
 import * as React from "react";
-
+// console.log
 interface PurchaseReceivingEmailProps {
     name: string;
     orderId: string;
