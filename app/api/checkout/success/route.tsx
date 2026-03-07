@@ -11,7 +11,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 const BACKEND_API_URL = API_BASE_URL;
-const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
 
 export async function GET(request: NextRequest) {
   try {
@@ -198,7 +197,6 @@ export async function GET(request: NextRequest) {
         if (isTempUrlStr(raw)) return raw;
 
         if (raw.startsWith('/uploads/') || raw.startsWith('/api/uploads/')) {
-          if (raw.startsWith('/uploads/')) return `${API_ORIGIN}${raw}`;
           return getApiUrl(raw);
         }
 
@@ -206,9 +204,6 @@ export async function GET(request: NextRequest) {
           try {
             const parsed = new URL(raw);
             if (parsed.pathname.startsWith('/uploads/') || parsed.pathname.startsWith('/api/uploads/')) {
-              if (parsed.pathname.startsWith('/uploads/')) {
-                return `${API_ORIGIN}${parsed.pathname}${parsed.search}`;
-              }
               return getApiUrl(`${parsed.pathname}${parsed.search}`);
             }
           } catch {
