@@ -162,12 +162,19 @@ const AuthModal = observer(({
           password: formData.password,
         })
 
-        toast({
-          title: "Welcome back!",
-          description: "Successfully signed in.",
-        })
-        onClose()
-        return
+       toast({
+  title: "Welcome back!",
+  description: "Successfully signed in.",
+})
+
+
+onClose()
+const params = new URLSearchParams(window.location.search)
+const redirect = params.get('redirect')
+if (redirect) {
+  window.location.href = redirect
+}
+return
       }
 
       // SIGN UP
@@ -186,12 +193,19 @@ const AuthModal = observer(({
 
         // Handle auto-login success
         if (registerResult.autoLogin && authStore.user) {
-          toast({
-            title: "🎉 Welcome to Grodify!",
-            description: "Your account has been created and you're now logged in.",
-          })
-          onClose()
-          return
+          
+    toast({
+  title: "🎉 Welcome to Grodify!",
+  description: "Your email has been verified and you're now logged in.",
+})
+
+onClose()
+const params = new URLSearchParams(window.location.search)
+const redirect = params.get('redirect')
+if (redirect) {
+  window.location.href = redirect
+}
+return
         }
 
         // Handle registration requiring email verification
