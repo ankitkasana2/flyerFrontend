@@ -370,6 +370,16 @@ export async function GET(request: NextRequest) {
         try {
           const { existsSync } = await import('fs');
           const isHttpUrl = (value: string) => /^https?:\/\//i.test(value);
+          const isServeTempUrl = (value: string) => typeof value === 'string' && value.includes('/api/serve-temp');
+          const isPermanentUploadUrl = (value: string) => {
+            if (!isHttpUrl(value)) return false;
+            try {
+              const parsed = new URL(value);
+              return parsed.pathname.startsWith('/uploads/') || parsed.pathname.startsWith('/api/uploads/');
+            } catch {
+              return false;
+            }
+          };
           console.log('[checkout-success] temp_files payload', parsedTempFiles);
 
           for (const [fieldName, filepath] of Object.entries(parsedTempFiles as Record<string, string>)) {
@@ -379,8 +389,16 @@ export async function GET(request: NextRequest) {
             let fileName = filepath.split(/[\\\/]/).pop() || `${fieldName}.jpg`;
             console.log('[checkout-success] temp_file:start', { fieldName, filepath });
 
+            // IMPORTANT:
+            // If this is already a permanent media URL, do not re-upload as file.
+            // Re-uploading makes backend rewrite it to /uploads/... (without /api).
+            if (isPermanentUploadUrl(filepath)) {
+              console.log('[checkout-success] temp_file:skip_permanent_url', { fieldName, filepath });
+              continue;
+            }
+
             if (isHttpUrl(filepath)) {
-              if (filepath.includes('/api/serve-temp')) {
+              if (isServeTempUrl(filepath)) {
                 try {
                   const { tmpdir } = await import('os');
                   const { join } = await import('path');
