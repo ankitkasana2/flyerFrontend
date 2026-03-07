@@ -108,6 +108,12 @@ export async function saveToLibrary(userId: string, file: File): Promise<string 
     formData.append("web_user_id", userId)
     formData.append("file", file)
 
+    console.log("[upload] saveToLibrary:start", {
+        userId,
+        name: file?.name,
+        size: file?.size,
+        type: file?.type,
+    })
 
     try {
         const res = await fetch(`${MEDIA_API_URL}`, {
@@ -117,16 +123,22 @@ export async function saveToLibrary(userId: string, file: File): Promise<string 
         })
 
         if (!res.ok) {
+            const errorText = await res.text().catch(() => "")
+            console.error("[upload] saveToLibrary:http_error", { status: res.status, errorText })
             return null
         }
 
         const data = await res.json()
         if (!data.success) {
+            console.error("[upload] saveToLibrary:api_error", data)
             return null
         }
         const fileUrl = data.file_url || data.media?.file_url || data.url || null
-        return resolveMediaUrl(fileUrl)
+        const resolvedUrl = resolveMediaUrl(fileUrl)
+        console.log("[upload] saveToLibrary:success", { fileUrl, resolvedUrl })
+        return resolvedUrl
     } catch (error) {
+        console.error("[upload] saveToLibrary:exception", error)
         return null
     }
 }
@@ -143,8 +155,10 @@ export async function saveToTemp(
     if (userId) {
         const libraryUrl = await saveToLibrary(userId, file)
         if (libraryUrl) {
+            console.log("[upload] saveToTemp:using_library_url", { fieldName, libraryUrl })
             return { filepath: libraryUrl, filename: file.name }
         }
+        console.warn("[upload] saveToTemp:library_upload_failed_fallback_to_temp", { fieldName, userId, fileName: file.name })
     }
 
     const formData = new FormData()
@@ -161,15 +175,20 @@ export async function saveToTemp(
         })
 
         if (!res.ok) {
+            const errorText = await res.text().catch(() => "")
+            console.error("[upload] saveToTemp:http_error", { status: res.status, fieldName, errorText })
             return null
         }
 
         const data = await res.json()
         if (!data.success) {
+            console.error("[upload] saveToTemp:api_error", { fieldName, data })
             return null
         }
+        console.log("[upload] saveToTemp:success", { fieldName, filepath: data.filepath, filename: data.filename })
         return { filepath: data.filepath, filename: data.filename }
     } catch (error) {
+        console.error("[upload] saveToTemp:exception", { fieldName, error })
         return null
     }
 }

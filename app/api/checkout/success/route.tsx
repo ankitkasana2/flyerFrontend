@@ -11,6 +11,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 const BACKEND_API_URL = API_BASE_URL;
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
 
 export async function GET(request: NextRequest) {
   try {
@@ -197,6 +198,7 @@ export async function GET(request: NextRequest) {
         if (isTempUrlStr(raw)) return raw;
 
         if (raw.startsWith('/uploads/') || raw.startsWith('/api/uploads/')) {
+          if (raw.startsWith('/uploads/')) return `${API_ORIGIN}${raw}`;
           return getApiUrl(raw);
         }
 
@@ -204,6 +206,9 @@ export async function GET(request: NextRequest) {
           try {
             const parsed = new URL(raw);
             if (parsed.pathname.startsWith('/uploads/') || parsed.pathname.startsWith('/api/uploads/')) {
+              if (parsed.pathname.startsWith('/uploads/')) {
+                return `${API_ORIGIN}${parsed.pathname}${parsed.search}`;
+              }
               return getApiUrl(`${parsed.pathname}${parsed.search}`);
             }
           } catch {
@@ -224,7 +229,7 @@ export async function GET(request: NextRequest) {
           const raw = item.trim();
           if (!raw) return { name: '' };
           if (raw.startsWith('http') || raw.startsWith('/') || raw.includes('/')) {
-            return { name: '', image_url: isTempUrlStr(raw) ? '' : normalizeMediaUrlForBackend(raw) };
+            return { name: '', image_url: normalizeMediaUrlForBackend(raw) };
           }
           return { name: raw };
         }
@@ -238,7 +243,7 @@ export async function GET(request: NextRequest) {
           item.url;
 
         if (img && typeof img === 'string') {
-          result.image_url = isTempUrlStr(img) ? '' : normalizeMediaUrlForBackend(img);
+          result.image_url = normalizeMediaUrlForBackend(img);
         }
         return result;
       };
@@ -264,7 +269,8 @@ export async function GET(request: NextRequest) {
           || sponsorsSanitized[i]?.image_url
           || ''
         const normalizedSponsorUrl = normalizeMediaUrlForBackend(sponsorUrl)
-        if (normalizedSponsorUrl && !isTempUrlStr(normalizedSponsorUrl)) {
+        console.log('[checkout-success] sponsor_url mapping', { index: i, sponsorUrl, normalizedSponsorUrl, isTemp: isTempUrlStr(normalizedSponsorUrl) })
+        if (normalizedSponsorUrl) {
           formData.append(`sponsor_url_${i}`, normalizedSponsorUrl)
         }
       }
@@ -276,7 +282,8 @@ export async function GET(request: NextRequest) {
           djsSanitized[i]?.image_url ||
           ''
         const normalizedDjUrl = normalizeMediaUrlForBackend(djUrl)
-        if (normalizedDjUrl && !isTempUrlStr(normalizedDjUrl)) {
+        console.log('[checkout-success] dj_url mapping', { index: i, djUrl, normalizedDjUrl, isTemp: isTempUrlStr(normalizedDjUrl) })
+        if (normalizedDjUrl) {
           formData.append(`dj_url_${i}`, normalizedDjUrl)
         }
       }
@@ -289,7 +296,8 @@ export async function GET(request: NextRequest) {
           hostsSanitized[i]?.image_url ||
           ''
         const normalizedHostUrl = normalizeMediaUrlForBackend(hostUrl)
-        if (normalizedHostUrl && !isTempUrlStr(normalizedHostUrl)) {
+        console.log('[checkout-success] host_url mapping', { index: i, hostUrl, normalizedHostUrl, isTemp: isTempUrlStr(normalizedHostUrl) })
+        if (normalizedHostUrl) {
           formData.append(`host_url_${i}`, normalizedHostUrl)
         }
       }
@@ -299,7 +307,12 @@ export async function GET(request: NextRequest) {
         || formDataObj.birthday_person_photo_url
         || ''
       const normalizedBirthdayPhotoUrl = normalizeMediaUrlForBackend(birthdayPersonPhotoUrl)
-      if (normalizedBirthdayPhotoUrl && !isTempUrlStr(normalizedBirthdayPhotoUrl)) {
+      console.log('[checkout-success] birthday_person_photo_url mapping', {
+        birthdayPersonPhotoUrl,
+        normalizedBirthdayPhotoUrl,
+        isTemp: isTempUrlStr(normalizedBirthdayPhotoUrl),
+      })
+      if (normalizedBirthdayPhotoUrl) {
         formData.append('birthday_person_photo_url', normalizedBirthdayPhotoUrl)
       }
 
@@ -330,7 +343,14 @@ export async function GET(request: NextRequest) {
       })()
       const venueLogoTempPath = (tempFilesForVenue as Record<string, string> | null)?.venue_logo
       const hasVenueLogoLocalTemp = typeof venueLogoTempPath === 'string' && isTempUrlStr(venueLogoTempPath)
-      if (normalizedVenueLogo && !isTempUrlStr(normalizedVenueLogo) && !hasVenueLogoLocalTemp) {
+      console.log('[checkout-success] venue_logo_url mapping', {
+        venueLogo,
+        normalizedVenueLogo,
+        venueLogoTempPath,
+        hasVenueLogoLocalTemp,
+        isTemp: isTempUrlStr(normalizedVenueLogo),
+      })
+      if (normalizedVenueLogo && !hasVenueLogoLocalTemp) {
         formData.append('venue_logo_url', normalizedVenueLogo)
       }
 
@@ -353,15 +373,16 @@ export async function GET(request: NextRequest) {
 
       if (parsedTempFiles) {
         try {
-          const { readFile } = await import('fs/promises');
           const { existsSync } = await import('fs');
           const isHttpUrl = (value: string) => /^https?:\/\//i.test(value);
+          console.log('[checkout-success] temp_files payload', parsedTempFiles);
 
           for (const [fieldName, filepath] of Object.entries(parsedTempFiles as Record<string, string>)) {
             if (!filepath) continue;
 
             let buffer: Buffer | null = null;
             let fileName = filepath.split(/[\\\/]/).pop() || `${fieldName}.jpg`;
+            console.log('[checkout-success] temp_file:start', { fieldName, filepath });
 
             if (isHttpUrl(filepath)) {
               if (filepath.includes('/api/serve-temp')) {
@@ -377,13 +398,16 @@ export async function GET(request: NextRequest) {
                       const { readFile } = await import('fs/promises');
                       buffer = await readFile(localPath);
                       fileName = queryKey.split(/[\\\/]/).pop() || fileName;
+                      console.log('[checkout-success] temp_file:loaded_from_local_key', { fieldName, localPath });
                     }
                   } else if (queryPath && existsSync(queryPath)) {
                     const { readFile } = await import('fs/promises');
                     buffer = await readFile(queryPath);
                     fileName = queryPath.split(/[\\\/]/).pop() || fileName;
+                    console.log('[checkout-success] temp_file:loaded_from_local_path', { fieldName, queryPath });
                   }
-                } catch {
+                } catch (err) {
+                  console.warn('[checkout-success] temp_file:local_read_failed', { fieldName, filepath, err });
                   // Fallback to fetch if direct read fails
                 }
               }
@@ -395,6 +419,7 @@ export async function GET(request: NextRequest) {
                   if (tempResp.ok) {
                     const arr = await tempResp.arrayBuffer();
                     buffer = Buffer.from(arr);
+                    console.log('[checkout-success] temp_file:fetched_http', { fieldName, filepath, size: buffer.length });
                     try {
                       const parsed = new URL(filepath);
                       const queryPath = parsed.searchParams.get('path');
@@ -407,16 +432,20 @@ export async function GET(request: NextRequest) {
                     } catch {
                       // keep default fileName
                     }
+                  } else {
+                    console.warn('[checkout-success] temp_file:http_fetch_not_ok', { fieldName, filepath, status: tempResp.status });
                   }
-                } catch {
-                  // Skip unreadable temp URL
+                } catch (err) {
+                  console.warn('[checkout-success] temp_file:http_fetch_failed', { fieldName, filepath, err });
                 }
               }
             } else if (existsSync(filepath)) {
               try {
                 const { readFile } = await import('fs/promises');
                 buffer = await readFile(filepath);
-              } catch {
+                console.log('[checkout-success] temp_file:loaded_local_absolute', { fieldName, filepath });
+              } catch (err) {
+                console.warn('[checkout-success] temp_file:local_absolute_read_failed', { fieldName, filepath, err });
                 buffer = null;
               }
             }
@@ -429,7 +458,7 @@ export async function GET(request: NextRequest) {
                 else if (ext === 'png') mimeType = 'image/png';
                 else if (ext === 'webp') mimeType = 'image/webp';
 
-                const blob = new Blob([buffer], { type: mimeType });
+                const blob = new Blob([new Uint8Array(buffer)], { type: mimeType });
 
                 let backendFieldName = fieldName;
                 if (fieldName.startsWith('host_')) {
@@ -440,16 +469,19 @@ export async function GET(request: NextRequest) {
                 }
 
                 formData.append(backendFieldName, blob as any, fileName);
+                console.log('[checkout-success] temp_file:attached_to_form', { fieldName, backendFieldName, fileName, size: buffer.length });
                 if (!isHttpUrl(filepath)) {
                   tempFilesToCleanup.push(filepath);
                 }
               } catch (err) {
-                // Skip failed file reads
+                console.warn('[checkout-success] temp_file:append_failed', { fieldName, filepath, err });
               }
+            } else {
+              console.warn('[checkout-success] temp_file:buffer_missing', { fieldName, filepath });
             }
           }
         } catch (importErr) {
-          // Handle import errors
+          console.warn('[checkout-success] temp_file:processing_failed', { importErr });
         }
       }
 

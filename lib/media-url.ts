@@ -1,6 +1,15 @@
-import { getApiUrl } from "@/config/api"
+import { API_BASE_URL, getApiUrl } from "@/config/api"
 
 const LOCAL_TEMP_PATH = "/api/serve-temp"
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "")
+
+function buildUploadsUrl(pathWithQuery: string): string {
+    if (!pathWithQuery) return pathWithQuery
+    if (pathWithQuery.startsWith("/uploads/")) {
+        return `${API_ORIGIN}${pathWithQuery}`
+    }
+    return getApiUrl(pathWithQuery)
+}
 
 export function resolveMediaUrl(url: string | null | undefined): string | null {
     if (!url) return null
@@ -19,7 +28,7 @@ export function resolveMediaUrl(url: string | null | undefined): string | null {
             if (parsed.pathname.startsWith(LOCAL_TEMP_PATH)) return raw
 
             if (parsed.pathname.startsWith("/uploads/") || parsed.pathname.startsWith("/api/uploads/")) {
-                return getApiUrl(pathWithQuery)
+                return buildUploadsUrl(pathWithQuery)
             }
         } catch {
             return raw
@@ -28,7 +37,7 @@ export function resolveMediaUrl(url: string | null | undefined): string | null {
     }
 
     if (raw.startsWith("/uploads/") || raw.startsWith("/api/uploads/")) {
-        return getApiUrl(raw)
+        return buildUploadsUrl(raw)
     }
 
     if (raw.startsWith("/")) {
