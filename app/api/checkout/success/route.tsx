@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { API_BASE_URL, getApiUrl } from '@/config/api'
-import { render } from '@react-email/components'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -14,14 +13,12 @@ const BACKEND_API_URL = API_BASE_URL;
 
 export async function GET(request: NextRequest) {
   try {
-    // Determine the base URL dynamically, prioritizing the current host header
     const host = request.headers.get('host')
     const protocol = request.headers.get('x-forwarded-proto') || 'http'
     let baseUrl = (host && !host.includes('0.0.0.0'))
       ? `${protocol}://${host}`
       : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
 
-    // Safety check for invalid baseUrl
     if (baseUrl.includes('0.0.0.0')) {
       baseUrl = 'http://localhost:3000'
     }
@@ -30,12 +27,9 @@ export async function GET(request: NextRequest) {
     const sessionId = searchParams.get('session_id')
 
     if (!sessionId) {
-      return NextResponse.redirect(
-        new URL('/success?error=missing_session_id', baseUrl)
-      )
+      return NextResponse.redirect(new URL('/success?error=missing_session_id', baseUrl))
     }
 
-    // Retrieve the session to verify payment
     let session;
     try {
       session = await stripe.checkout.sessions.retrieve(sessionId)
@@ -46,9 +40,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!session) {
-      return NextResponse.redirect(
-        new URL('/success?error=session_not_found', baseUrl)
-      )
+      return NextResponse.redirect(new URL('/success?error=session_not_found', baseUrl))
     }
 
     if (session.payment_status !== 'paid') {
@@ -57,20 +49,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
-
-    // Get order data from Stripe metadata
     let orderDataBase64 = session.metadata?.orderData
     const chunkCount = session.metadata?.chunkCount
 
-    // Check if data was chunked
     if (chunkCount) {
       const chunks = []
       const count = parseInt(chunkCount)
       for (let i = 0; i < count; i++) {
         const chunk = session.metadata?.[`orderData_${i}`]
-        if (chunk) {
-          chunks.push(chunk)
-        }
+        if (chunk) chunks.push(chunk)
       }
       orderDataBase64 = chunks.join('')
     }
@@ -81,8 +68,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-
-    // Decode order data from base64
     let orderData: any
     try {
       const orderDataString = Buffer.from(orderDataBase64, 'base64').toString('utf-8')
@@ -95,37 +80,36 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Extract items to process (could be a single item or multiple from cart)
-    // Robust extraction: check for items array first, then formData, then the object itself
     let itemsToProcess: any[] = []
     if (orderData.items && Array.isArray(orderData.items)) {
       itemsToProcess = orderData.items
     } else if (orderData.formData) {
       itemsToProcess = [orderData.formData]
     } else {
-      // Fallback: check if the object itself looks like order data
       itemsToProcess = [orderData]
     }
 
     console.log(`🛒 Processing ${itemsToProcess.length} items`);
 
+    // ✅ STEP 1: Declare all variables before loop
     const createdOrderIds: string[] = [];
     const allTempFilesToCleanup: string[] = [];
     let lastBackendError = "";
+    const allFlyerInfoForEmail: { orderId: string; flyerName: string; total: string; imageUrl?: string }[] = [];
+    const emailToSend = orderData.userEmail || itemsToProcess[0]?.email || '';
+    const customerName = itemsToProcess[0]?.presenting || itemsToProcess[0]?.name || emailToSend.split('@')[0] || 'Valued Customer';
 
     if (itemsToProcess.length === 0) {
       lastBackendError = "No items to process in order data";
     }
 
-    // Loop through each item and create a separate order
+    // ✅ STEP 2: Loop — sirf orders create karo, email nahi
     for (let index = 0; index < itemsToProcess.length; index++) {
       const formDataObj = itemsToProcess[index];
       console.log(`📝 Processing item ${index + 1}/${itemsToProcess.length}:`, formDataObj.event_title);
 
-      // Create FormData for THIS specific item
       const formData = new FormData();
 
-      // Add all fields from the actual order data
       formData.append('presenting', formDataObj.presenting || '');
       formData.append('event_title', formDataObj.event_title || '');
 
@@ -146,8 +130,7 @@ export async function GET(request: NextRequest) {
       const flyerId = formDataObj.flyer_id || formDataObj.flyer_is || 1;
       formData.append('flyer_is', flyerId.toString());
       formData.append('category_id', (formDataObj.category_id || 1).toString());
-      formData.append('user_id', formDataObj.user_id || orderData.userId || '');
-      // FIX - userId fallback chain
+
       const resolvedUserId = formDataObj.web_user_id || formDataObj.user_id || orderData.userId || ''
       formData.append('web_user_id', resolvedUserId)
       formData.append('user_id', resolvedUserId)
@@ -166,18 +149,12 @@ export async function GET(request: NextRequest) {
       formData.append('subtotal', parsePrice(formDataObj.subtotal || 0).toString());
       formData.append('image_url', formDataObj.image_url || '');
 
-      // Sanitize JSON fields.
-      // Cart/production payloads often return these fields as JSON strings.
       const parseMaybeJson = (value: any) => {
         if (typeof value !== 'string') return value;
         const trimmed = value.trim();
         if (!trimmed) return value;
         if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-          try {
-            return JSON.parse(trimmed);
-          } catch {
-            return value;
-          }
+          try { return JSON.parse(trimmed); } catch { return value; }
         }
         return value;
       };
@@ -188,38 +165,29 @@ export async function GET(request: NextRequest) {
         return [value];
       };
 
-      // Helper to filter out temporary Next.js URLs that shouldn't be sent as strings
       const isTempUrlStr = (url: string) => url && typeof url === 'string' && url.includes('/api/serve-temp');
+
       const normalizeMediaUrlForBackend = (url: string) => {
         if (!url || typeof url !== 'string') return '';
         const raw = url.trim();
         if (!raw) return '';
         if (isTempUrlStr(raw)) return raw;
-
-        if (raw.startsWith('/uploads/') || raw.startsWith('/api/uploads/')) {
-          return getApiUrl(raw);
-        }
-
+        if (raw.startsWith('/uploads/') || raw.startsWith('/api/uploads/')) return getApiUrl(raw);
         if (raw.startsWith('http://') || raw.startsWith('https://')) {
           try {
             const parsed = new URL(raw);
             if (parsed.pathname.startsWith('/uploads/') || parsed.pathname.startsWith('/api/uploads/')) {
               return getApiUrl(`${parsed.pathname}${parsed.search}`);
             }
-          } catch {
-            return raw;
-          }
+          } catch { return raw; }
           return raw;
         }
-
         if (raw.startsWith('/')) return raw;
         return raw.includes('uploads/') ? getApiUrl(`/${raw.replace(/^\/+/, '')}`) : raw;
       };
 
       const sanitizeItem = (item: any) => {
         if (!item) return { name: '' };
-
-        // If backend/cart sent only URL string, preserve it as image_url.
         if (typeof item === 'string') {
           const raw = item.trim();
           if (!raw) return { name: '' };
@@ -228,18 +196,9 @@ export async function GET(request: NextRequest) {
           }
           return { name: raw };
         }
-
         const result: any = { name: item.name || item.title || '' };
-        const img =
-          item.image_url ||
-          item.imageUrl ||
-          item.image ||
-          item.file_url ||
-          item.url;
-
-        if (img && typeof img === 'string') {
-          result.image_url = normalizeMediaUrlForBackend(img);
-        }
+        const img = item.image_url || item.imageUrl || item.image || item.file_url || item.url;
+        if (img && typeof img === 'string') result.image_url = normalizeMediaUrlForBackend(img);
         return result;
       };
 
@@ -251,117 +210,55 @@ export async function GET(request: NextRequest) {
       const hostsSanitized = asArray(parsedHosts).map(sanitizeItem);
       const sponsorsSanitized = asArray(parsedSponsors).map(sanitizeItem);
 
-
       formData.append('djs', JSON.stringify(djsSanitized));
       const hostPayload = hostsSanitized.length > 0 ? hostsSanitized[0] : { name: '' };
       formData.append('host', JSON.stringify(hostPayload));
       formData.append('sponsors', JSON.stringify(sponsorsSanitized));
 
-      // Sponsor URLs from metadata/form payload/sanitized payload
       for (let i = 0; i < 3; i++) {
-        const sponsorUrl = session.metadata?.[`sponsor_url_${i}`]
-          || formDataObj[`sponsor_url_${i}`]
-          || sponsorsSanitized[i]?.image_url
-          || ''
+        const sponsorUrl = session.metadata?.[`sponsor_url_${i}`] || formDataObj[`sponsor_url_${i}`] || sponsorsSanitized[i]?.image_url || ''
         const normalizedSponsorUrl = normalizeMediaUrlForBackend(sponsorUrl)
-        console.log('[checkout-success] sponsor_url mapping', { index: i, sponsorUrl, normalizedSponsorUrl, isTemp: isTempUrlStr(normalizedSponsorUrl) })
-        if (normalizedSponsorUrl) {
-          formData.append(`sponsor_url_${i}`, normalizedSponsorUrl)
-        }
+        if (normalizedSponsorUrl) formData.append(`sponsor_url_${i}`, normalizedSponsorUrl)
       }
-      // DJ URLs from metadata/form payload/sanitized payload
+
       for (let i = 0; i < 5; i++) {
-        const djUrl =
-          session.metadata?.[`dj_url_${i}`] ||
-          formDataObj[`dj_url_${i}`] ||
-          djsSanitized[i]?.image_url ||
-          ''
+        const djUrl = session.metadata?.[`dj_url_${i}`] || formDataObj[`dj_url_${i}`] || djsSanitized[i]?.image_url || ''
         const normalizedDjUrl = normalizeMediaUrlForBackend(djUrl)
-        console.log('[checkout-success] dj_url mapping', { index: i, djUrl, normalizedDjUrl, isTemp: isTempUrlStr(normalizedDjUrl) })
-        if (normalizedDjUrl) {
-          formData.append(`dj_url_${i}`, normalizedDjUrl)
-        }
+        if (normalizedDjUrl) formData.append(`dj_url_${i}`, normalizedDjUrl)
       }
 
-      // Host URLs from metadata/form payload/sanitized payload
       for (let i = 0; i < 2; i++) {
-        const hostUrl =
-          session.metadata?.[`host_url_${i}`] ||
-          formDataObj[`host_url_${i}`] ||
-          hostsSanitized[i]?.image_url ||
-          ''
+        const hostUrl = session.metadata?.[`host_url_${i}`] || formDataObj[`host_url_${i}`] || hostsSanitized[i]?.image_url || ''
         const normalizedHostUrl = normalizeMediaUrlForBackend(hostUrl)
-        console.log('[checkout-success] host_url mapping', { index: i, hostUrl, normalizedHostUrl, isTemp: isTempUrlStr(normalizedHostUrl) })
-        if (normalizedHostUrl) {
-          formData.append(`host_url_${i}`, normalizedHostUrl)
-        }
+        if (normalizedHostUrl) formData.append(`host_url_${i}`, normalizedHostUrl)
       }
 
-      // Birthday person photo URL from metadata / payload
-      const birthdayPersonPhotoUrl = session.metadata?.birthday_person_photo_url
-        || formDataObj.birthday_person_photo_url
-        || ''
+      const birthdayPersonPhotoUrl = session.metadata?.birthday_person_photo_url || formDataObj.birthday_person_photo_url || ''
       const normalizedBirthdayPhotoUrl = normalizeMediaUrlForBackend(birthdayPersonPhotoUrl)
-      console.log('[checkout-success] birthday_person_photo_url mapping', {
-        birthdayPersonPhotoUrl,
-        normalizedBirthdayPhotoUrl,
-        isTemp: isTempUrlStr(normalizedBirthdayPhotoUrl),
-      })
-      if (normalizedBirthdayPhotoUrl) {
-        formData.append('birthday_person_photo_url', normalizedBirthdayPhotoUrl)
-      }
-
+      if (normalizedBirthdayPhotoUrl) formData.append('birthday_person_photo_url', normalizedBirthdayPhotoUrl)
 
       formData.append('venue_text', formDataObj.venue_text || '');
-      // FIX - orderData se bhi check karo
-      // Session metadata se directly lo - ye Stripe me save hota hai
-      const venueLogo = session.metadata?.venue_logo_url
-        || formDataObj.venue_logo_url
-        || formDataObj.venue_logo
-        || ''
 
-      console.log('🖼️ Venue Logo URL:', venueLogo) // ← Debug ke liye
-
+      const venueLogo = session.metadata?.venue_logo_url || formDataObj.venue_logo_url || formDataObj.venue_logo || ''
       const normalizedVenueLogo = normalizeMediaUrlForBackend(venueLogo)
       const tempFilesForVenue = (() => {
         const value = formDataObj.temp_files
         if (!value) return null
         if (typeof value === 'string') {
-          try {
-            const parsed = JSON.parse(value)
-            return parsed && typeof parsed === 'object' ? parsed : null
-          } catch {
-            return null
-          }
+          try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' ? parsed : null } catch { return null }
         }
         return typeof value === 'object' ? value : null
       })()
       const venueLogoTempPath = (tempFilesForVenue as Record<string, string> | null)?.venue_logo
       const hasVenueLogoLocalTemp = typeof venueLogoTempPath === 'string' && isTempUrlStr(venueLogoTempPath)
-      console.log('[checkout-success] venue_logo_url mapping', {
-        venueLogo,
-        normalizedVenueLogo,
-        venueLogoTempPath,
-        hasVenueLogoLocalTemp,
-        isTemp: isTempUrlStr(normalizedVenueLogo),
-      })
-      if (normalizedVenueLogo && !hasVenueLogoLocalTemp) {
-        formData.append('venue_logo_url', normalizedVenueLogo)
-      }
+      if (normalizedVenueLogo && !hasVenueLogoLocalTemp) formData.append('venue_logo_url', normalizedVenueLogo)
 
-
-      // Handle TEMP FILES upload for this item
       const tempFilesToCleanup: string[] = [];
       const parsedTempFiles = (() => {
         const value = formDataObj.temp_files
         if (!value) return null
         if (typeof value === 'string') {
-          try {
-            const parsed = JSON.parse(value)
-            return parsed && typeof parsed === 'object' ? parsed : null
-          } catch {
-            return null
-          }
+          try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' ? parsed : null } catch { return null }
         }
         return (typeof value === 'object') ? value : null
       })()
@@ -376,26 +273,15 @@ export async function GET(request: NextRequest) {
             try {
               const parsed = new URL(value);
               return parsed.pathname.startsWith('/uploads/') || parsed.pathname.startsWith('/api/uploads/');
-            } catch {
-              return false;
-            }
+            } catch { return false; }
           };
-          console.log('[checkout-success] temp_files payload', parsedTempFiles);
 
           for (const [fieldName, filepath] of Object.entries(parsedTempFiles as Record<string, string>)) {
             if (!filepath) continue;
-
             let buffer: Buffer | null = null;
             let fileName = filepath.split(/[\\\/]/).pop() || `${fieldName}.jpg`;
-            console.log('[checkout-success] temp_file:start', { fieldName, filepath });
 
-            // IMPORTANT:
-            // If this is already a permanent media URL, do not re-upload as file.
-            // Re-uploading makes backend rewrite it to /uploads/... (without /api).
-            if (isPermanentUploadUrl(filepath)) {
-              console.log('[checkout-success] temp_file:skip_permanent_url', { fieldName, filepath });
-              continue;
-            }
+            if (isPermanentUploadUrl(filepath)) continue;
 
             if (isHttpUrl(filepath)) {
               if (isServeTempUrl(filepath)) {
@@ -411,56 +297,36 @@ export async function GET(request: NextRequest) {
                       const { readFile } = await import('fs/promises');
                       buffer = await readFile(localPath);
                       fileName = queryKey.split(/[\\\/]/).pop() || fileName;
-                      console.log('[checkout-success] temp_file:loaded_from_local_key', { fieldName, localPath });
                     }
                   } else if (queryPath && existsSync(queryPath)) {
                     const { readFile } = await import('fs/promises');
                     buffer = await readFile(queryPath);
                     fileName = queryPath.split(/[\\\/]/).pop() || fileName;
-                    console.log('[checkout-success] temp_file:loaded_from_local_path', { fieldName, queryPath });
                   }
-                } catch (err) {
-                  console.warn('[checkout-success] temp_file:local_read_failed', { fieldName, filepath, err });
-                  // Fallback to fetch if direct read fails
-                }
+                } catch (err) { }
               }
 
-              // Fallback fetch if buffer still null
               if (!buffer) {
                 try {
                   const tempResp = await fetch(filepath);
                   if (tempResp.ok) {
                     const arr = await tempResp.arrayBuffer();
                     buffer = Buffer.from(arr);
-                    console.log('[checkout-success] temp_file:fetched_http', { fieldName, filepath, size: buffer.length });
                     try {
                       const parsed = new URL(filepath);
                       const queryPath = parsed.searchParams.get('path');
                       const queryKey = parsed.searchParams.get('key');
-                      if (queryPath) {
-                        fileName = queryPath.split(/[\\\/]/).pop() || fileName;
-                      } else if (queryKey) {
-                        fileName = queryKey.split(/[\\\/]/).pop() || fileName;
-                      }
-                    } catch {
-                      // keep default fileName
-                    }
-                  } else {
-                    console.warn('[checkout-success] temp_file:http_fetch_not_ok', { fieldName, filepath, status: tempResp.status });
+                      if (queryPath) fileName = queryPath.split(/[\\\/]/).pop() || fileName;
+                      else if (queryKey) fileName = queryKey.split(/[\\\/]/).pop() || fileName;
+                    } catch { }
                   }
-                } catch (err) {
-                  console.warn('[checkout-success] temp_file:http_fetch_failed', { fieldName, filepath, err });
-                }
+                } catch (err) { }
               }
             } else if (existsSync(filepath)) {
               try {
                 const { readFile } = await import('fs/promises');
                 buffer = await readFile(filepath);
-                console.log('[checkout-success] temp_file:loaded_local_absolute', { fieldName, filepath });
-              } catch (err) {
-                console.warn('[checkout-success] temp_file:local_absolute_read_failed', { fieldName, filepath, err });
-                buffer = null;
-              }
+              } catch (err) { buffer = null; }
             }
 
             if (buffer) {
@@ -472,7 +338,6 @@ export async function GET(request: NextRequest) {
                 else if (ext === 'webp') mimeType = 'image/webp';
 
                 const blob = new Blob([new Uint8Array(buffer)], { type: mimeType });
-
                 let backendFieldName = fieldName;
                 if (fieldName.startsWith('host_')) {
                   const hostIndex = parseInt(fieldName.split('_')[1]);
@@ -480,46 +345,28 @@ export async function GET(request: NextRequest) {
                 } else if (fieldName === 'birthday_person_photo') {
                   backendFieldName = 'host_file';
                 }
-
                 formData.append(backendFieldName, blob as any, fileName);
-                console.log('[checkout-success] temp_file:attached_to_form', { fieldName, backendFieldName, fileName, size: buffer.length });
-                if (!isHttpUrl(filepath)) {
-                  tempFilesToCleanup.push(filepath);
-                }
-              } catch (err) {
-                console.warn('[checkout-success] temp_file:append_failed', { fieldName, filepath, err });
-              }
-            } else {
-              console.warn('[checkout-success] temp_file:buffer_missing', { fieldName, filepath });
+                if (!isHttpUrl(filepath)) tempFilesToCleanup.push(filepath);
+              } catch (err) { }
             }
           }
-        } catch (importErr) {
-          console.warn('[checkout-success] temp_file:processing_failed', { importErr });
-        }
+        } catch (importErr) { }
       }
 
-      // Submit THIS order to backend API
+      // Submit order to backend
       try {
         let orderEndpoint = getApiUrl('/orders');
-
-        // Ensure absolute URL for Node.js fetch
         if (!orderEndpoint.startsWith('http')) {
           const apiPath = orderEndpoint.startsWith('/') ? orderEndpoint : `/${orderEndpoint}`;
           orderEndpoint = `${baseUrl}${apiPath}`;
         }
 
         console.log(`📡 Sending to backend: ${orderEndpoint}`);
-
-        const response = await fetch(orderEndpoint, {
-          method: 'POST',
-          body: formData
-        });
-
+        const response = await fetch(orderEndpoint, { method: 'POST', body: formData });
         console.log(`📶 Backend response status: ${response.status}`);
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error(`❌ Backend error text:`, errorText);
           lastBackendError = `Backend ${response.status}: ${errorText.substring(0, 100)}`;
           continue;
         }
@@ -527,13 +374,11 @@ export async function GET(request: NextRequest) {
         const responseData = await response.json();
         console.log(`✅ Backend response data:`, responseData);
 
-        // Handle cases where backend returns 200 but success is false
         if (responseData.success === false) {
           lastBackendError = `Backend logic error: ${responseData.message || JSON.stringify(responseData)}`;
           continue;
         }
 
-        // Broaden order ID extraction to handle various backend response formats
         const orderId =
           responseData.order?.id ||
           responseData.orderId ||
@@ -547,67 +392,13 @@ export async function GET(request: NextRequest) {
           console.log(`🎉 Order created successfully! ID: ${orderId}`);
           createdOrderIds.push(orderId.toString());
           allTempFilesToCleanup.push(...tempFilesToCleanup);
-
-          // Send confirmation email via Resend
-          try {
-            const { resend } = await import('@/lib/resend');
-            const { OrderConfirmationEmail } = await import('@/emails/OrderConfirmation');
-            const { render } = await import('@react-email/render');
-
-            const emailHtml = await render(
-              <OrderConfirmationEmail
-              name={formDataObj.presenting || formDataObj.name || (formDataObj.email ? formDataObj.email.split('@')[0] : "Valued Customer")}
-                orderId={orderId.toString()}
-                flyerName={formDataObj.event_title || "Professional Flyer"}
-                total={formDataObj.total_price?.toString() || "0"}
-                imageUrl={formDataObj.image_url}
-                date={new Date().toLocaleDateString('en-IN', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric'
-                })}
-              />
-            );
-
-            await resend.emails.send({
-              from: "Grodify <support@mail.grodify.com>",
-              to: formDataObj.email || orderData.userEmail,
-              replyTo: "admin@grodify.com",
-              subject: `Order Confirmation - #${orderId}`,
-              html: emailHtml,
-              headers: {
-                'X-Entity-Ref-ID': orderId.toString(),
-              },
-            });
-
-
-            console.log(`📧 Resend confirmation sent for order: ${orderId}`);
-             // Purchase Receiving Email
-           const { PurchaseReceivingEmail } = await import('@/emails/Purchasereceiving');
-            const purchaseHtml = await render(
-              <PurchaseReceivingEmail
-               name={formDataObj.presenting || formDataObj.name || (formDataObj.email ? formDataObj.email.split('@')[0] : "Valued Customer")}
-                orderId={orderId.toString()}
-                flyerName={formDataObj.event_title || "Professional Flyer"}
-                total={formDataObj.total_price?.toString() || "0"}
-                date={new Date().toLocaleDateString('en-IN', {
-                  day: 'numeric', month: 'long', year: 'numeric'
-                })}
-              />
-            );
-            await resend.emails.send({
-              from: "Grodify <support@mail.grodify.com>",
-              to: formDataObj.email || orderData.userEmail,
-              replyTo: "admin@grodify.com",
-              subject: `Purchase Received - #${orderId}`,
-              html: purchaseHtml,
-            });
-            console.log(`📧 Purchase receiving email sent for order: ${orderId}`);
-
-          } catch (emailError: any) {
-            console.error(`❌ Resend email failed:`, emailError.message);
-            // Non-blocking email error
-          }
+          // ✅ Sirf flyer info store karo — email baad mein bhejenge
+          allFlyerInfoForEmail.push({
+            orderId: orderId.toString(),
+            flyerName: formDataObj.event_title || "Professional Flyer",
+            total: formDataObj.total_price?.toString() || "0",
+            imageUrl: formDataObj.image_url || '',
+          });
         } else {
           lastBackendError = `Order created but no ID found in response: ${JSON.stringify(responseData).substring(0, 100)}`;
         }
@@ -615,6 +406,7 @@ export async function GET(request: NextRequest) {
         lastBackendError = `Fetch error: ${fetchError.message}`;
       }
     }
+    // ✅ LOOP KHATAM
 
     if (createdOrderIds.length === 0) {
       const diagInfo = `items=${itemsToProcess.length}, keys=${Object.keys(orderData).join('|').substring(0, 50)}`;
@@ -624,7 +416,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // ✅ CLEANUP TEMP FILES
+    // ✅ STEP 3: Cleanup temp files
     try {
       if (allTempFilesToCleanup.length > 0) {
         const { unlink, rmdir } = await import('fs/promises');
@@ -633,18 +425,82 @@ export async function GET(request: NextRequest) {
           try { await unlink(filepath); } catch (err) { }
         }
         try {
-          // Attempt to remove the parent directory if empty
           const uploadDir = dirname(allTempFilesToCleanup[0]);
           await rmdir(uploadDir);
         } catch (err) { }
       }
     } catch (cleanupErr) { }
 
-    // Clear cart (best effort)
-    if ((session.metadata?.source === 'cart' || orderData.userId) && orderData.userId) {
+    // ✅ STEP 4: Cart clear
+    const userIdToClear = orderData.userId || orderData.formData?.user_id || orderData.formData?.web_user_id || ''
+    if (userIdToClear) {
       try {
-        await fetch(getApiUrl(`/cart/clear/${orderData.userId}`), { method: 'DELETE' });
-      } catch (cartError) { }
+        console.log(`🗑️ Clearing cart for user: ${userIdToClear}`)
+        await fetch(getApiUrl(`/cart/clear/${userIdToClear}`), { method: 'DELETE' });
+        console.log(`✅ Cart cleared successfully`)
+      } catch (cartError) {
+        console.error('❌ Cart clear failed:', cartError)
+      }
+    }
+
+    // ✅ STEP 5: EK SAATH SAARE FLYERS KI EMAIL BHEJO
+    if (createdOrderIds.length > 0 && emailToSend) {
+      try {
+        const { resend } = await import('@/lib/resend');
+        const { OrderConfirmationEmail } = await import('@/emails/OrderConfirmation');
+        const { render } = await import('@react-email/render');
+
+        const emailHtml = await render(
+          <OrderConfirmationEmail
+            name={customerName}
+            orderId={createdOrderIds[0]}
+            flyerName={allFlyerInfoForEmail[0]?.flyerName || "Professional Flyer"}
+            total={allFlyerInfoForEmail[0]?.total || "0"}
+            date={new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            imageUrl={allFlyerInfoForEmail[0]?.imageUrl}
+            allFlyers={allFlyerInfoForEmail}
+          />
+        );
+
+        const orderIdsText = createdOrderIds.length > 1
+          ? `Orders #${createdOrderIds.join(', #')}`
+          : `Order #${createdOrderIds[0]}`;
+
+        await resend.emails.send({
+          from: "Grodify <support@mail.grodify.com>",
+          to: emailToSend,
+          replyTo: "admin@grodify.com",
+          subject: `Order Confirmation - ${orderIdsText}`,
+          html: emailHtml,
+          headers: { 'X-Entity-Ref-ID': createdOrderIds[0] },
+        });
+
+        console.log(`📧 Confirmation email sent for ${createdOrderIds.length} order(s)`);
+
+        const { PurchaseReceivingEmail } = await import('@/emails/Purchasereceiving');
+        const purchaseHtml = await render(
+          <PurchaseReceivingEmail
+            name={customerName}
+            orderId={createdOrderIds[0]}
+            flyerName={allFlyerInfoForEmail[0]?.flyerName || "Professional Flyer"}
+            total={allFlyerInfoForEmail.reduce((sum, f) => sum + parseFloat(f.total || '0'), 0).toFixed(2)}
+            date={new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+          />
+        );
+
+        await resend.emails.send({
+          from: "Grodify <support@mail.grodify.com>",
+          to: emailToSend,
+          replyTo: "admin@grodify.com",
+          subject: `Purchase Received - ${orderIdsText}`,
+          html: purchaseHtml,
+        });
+
+        console.log(`📧 Purchase email sent for ${createdOrderIds.length} order(s)`);
+
+      } catch (emailError: any) {
+        console.error(`❌ Email failed:`, emailError.message);
+      }
     }
 
     // Success redirect
@@ -653,7 +509,6 @@ export async function GET(request: NextRequest) {
     )
 
   } catch (error: any) {
-    // Resolve baseUrl again for the catch block
     let errUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
     try {
       const host = request.headers.get('host')
