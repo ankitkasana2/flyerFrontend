@@ -1,7 +1,7 @@
 
 
 // stores/CartStore.ts
-import { makeAutoObservable } from "mobx"
+import { makeAutoObservable, runInAction } from "mobx"
 import { getApiUrl } from "@/config/api"
 
 export interface DJ {
@@ -187,22 +187,21 @@ export class CartStore {
   }
 
   // Clear entire cart
-  async clearCart(userId: string) {
-    if (!userId) return
-
-    try {
-      // You'll need to implement the clear endpoint
-      const response = await fetch(getApiUrl(`/cart/clear/${userId}`), {
-        method: "DELETE"
-      })
-
-      if (response.ok) {
-        this.cartItems = []
-      }
-    } catch (err) {
-      this.error = "Failed to clear cart"
-    }
+async clearCart(userId: string) {
+  if (!userId) return
+  try {
+    await fetch(getApiUrl(`/cart/clear/${userId}`), {
+      method: "DELETE"
+    })
+  } catch (err) {
+    console.error('Cart clear error:', err)
+  } finally {
+    runInAction(() => {
+      this.cartItems = []
+    })
   }
+}
+
 
   // Get total items count
   get count() {

@@ -1,38 +1,54 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { useStore } from '@/stores/StoreProvider';
+import { observer } from 'mobx-react-lite';
+import { runInAction } from 'mobx';
 
-function ThankYouContent() {
+const ThankYouContent = observer(() => {
   const { cartStore, authStore } = useStore();
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
+  const clearedRef = useRef(false);
 
   useEffect(() => {
-    // Clear local cart store items on success
-    cartStore.cartItems = [];
+    // User load hone ka wait karo
+    if (!authStore.user?.id) return;
+    
+    // Sirf ek baar run karo
+    if (clearedRef.current) return;
+    clearedRef.current = true;
 
-    // Add notification
-    if (authStore.user?.id) {
-      import('@/lib/notifications').then(({ addNotification }) => {
-        addNotification(authStore.user!.id, {
-          type: 'order',
-          title: 'Order Confirmed',
-          message: `Your order ${orderId ? '#' + orderId : ''} has been received and is being processed.`,
-          link: '/orders'
-        });
+    const userId = authStore.user.id;
+
+    // Backend cart clear karo
+    fetch(`/api/cart-clear?userId=${encodeURIComponent(userId)}`, {
+      method: 'DELETE'
+    }).catch(() => {});
+
+    // Local store bhi clear karo
+    runInAction(() => {
+      cartStore.cartItems = [];
+    });
+
+    // Notification add karo
+    import('@/lib/notifications').then(({ addNotification }) => {
+      addNotification(userId, {
+        type: 'order',
+        title: 'Order Confirmed',
+        message: `Your order ${orderId ? '#' + orderId : ''} has been received and is being processed.`,
+        link: '/orders'
       });
-    }
-  }, [cartStore, authStore.user?.id, orderId]);
+    });
+
+  }, [authStore.user?.id]); // user load hone pe run karo
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-black p-4 sm:p-6 lg:p-8 relative overflow-hidden">
-
-
       <div className="relative max-w-lg w-full bg-zinc-900 border border-zinc-800 shadow-2xl rounded-3xl p-8 sm:p-10 text-center animate-in fade-in zoom-in duration-500 slide-in-from-bottom-4">
 
         <div className="mx-auto flex items-center justify-center mb-8 relative">
@@ -86,11 +102,15 @@ function ThankYouContent() {
       </div>
     </div>
   );
-}
+});
 
 export default function ThankYouPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-black"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-700"></div></div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-700"></div>
+      </div>
+    }>
       <ThankYouContent />
     </Suspense>
   );

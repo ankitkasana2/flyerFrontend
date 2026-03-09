@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Trash2, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -24,8 +24,14 @@ const CartPage = observer(() => {
     const { authStore, cartStore } = useStore()
     const [isCheckingOut, setIsCheckingOut] = useState(false)
 
+    // ✅ FIX - Har baar cart page khulne pe backend se fresh data lo
+    useEffect(() => {
+        if (authStore.user?.id) {
+            cartStore.load(authStore.user.id)
+        }
+    }, [authStore.user?.id])
+
     const handleCheckout = async () => {
-        console.log("🛒 ~ handleCheckout started")
         if (!authStore.user) {
             authStore.handleAuthModal()
             return
@@ -35,14 +41,13 @@ const CartPage = observer(() => {
 
         setIsCheckingOut(true)
         try {
-            // Map cart items to the format expected by the checkout session API
             const items = cartStore.cartItems.map(item => ({
                 ...item,
                 image_url: getImageUrl(item.image_url || item.flyer?.image || item.venue_logo),
                 user_id: authStore.user?.id,
                 email: item.email || authStore.user?.email,
                 flyer_id: item.flyer_is,
-                address_phone: item.address_and_phone, // Map for backend compatibility
+                address_phone: item.address_and_phone,
                 subtotal: item.total_price,
                 eventDetails: {
                     mainTitle: item.event_title,
@@ -50,21 +55,16 @@ const CartPage = observer(() => {
                 }
             }))
 
-            console.log("🚀 ~ Proceeding to checkout with items ->", items)
-
             const subtotal = cartStore.totalPrice
             const fees = Math.round(subtotal * 0.05 * 100) / 100
 
             const response = await fetch('/api/checkout/session', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ item: items, fees }),
             })
 
             const data = await response.json()
-            console.log("📦 ~ Checkout Session Response ->", data)
 
             if (data.url) {
                 window.location.href = data.url
@@ -72,19 +72,11 @@ const CartPage = observer(() => {
                 throw new Error(data.error || 'Failed to create checkout session')
             }
         } catch (err: any) {
-            console.error('Checkout error:', err)
             toast.error(err.message || 'An error occurred during checkout')
         } finally {
             setIsCheckingOut(false)
         }
     }
-
-    // Load cart on mount
-    useEffect(() => {
-        if (authStore.user?.id) {
-            cartStore.load(authStore.user.id)
-        }
-    }, [authStore.user?.id])
 
     if (cartStore.isLoading) {
         return (
@@ -102,18 +94,16 @@ const CartPage = observer(() => {
     const EmptyState = () => (
         <div className="rounded-lg border border-border bg-card p-10 text-center">
             <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-muted/20 flex items-center justify-center">
-                <span className="text-2xl"><ShoppingBag className="h-6 w-6" /></span>
+                <ShoppingBag className="h-6 w-6" />
             </div>
-            <h2 className="text-xl font-semibold text-balance">Your cart is empty</h2>
+            <h2 className="text-xl font-semibold">Your cart is empty</h2>
             <p className="text-muted-foreground mt-2">Browse our flyer catalog and add templates to your cart.</p>
             <div className="mt-6 flex items-center justify-center gap-3">
                 <Link href="/categories">
-                    <Button variant="default" className="text-primary-foreground hover:cursor-pointer">
-                        Browse Flyers
-                    </Button>
+                    <Button variant="default">Browse Flyers</Button>
                 </Link>
                 <Link href="/favorites">
-                    <Button variant="outline" className="hover:cursor-pointer">View Favorites</Button>
+                    <Button variant="outline">View Favorites</Button>
                 </Link>
             </div>
         </div>
@@ -122,7 +112,7 @@ const CartPage = observer(() => {
     return (
         <main className="container mx-auto px-4 py-6 md:py-10">
             <header className="mb-6 md:mb-10">
-                <h1 className="text-xl md:text-2xl font-bold tracking-tight text-balance">Your Cart</h1>
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight">Your Cart</h1>
                 <p className="text-muted-foreground mt-1">Review your flyer templates and proceed to secure checkout.</p>
             </header>
 
@@ -130,7 +120,6 @@ const CartPage = observer(() => {
                 <EmptyState />
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left: Items */}
                     <section className="lg:col-span-2 rounded-lg border border-border bg-card p-4 md:p-6">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-semibold">Items ({cartItems.length})</h2>
@@ -149,10 +138,7 @@ const CartPage = observer(() => {
                                     <div className="flex items-start gap-4">
                                         <div className="h-70 w-50 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
                                             <img
-                                                src={
-                                                    getImageUrl(item.flyer?.image || item.image_url || item.venue_logo) ||
-                                                    "/placeholder.svg"
-                                                }
+                                                src={getImageUrl(item.flyer?.image || item.image_url || item.venue_logo) || "/placeholder.svg"}
                                                 alt={item.flyer?.title || item.event_title || "Flyer thumbnail"}
                                                 className="h-full w-full object-cover"
                                             />
@@ -166,12 +152,8 @@ const CartPage = observer(() => {
 
                                             {item.flyer && (
                                                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                                                    <Badge variant="outline" className="text-xs">
-                                                        Template: {item.flyer.title}
-                                                    </Badge>
-                                                    <Badge variant="outline" className="text-xs">
-                                                        {item.flyer.type}
-                                                    </Badge>
+                                                    <Badge variant="outline" className="text-xs">Template: {item.flyer.title}</Badge>
+                                                    <Badge variant="outline" className="text-xs">{item.flyer.type}</Badge>
                                                 </div>
                                             )}
 
@@ -200,13 +182,10 @@ const CartPage = observer(() => {
                                                     Remove
                                                 </Button>
                                                 <Link href={`/order/${item.id}`}>
-                                                    <Button variant="ghost" size="sm">
-                                                        Edit
-                                                    </Button>
+                                                    <Button variant="ghost" size="sm">Edit</Button>
                                                 </Link>
                                             </div>
 
-                                            {/* Show options */}
                                             <div className="mt-2 flex flex-wrap gap-1">
                                                 {item.story_size_version && <Badge variant="secondary">Story Size</Badge>}
                                                 {item.custom_flyer && <Badge variant="secondary">Custom</Badge>}
@@ -233,7 +212,6 @@ const CartPage = observer(() => {
                         </div>
                     </section>
 
-                    {/* Right: Summary */}
                     <aside className="rounded-lg border border-border bg-card p-4 md:p-6 h-fit">
                         <h2 className="text-lg font-semibold">Order Summary</h2>
                         <div className="mt-4 space-y-3 text-sm">
@@ -250,8 +228,7 @@ const CartPage = observer(() => {
                                 <span className="font-semibold">{currency(total)}</span>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Delivery options and upgrades (Story size, Animation, Rush) are selected on the order form after
-                                checkout.
+                                Delivery options and upgrades are selected on the order form after checkout.
                             </p>
                         </div>
 
