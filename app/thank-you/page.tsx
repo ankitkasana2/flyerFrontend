@@ -15,27 +15,25 @@ const ThankYouContent = observer(() => {
   const orderId = searchParams.get('orderId');
   const clearedRef = useRef(false);
 
+  // ✅ FIX 1: User load hone pe cart clear karo
   useEffect(() => {
-    // User load hone ka wait karo
     if (!authStore.user?.id) return;
-    
-    // Sirf ek baar run karo
     if (clearedRef.current) return;
     clearedRef.current = true;
 
     const userId = authStore.user.id;
 
-    // Backend cart clear karo
+    // Backend cart clear
     fetch(`/api/cart-clear?userId=${encodeURIComponent(userId)}`, {
       method: 'DELETE'
     }).catch(() => {});
 
-    // Local store bhi clear karo
+    // Local store clear
     runInAction(() => {
       cartStore.cartItems = [];
     });
 
-    // Notification add karo
+    // Notification
     import('@/lib/notifications').then(({ addNotification }) => {
       addNotification(userId, {
         type: 'order',
@@ -45,7 +43,29 @@ const ThankYouContent = observer(() => {
       });
     });
 
-  }, [authStore.user?.id]); // user load hone pe run karo
+  }, [authStore.user?.id]);
+
+  // ✅ FIX 2: Agar user bahut late load ho — 5 second baad bhi clear karo
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (clearedRef.current) return;
+      clearedRef.current = true;
+      
+      // Local store force clear
+      runInAction(() => {
+        cartStore.cartItems = [];
+      });
+
+      // Agar user mil gaya ho by then
+      if (authStore.user?.id) {
+        fetch(`/api/cart-clear?userId=${encodeURIComponent(authStore.user.id)}`, {
+          method: 'DELETE'
+        }).catch(() => {});
+      }
+    }, 5000); // 5 second wait
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-black p-4 sm:p-6 lg:p-8 relative overflow-hidden">
