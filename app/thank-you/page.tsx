@@ -23,15 +23,20 @@ const ThankYouContent = observer(() => {
 
     const userId = authStore.user.id;
 
-    // Backend cart clear
-    fetch(`/api/cart-clear?userId=${encodeURIComponent(userId)}`, {
-      method: 'DELETE'
-    }).catch(() => {});
-
-    // Local store clear
-    runInAction(() => {
-      cartStore.cartItems = [];
-    });
+  // Backend cart clear + local reload
+const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/api$/, '')
+fetch(`${apiBase}/api/cart/clear/${encodeURIComponent(userId)}`, {
+  method: 'DELETE'
+}).then(() => {
+  // Clear ke baad fresh load karo
+  runInAction(() => {
+    cartStore.cartItems = [];
+  });
+}).catch(() => {
+  runInAction(() => {
+    cartStore.cartItems = [];
+  });
+});
 
     // Notification
     import('@/lib/notifications').then(({ addNotification }) => {
