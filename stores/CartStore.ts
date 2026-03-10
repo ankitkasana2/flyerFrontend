@@ -186,7 +186,6 @@ export class CartStore {
     }
   }
 
-  // Clear entire cart
 async clearCart(userId: string) {
   if (!userId) return
   try {
@@ -198,6 +197,7 @@ async clearCart(userId: string) {
   } finally {
     runInAction(() => {
       this.cartItems = []
+      this.isLoading = false
     })
   }
 }

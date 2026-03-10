@@ -432,11 +432,19 @@ export async function GET(request: NextRequest) {
     } catch (cleanupErr) { }
 
     // ✅ STEP 4: Cart clear
-    const userIdToClear = orderData.userId || orderData.formData?.user_id || orderData.formData?.web_user_id || ''
+const userIdToClear = orderData.userId 
+  || orderData.formData?.web_user_id 
+  || orderData.formData?.user_id 
+  || itemsToProcess[0]?.web_user_id 
+  || itemsToProcess[0]?.user_id 
+  || ''
+
+console.log(`🧹 userIdToClear: ${userIdToClear}`)
     if (userIdToClear) {
       try {
         console.log(`🗑️ Clearing cart for user: ${userIdToClear}`)
-        await fetch(getApiUrl(`/cart/clear/${userIdToClear}`), { method: 'DELETE' });
+    const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/api$/, '')
+await fetch(`${apiBase}/api/cart/clear/${userIdToClear}`, { method: 'DELETE' });
         console.log(`✅ Cart cleared successfully`)
       } catch (cartError) {
         console.error('❌ Cart clear failed:', cartError)
