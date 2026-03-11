@@ -144,43 +144,53 @@ export async function saveToLibrary(userId: string, file: File): Promise<string 
 }
 
 // 1.1 Upload to Local Temp
+// 1.1 Upload to Temp (via backend if userId available)
 export async function saveToTemp(
     file: File,
     fieldName: string = "file",
     userId?: string
 ): Promise<{ filepath: string, filename: string } | null> {
-    // Production reliability:
-    // Stripe success callback can run on a different instance where local temp files do not exist.
-    // If user is authenticated, prefer persistent media URL first.
-   // PC uploads are NOT saved to library
-    const formData = new FormData()
-    formData.append("file", file)
-    formData.append("field", fieldName)
-    // Create a semi-unique ID for this batch if needed, or let route handle it
-    const uploadId = "checkout_" + Date.now();
-    formData.append("uploadId", uploadId);
-
     try {
+        if (userId) {
+            const formData = new FormData()
+            formData.append("web_user_id", userId)
+            formData.append("file", file)
+
+            const res = await fetch(getApiUrl('/user-media'), {
+                method: "POST",
+                body: formData,
+            })
+
+            if (!res.ok) return null
+            const data = await res.json()
+            if (!data.success) return null
+
+            const fileUrl = data.file_url || data.media?.file_url || data.url || null
+            if (!fileUrl) return null
+
+            const resolvedUrl = resolveMediaUrl(fileUrl)
+            if (!resolvedUrl) return null
+
+            return { filepath: resolvedUrl, filename: file.name }
+        }
+
+        // Fallback
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("field", fieldName)
+        formData.append("uploadId", "checkout_" + Date.now())
+
         const res = await fetch(`/api/tmp-upload`, {
             method: "POST",
             body: formData,
         })
 
-        if (!res.ok) {
-            const errorText = await res.text().catch(() => "")
-            console.error("[upload] saveToTemp:http_error", { status: res.status, fieldName, errorText })
-            return null
-        }
-
+        if (!res.ok) return null
         const data = await res.json()
-        if (!data.success) {
-            console.error("[upload] saveToTemp:api_error", { fieldName, data })
-            return null
-        }
-        console.log("[upload] saveToTemp:success", { fieldName, filepath: data.filepath, filename: data.filename })
+        if (!data.success) return null
+
         return { filepath: data.filepath, filename: data.filename }
     } catch (error) {
-        console.error("[upload] saveToTemp:exception", { fieldName, error })
         return null
     }
 }
