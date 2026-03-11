@@ -152,15 +152,7 @@ export async function saveToTemp(
     // Production reliability:
     // Stripe success callback can run on a different instance where local temp files do not exist.
     // If user is authenticated, prefer persistent media URL first.
-    if (userId) {
-        const libraryUrl = await saveToLibrary(userId, file)
-        if (libraryUrl) {
-            console.log("[upload] saveToTemp:using_library_url", { fieldName, libraryUrl })
-            return { filepath: libraryUrl, filename: file.name }
-        }
-        console.warn("[upload] saveToTemp:library_upload_failed_fallback_to_temp", { fieldName, userId, fileName: file.name })
-    }
-
+   // PC uploads are NOT saved to library
     const formData = new FormData()
     formData.append("file", file)
     formData.append("field", fieldName)
