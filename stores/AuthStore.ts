@@ -1054,7 +1054,11 @@ if (!checkData.exists) {
     }
   }
 
-  handleAuthModal = () => {
+clearError = () => {
+    this.error = null
+  }
+
+handleAuthModal = () => {
     this.authModal = !this.authModal
   }
 

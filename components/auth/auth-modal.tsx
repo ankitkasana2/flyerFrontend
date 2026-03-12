@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -12,8 +11,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Eye, EyeOff, Mail, Lock, User, Chrome, Apple } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { Eye, EyeOff, Chrome } from "lucide-react"
+import { toast } from "sonner"
 import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
 import { confirmSignUp as awsConfirmSignUp, resendSignUpCode } from 'aws-amplify/auth'
@@ -33,7 +32,7 @@ const AuthModal = observer(({
   const [showPassword, setShowPassword] = useState(false)
   const [showOtp, setShowOtp] = useState(false)
   const [userEmail, setUserEmail] = useState("")
-  const [userPassword, setUserPassword] = useState("") // Store password for auto-login after OTP
+  const [userPassword, setUserPassword] = useState("")
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -46,7 +45,6 @@ const AuthModal = observer(({
   const [isLoading, setIsLoading] = useState(false)
 
   const { authStore, loadingStore } = useStore()
-  const { toast } = useToast()
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -54,100 +52,62 @@ const AuthModal = observer(({
       setFormData({ name: "", email: "", password: "", otp: "", newPassword: "", confirmPassword: "" })
       setShowOtp(false)
       setUserEmail("")
-      setUserPassword("") // Clear stored password
+      setUserPassword("")
       setMode(defaultMode)
       setResetStep("send")
-      // Clear any existing auth errors when modal closes
-      authStore.error = null
+      authStore.clearError()
     }
   }, [isOpen, defaultMode])
 
-  // Display auth store errors prominently
+  // Display auth store errors
   useEffect(() => {
     if (authStore.error) {
-      toast({
-        title: "Authentication Error",
-        description: authStore.error,
-        variant: "destructive",
-      })
+      toast.error(authStore.error)
     }
-  }, [authStore.error, toast])
+  }, [authStore.error])
 
   const getFriendlyErrorMessage = (error: any): string => {
-    // This function is now mainly for fallback, as AuthStore handles most error messages
     const errorMessage = error?.message || 'Something went wrong';
-
-    // Handle any remaining error messages not covered in AuthStore
     if (errorMessage.includes('User already exists')) {
       return 'An account with this email already exists. Please sign in or use a different email.';
     }
-
     if (errorMessage.includes('Incorrect username or password')) {
       return 'Incorrect email or password. Please try again.';
     }
-
     if (errorMessage.includes('Password did not conform with policy')) {
       return 'Password must be at least 8 characters long and include uppercase, lowercase, numbers, and special characters.';
     }
-
     if (errorMessage.includes('Invalid verification code')) {
       return 'The verification code is invalid or has expired. Please request a new one.';
     }
-
     if (errorMessage.includes('User is not confirmed')) {
       return 'Please verify your email address before signing in. Check your inbox for the verification code.';
     }
-
     return errorMessage;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Basic validation
     if (mode === 'signup') {
       if (formData.password.length < 8) {
-        toast({
-          title: 'Password too short',
-          description: 'Password must be at least 8 characters long.',
-          variant: 'destructive',
-        });
+        toast.error('Password must be at least 8 characters long.')
         return;
       }
-
       if (!/[A-Z]/.test(formData.password)) {
-        toast({
-          title: 'Password requirements not met',
-          description: 'Password must contain at least one uppercase letter (A-Z).',
-          variant: 'destructive',
-        });
+        toast.error('Password must contain at least one uppercase letter (A-Z).')
         return;
       }
-
       if (!/[a-z]/.test(formData.password)) {
-        toast({
-          title: 'Password requirements not met',
-          description: 'Password must contain at least one lowercase letter (a-z).',
-          variant: 'destructive',
-        });
+        toast.error('Password must contain at least one lowercase letter (a-z).')
         return;
       }
-
       if (!/[0-9]/.test(formData.password)) {
-        toast({
-          title: 'Password requirements not met',
-          description: 'Password must contain at least one number (0-9).',
-          variant: 'destructive',
-        });
+        toast.error('Password must contain at least one number (0-9).')
         return;
       }
-
       if (!/[^A-Za-z0-9]/.test(formData.password)) {
-        toast({
-          title: 'Password requirements not met',
-          description: 'Password must contain at least one special character (e.g., !@#$%^&*).',
-          variant: 'destructive',
-        });
+        toast.error('Password must contain at least one special character (e.g., !@#$%^&*).')
         return;
       }
     }
@@ -155,31 +115,22 @@ const AuthModal = observer(({
     setIsLoading(true)
     loadingStore.startLoading(mode === "signin" ? "Signing in..." : "Creating account...")
     try {
-      // SIGN IN
       if (mode === "signin") {
         await authStore.login({
           email: formData.email,
           password: formData.password,
         })
-
-       toast({
-  title: "Welcome back!",
-  description: "Successfully signed in.",
-})
-
-
-onClose()
-const params = new URLSearchParams(window.location.search)
-const redirect = params.get('redirect')
-if (redirect) {
-  window.location.href = redirect
-}
-return
+        toast.success("Successfully signed in. Welcome back!")
+        onClose()
+        const params = new URLSearchParams(window.location.search)
+        const redirect = params.get('redirect')
+        if (redirect) {
+          window.location.href = redirect
+        }
+        return
       }
 
-      // SIGN UP
       if (mode === "signup") {
-        // Check if email is valid
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData.email)) {
           throw new Error('Please enter a valid email address.');
@@ -191,46 +142,27 @@ return
           password: formData.password,
         })
 
-        // Handle auto-login success
         if (registerResult.autoLogin && authStore.user) {
-          
-    toast({
-  title: "🎉 Welcome to Grodify!",
-  description: "Your email has been verified and you're now logged in.",
-})
-
-onClose()
-const params = new URLSearchParams(window.location.search)
-const redirect = params.get('redirect')
-if (redirect) {
-  window.location.href = redirect
-}
-return
+          toast.success("🎉 Welcome to Grodify! You're now logged in.")
+          onClose()
+          const params = new URLSearchParams(window.location.search)
+          const redirect = params.get('redirect')
+          if (redirect) {
+            window.location.href = redirect
+          }
+          return
         }
 
-        // Handle registration requiring email verification
         if (!registerResult.autoLogin) {
-          // Store email and password for auto-login after OTP verification
           setUserEmail(formData.email)
           setUserPassword(formData.password)
-
-          // Show OTP input and store email
           setShowOtp(true)
-          setFormData(prev => ({ ...prev, password: "" })) // Clear password field
-
-          toast({
-            title: "✅ Account Created!",
-            description: registerResult.message || "Please check your email for verification code.",
-          })
+          setFormData(prev => ({ ...prev, password: "" }))
+          toast.success(registerResult.message || "✅ Account Created! Please check your email for verification code.")
         }
       }
     } catch (error: any) {
-      const friendlyMessage = getFriendlyErrorMessage(error);
-      toast({
-        title: "Error",
-        description: friendlyMessage,
-        variant: "destructive",
-      })
+      toast.error(getFriendlyErrorMessage(error))
     } finally {
       setIsLoading(false)
       loadingStore.stopLoading()
@@ -239,25 +171,19 @@ return
 
   const handleVerifyOtp = async () => {
     if (!formData.otp) {
-      toast({
-        title: "Error",
-        description: "Please enter the verification code",
-        variant: "destructive",
-      })
+      toast.error("Please enter the verification code")
       return
     }
 
     try {
       setIsLoading(true)
       loadingStore.startLoading("Verifying...")
-      // Use the confirmSignUp method from AWS Amplify to verify the OTP
-      const { isSignUpComplete, nextStep } = await awsConfirmSignUp({
+      const { isSignUpComplete } = await awsConfirmSignUp({
         username: userEmail,
         confirmationCode: formData.otp
       });
 
       if (isSignUpComplete) {
-        // Auto-login after successful email verification
         if (userEmail && userPassword) {
           try {
             await authStore.login({
@@ -265,69 +191,46 @@ return
               password: userPassword,
             })
 
+            try {
+              const { resend } = await import('@/lib/resend');
+              const { render } = await import('@react-email/render');
+              const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVerification');
+              const emailHtml = await render(
+                <RegistrationVerificationEmail
+                  name={userEmail.split('@')[0]}
+                  verificationUrl="https://grodify.com/profile"
+                />
+              );
+              await resend.emails.send({
+                from: "Grodify <support@mail.grodify.com>",
+                to: userEmail,
+                replyTo: "admin@grodify.com",
+                subject: "Welcome to Grodify - Email Verified! ✅",
+                html: emailHtml,
+              });
+            } catch (emailErr) {
+              console.error('Verification email failed:', emailErr);
+            }
 
-
-// Registration Verification Email
-try {
-  const { resend } = await import('@/lib/resend');
-  const { render } = await import('@react-email/render');
-const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVerification');
-  const emailHtml = await render(
-    <RegistrationVerificationEmail
-      name={userEmail.split('@')[0]}
-      verificationUrl="https://grodify.com/profile"
-    />
-  );
-  await resend.emails.send({
-    from: "Grodify <support@mail.grodify.com>",
-    to: userEmail,
-    replyTo: "admin@grodify.com",
-    subject: "Welcome to Grodify - Email Verified! ✅",
-    html: emailHtml,
-  });
-} catch (emailErr) {
-  console.error('Verification email failed:', emailErr);
-}
-
-
-            toast({
-              title: "🎉 Welcome to Grodify!",
-              description: "Your email has been verified and you're now logged in.",
-            })
+            toast.success("🎉 Welcome to Grodify! Your email has been verified.")
             onClose()
             return
           } catch (loginError: any) {
-            toast({
-              title: "✅ Email Verified!",
-              description: "Your email has been verified. Please sign in manually.",
-            })
+            toast.success("✅ Email Verified! Please sign in manually.")
             setShowOtp(false)
             setMode("signin")
             return
           }
         }
 
-        // Fallback if no password stored
-        toast({
-          title: "✅ Email Verified!",
-          description: "Your email has been verified. You can now sign in.",
-        })
+        toast.success("✅ Email Verified! You can now sign in.")
         setShowOtp(false)
         setMode("signin")
       } else {
-        // Handle case where additional steps are needed
-        toast({
-          title: "Additional Steps Required",
-          description: "Please complete the additional verification steps.",
-          variant: "default",
-        })
+        toast("Please complete the additional verification steps.")
       }
     } catch (error: any) {
-      toast({
-        title: "Verification Failed",
-        description: error?.message || "Invalid verification code",
-        variant: "destructive",
-      })
+      toast.error(error?.message || "Invalid verification code")
     } finally {
       setIsLoading(false)
       loadingStore.stopLoading()
@@ -336,16 +239,13 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
+    authStore.clearError()
     setIsLoading(true)
     loadingStore.startLoading("Sending reset code...")
     const emailToReset = formData.email.trim();
 
     if (!emailToReset) {
-      toast({
-        title: "Error",
-        description: "Please enter your email address",
-        variant: "destructive",
-      })
+      toast.error("Please enter your email address")
       setIsLoading(false)
       loadingStore.stopLoading()
       return
@@ -353,19 +253,11 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
 
     try {
       await authStore.sendOTP(emailToReset)
-      toast({
-        title: "Code Sent",
-        description: "A password reset code has been sent to your email.",
-      })
+      toast.success("A password reset code has been sent to your email.")
       setUserEmail(emailToReset)
       setResetStep("verify")
-  } catch (error: any) {
-      toast({
-        title: "❌ Email Not Found",
-        description: error?.message || "This email is not registered. Please check your email or create a new account.",
-        variant: "destructive",
-      })
-    
+    } catch (error: any) {
+      toast.error(error?.message || "This email is not registered. Please create a new account.")
     } finally {
       setIsLoading(false)
       loadingStore.stopLoading()
@@ -374,37 +266,25 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
+    authStore.clearError()
 
-    // Use stored userEmail or fallback to formData.email
     const emailToUse = userEmail || formData.email
     const code = formData.otp.trim()
     const newPass = formData.newPassword
 
     if (!emailToUse) {
-      toast({
-        title: "Error",
-        description: "User information missing. Please try again from the start.",
-        variant: "destructive",
-      })
+      toast.error("User information missing. Please try again from the start.")
       setResetStep("send")
       return
     }
 
     if (newPass !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      })
+      toast.error("Passwords do not match")
       return
     }
 
     if (newPass.length < 8) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 8 characters long",
-        variant: "destructive",
-      })
+      toast.error("Password must be at least 8 characters long")
       return
     }
 
@@ -412,19 +292,12 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
     loadingStore.startLoading("Resetting password...")
     try {
       await authStore.verifyOTP(emailToUse, code, newPass)
-      toast({
-        title: "Success",
-        description: "Your password has been reset successfully. Please sign in with your new password.",
-      })
+      toast.success("Your password has been reset successfully. Please sign in with your new password.")
       setMode("signin")
       setResetStep("send")
       setFormData(prev => ({ ...prev, password: "", otp: "", newPassword: "", confirmPassword: "" }))
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to reset password",
-        variant: "destructive",
-      })
+      toast.error(error?.message || "Failed to reset password")
     } finally {
       setIsLoading(false)
       loadingStore.stopLoading()
@@ -435,21 +308,12 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
     try {
       setIsLoading(true)
       loadingStore.startLoading("Resending code...")
-      // Use the resendSignUpCode method from AWS Amplify
       const { destination, deliveryMedium } = await resendSignUpCode({
         username: userEmail
       });
-
-      toast({
-        title: "Verification Code Sent",
-        description: `A new verification code has been sent to ${destination} via ${deliveryMedium}.`,
-      });
+      toast.success(`A new verification code has been sent to ${destination} via ${deliveryMedium}.`)
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to resend verification code. Please try again.",
-        variant: "destructive",
-      });
+      toast.error(error?.message || "Failed to resend verification code. Please try again.")
     } finally {
       setIsLoading(false)
       loadingStore.stopLoading()
@@ -460,20 +324,9 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
     try {
       setIsLoading(true)
       loadingStore.startLoading(`Continuing with ${provider}...`)
-
-      // Use Cognito-based social sign-in (Amplify)
-      // This is more robust as it keeps all users in the same User Pool
-      // and handles the complex OAuth flow through Cognito.
       await authStore.signInWithProvider(provider)
-
-      // The redirect will happen automatically via Amplify
-      // User will be redirected to /auth/callback as configured in aws-config.ts
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.message || "Social sign-in failed",
-        variant: "destructive",
-      })
+      toast.error(error?.message || "Social sign-in failed")
     } finally {
       setIsLoading(false)
       loadingStore.stopLoading()
@@ -501,18 +354,12 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
 
               <div className="space-y-2">
                 <Label>Verification Code</Label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder="Enter 6-digit code"
-                    value={formData.otp}
-                    onChange={(e) =>
-                      setFormData({ ...formData, otp: e.target.value })
-                    }
-                    className="pl-10"
-                  />
-                  {/* <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" /> */}
-                </div>
+                <Input
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  value={formData.otp}
+                  onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
+                />
               </div>
 
               <Button
@@ -563,16 +410,6 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
                       <Chrome className="w-4 h-4 mr-2" />
                       Continue with Google
                     </Button>
-
-                    {/* <Button
-                      variant="outline"
-                      className="w-full bg-transparent hover:!bg-primary hover:!text-white"
-                      onClick={() => handleSocialSignIn("apple")}
-                      disabled={isLoading}
-                    >
-                      <Apple className="w-4 h-4 mr-2" />
-                      Continue with Apple
-                    </Button> */}
                   </div>
 
                   <div className="relative">
@@ -588,18 +425,12 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
                 </>
               )}
 
-              {/* Email / Password form */}
               {mode === "forgot" ? (
                 resetStep === "send" ? (
                   <form onSubmit={handleForgotPassword} className="space-y-4">
-                    {/* Inline Error Display */}
                     {authStore.error && (
                       <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                        <div className="flex items-start space-x-2">
-                          <div className="text-red-400 text-sm">
-                            {authStore.error}
-                          </div>
-                        </div>
+                        <div className="text-red-400 text-sm">{authStore.error}</div>
                       </div>
                     )}
                     <div className="space-y-2">
@@ -626,14 +457,9 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
                   </form>
                 ) : (
                   <form onSubmit={handleResetPassword} className="space-y-4">
-                    {/* Inline Error Display */}
                     {authStore.error && (
                       <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                        <div className="flex items-start space-x-2">
-                          <div className="text-red-400 text-sm">
-                            {authStore.error}
-                          </div>
-                        </div>
+                        <div className="text-red-400 text-sm">{authStore.error}</div>
                       </div>
                     )}
                     <div className="space-y-2">
@@ -676,92 +502,69 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
                 )
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Inline Error Display */}
                   {authStore.error && (
                     <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                      <div className="flex items-start space-x-2">
-                        <div className="text-red-400 text-sm">
-                          {authStore.error}
-                        </div>
-                      </div>
+                      <div className="text-red-400 text-sm">{authStore.error}</div>
                     </div>
                   )}
 
                   {mode === "signup" && (
                     <div className="space-y-2">
                       <Label>Full Name</Label>
-                      <div className="relative">
-                        {/* <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" /> */}
-                        <Input
-                          type="text"
-                          placeholder="Enter your full name"
-                          value={formData.name}
-                          onChange={(e) => {
-                            setFormData({ ...formData, name: e.target.value })
-                            // Clear error when user starts typing
-                            if (authStore.error) authStore.error = null
-                          }}
-                          required
-                          disabled={isLoading}
-                          className={formData.name && formData.name.length < 2 ? "border-red-500/50" : ""}
-                        />
-                      </div>
+                      <Input
+                        type="text"
+                        placeholder="Enter your full name"
+                        value={formData.name}
+                        onChange={(e) => {
+                          setFormData({ ...formData, name: e.target.value })
+                          if (authStore.error) authStore.clearError()
+                        }}
+                        required
+                        disabled={isLoading}
+                        className={formData.name && formData.name.length < 2 ? "border-red-500/50" : ""}
+                      />
                       {formData.name && formData.name.length < 2 && (
-                        <div className="text-xs text-red-400">
-                          Name must be at least 2 characters long
-                        </div>
+                        <div className="text-xs text-red-400">Name must be at least 2 characters long</div>
                       )}
                     </div>
                   )}
 
                   <div className="space-y-2">
                     <Label>Email</Label>
-                    <div className="relative">
-                      {/* <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" /> */}
-                      <Input
-                        type="email"
-                        placeholder="Enter your email"
-                        value={formData.email}
-                        onChange={(e) => {
-                          setFormData({ ...formData, email: e.target.value })
-                          // Clear error when user starts typing
-                          if (authStore.error) authStore.error = null
-                        }}
-                        required
-                        disabled={isLoading}
-                        className={
-                          formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-                            ? "border-red-500/50"
-                            : ""
-                        }
-                      />
-                    </div>
+                    <Input
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value })
+                        if (authStore.error) authStore.clearError()
+                      }}
+                      required
+                      disabled={isLoading}
+                      className={
+                        formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+                          ? "border-red-500/50" : ""
+                      }
+                    />
                     {formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
-                      <div className="text-xs text-red-400">
-                        Please enter a valid email address
-                      </div>
+                      <div className="text-xs text-red-400">Please enter a valid email address</div>
                     )}
                   </div>
 
                   <div className="space-y-2">
                     <Label>Password</Label>
                     <div className="relative">
-                      {/* <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" /> */}
                       <Input
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
                         value={formData.password}
                         onChange={(e) => {
                           setFormData({ ...formData, password: e.target.value })
-                          // Clear error when user starts typing
-                          if (authStore.error) authStore.error = null
+                          if (authStore.error) authStore.clearError()
                         }}
                         required
                         disabled={isLoading}
-                        className={`pr-10 ${formData.password && formData.password.length > 0 && formData.password.length < 8
-                          ? "border-red-500/50"
-                          : ""
-                          }`}
+                        className={`pr-10 ${formData.password && formData.password.length > 0 && formData.password.length < 8 ? "border-red-500/50" : ""}`}
                       />
                       <button
                         type="button"
@@ -769,39 +572,25 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={isLoading}
                       >
-                        {showPassword ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                     {mode === "signup" && formData.password && formData.password.length > 0 && (
                       <div className="space-y-1">
                         {formData.password.length < 8 && (
-                          <div className="text-xs text-red-400">
-                            Password must be at least 8 characters long
-                          </div>
+                          <div className="text-xs text-red-400">Password must be at least 8 characters long</div>
                         )}
                         {formData.password.length >= 8 && !/[A-Z]/.test(formData.password) && (
-                          <div className="text-xs text-red-400">
-                            Must include at least one uppercase letter
-                          </div>
+                          <div className="text-xs text-red-400">Must include at least one uppercase letter</div>
                         )}
                         {formData.password.length >= 8 && /[A-Z]/.test(formData.password) && !/[a-z]/.test(formData.password) && (
-                          <div className="text-xs text-red-400">
-                            Must include at least one lowercase letter
-                          </div>
+                          <div className="text-xs text-red-400">Must include at least one lowercase letter</div>
                         )}
                         {formData.password.length >= 8 && /[A-Z]/.test(formData.password) && /[a-z]/.test(formData.password) && !/[0-9]/.test(formData.password) && (
-                          <div className="text-xs text-red-400">
-                            Must include at least one number
-                          </div>
+                          <div className="text-xs text-red-400">Must include at least one number</div>
                         )}
                         {formData.password.length >= 8 && /[A-Z]/.test(formData.password) && /[a-z]/.test(formData.password) && /[0-9]/.test(formData.password) && !/[^A-Za-z0-9]/.test(formData.password) && (
-                          <div className="text-xs text-red-400">
-                            Must include at least one special character
-                          </div>
+                          <div className="text-xs text-red-400">Must include at least one special character</div>
                         )}
                       </div>
                     )}
@@ -818,25 +607,17 @@ const { RegistrationVerificationEmail } = await import('@/emails/RegistrationVer
                     </button>
                   )}
 
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading}
-                  >
+                  <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading
                       ? (mode === "signin" ? "Signing In..." : "Creating Account...")
-                      : (mode === "signin"
-                        ? "Sign In"
-                        : "Create Account")}
+                      : (mode === "signin" ? "Sign In" : "Create Account")}
                   </Button>
                 </form>
               )}
 
               {mode !== "forgot" && (
                 <p className="text-sm text-muted-foreground text-center">
-                  {mode === "signin"
-                    ? "Don't have an account? "
-                    : "Already have an account? "}
+                  {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
                   <button
                     type="button"
                     className="text-primary hover:underline"
