@@ -865,7 +865,8 @@ export class AuthStore {
 
 
       // Pehle check karo ki email database mein hai ya nahi
-const checkResponse = await fetch('http://localhost:3007/api/web/auth/check-email', {
+const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3007').replace(/\/api$/, '')
+const checkResponse = await fetch(`${apiBase}/api/web/auth/check-email`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ email })
