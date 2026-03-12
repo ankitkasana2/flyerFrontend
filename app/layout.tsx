@@ -29,12 +29,12 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased overflow-x-hidden`}>
         <AuthProvider>
           <Suspense fallback={null}>
-            <StoreProvider>
-              <FavoritesSync />
-              <PageTransitionLoader />
-              <AppShell>{children}</AppShell>
-            </StoreProvider>
-            <Toaster position="top-left" />
+         <StoreProvider>
+  <FavoritesSync />
+  <PageTransitionLoader />
+  <AppShell>{children}</AppShell>
+  <Toaster position="top-left" />
+</StoreProvider>
             <Analytics />
           </Suspense>
         </AuthProvider>
