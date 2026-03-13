@@ -43,74 +43,74 @@ export const OrderConfirmationEmail = ({
         ? allFlyers.reduce((sum, f) => sum + parseFloat(f.total || "0"), 0).toFixed(2)
         : total;
 
-    const colors = {
-        pageBg: '#f4f4f4',
-        containerBg: '#ffffff',
-        cardBg: '#f9f9f9',
-        border: '#e0e0e0',
-        black: '#111111',
-        darkGray: '#444444',
-        gray: '#888888',
-        lightGray: '#aaaaaa',
-        blue: '#1a73e8',
-    };
-
     const font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+    // Colors
+    const pageBg = '#f4f4f4';
+    const containerBg = '#ffffff';
+    const cardBg = '#f9f9f9';
+    const border = '#e0e0e0';
+    const black = '#111111';
+    const darkGray = '#444444';
+    const gray = '#888888';
+    const lightGray = '#aaaaaa';
+    const blue = '#1a73e8';
 
     return (
         <Html>
             <Head />
             <Preview>{previewText}</Preview>
 
-            <Body style={{ margin: '0', padding: '0', backgroundColor: colors.pageBg, fontFamily: font }}>
+            <Body style={{ margin: '0', padding: '0', backgroundColor: pageBg, fontFamily: font }}>
 
+                {/* PAGE WRAPPER */}
                 <table width="100%" cellPadding="0" cellSpacing="0" role="presentation"
-                    style={{ backgroundColor: colors.pageBg }}>
+                    style={{ backgroundColor: pageBg, margin: '0', padding: '0' }}>
                     <tr>
-                        <td align="center" style={{ padding: '40px 20px', backgroundColor: colors.pageBg }}>
+                        <td align="center" bgcolor="#f4f4f4" style={{ padding: '40px 0', backgroundColor: pageBg }}>
 
-                            {/* MAIN CONTAINER */}
+                            {/* MAIN CONTAINER - NO borderRadius, NO border = no white corners */}
                             <table width="500" cellPadding="0" cellSpacing="0" role="presentation"
                                 style={{
                                     maxWidth: '500px',
                                     width: '100%',
-                                    backgroundColor: colors.containerBg,
-                                    borderRadius: '12px',
-                                    border: `1px solid ${colors.border}`,
-                                    overflow: 'hidden',
+                                    backgroundColor: containerBg,
+                                    // NO borderRadius here - that causes white corners
+                                    // NO border here
                                 }}>
 
-                                {/* ✅ BLACK LOGO HEADER - fixed */}
+                                {/* ===== BLACK LOGO HEADER ===== */}
                                 <tr>
-                                    <td align="center"
-                                        bgcolor="#000000"
+                                    <td align="center" bgcolor="#000000"
                                         style={{
                                             backgroundColor: '#000000',
-                                            padding: '28px 32px',
+                                            padding: '20px 0',
                                             textAlign: 'center',
                                             lineHeight: '0',
+                                            margin: '0',
                                         }}>
-                                        <Img
+                                        <img
                                             src="https://grodify.com/logo-email-banner.png"
-                                               width="300"
-                                               height="80"
+                                            width="300"
+                                            height="80"
                                             alt="Grodify"
                                             style={{
                                                 display: 'block',
                                                 margin: '0 auto',
-                                                width: '140px',
-                                                height: '46px',
+                                                width: '300px',
+                                                height: '80px',
                                                 border: '0',
                                                 outline: 'none',
+                                                textDecoration: 'none',
                                                 backgroundColor: '#000000',
                                             }}
                                         />
                                     </td>
                                 </tr>
 
-                                {/* GREEN SUCCESS BANNER */}
+                                {/* ===== GREEN BANNER ===== */}
                                 <tr>
-                                    <td bgcolor="#22c55e"
+                                    <td align="center" bgcolor="#22c55e"
                                         style={{
                                             backgroundColor: '#22c55e',
                                             padding: '14px 16px',
@@ -129,32 +129,32 @@ export const OrderConfirmationEmail = ({
                                     </td>
                                 </tr>
 
-                                {/* BODY */}
+                                {/* ===== BODY ===== */}
                                 <tr>
-                                    <td style={{ padding: '32px', backgroundColor: colors.containerBg }}>
+                                    <td bgcolor="#ffffff" style={{ padding: '32px', backgroundColor: containerBg }}>
 
                                         {/* Greeting */}
-                                        <p style={{ color: colors.black, fontSize: '16px', lineHeight: '26px', margin: '0 0 8px 0', fontFamily: font, backgroundColor: colors.containerBg }}>
-                                            Hello <strong style={{ color: colors.black }}>{name}</strong>,
+                                        <p style={{ color: black, fontSize: '16px', lineHeight: '26px', margin: '0 0 8px 0', fontFamily: font }}>
+                                            Hello <strong>{name}</strong>,
                                         </p>
-                                        <p style={{ color: colors.darkGray, fontSize: '14px', lineHeight: '24px', margin: '0 0 28px 0', fontFamily: font, backgroundColor: colors.containerBg }}>
-                                            Thank you for choosing <strong style={{ color: colors.black }}>Grodify</strong> for your flyer needs. We've received your order and our designers are getting started.
+                                        <p style={{ color: darkGray, fontSize: '14px', lineHeight: '24px', margin: '0 0 28px 0', fontFamily: font }}>
+                                            Thank you for choosing <strong style={{ color: black }}>Grodify</strong> for your flyer needs. We've received your order and our designers are getting started.
                                         </p>
 
                                         {/* ORDER SUMMARY CARD */}
                                         <table width="100%" cellPadding="0" cellSpacing="0" role="presentation"
-                                            style={{ backgroundColor: colors.cardBg, borderRadius: '8px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+                                            style={{ backgroundColor: cardBg, border: `1px solid ${border}`, marginBottom: '16px' }}>
                                             <tr>
-                                                <td style={{ padding: '16px 20px', backgroundColor: colors.cardBg, borderRadius: '8px' }}>
+                                                <td bgcolor="#f9f9f9" style={{ padding: '16px 20px', backgroundColor: cardBg }}>
                                                     <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
                                                         <tr>
-                                                            <td style={{ backgroundColor: colors.cardBg }}>
-                                                                <p style={{ color: colors.gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font, backgroundColor: colors.cardBg }}>Order Date</p>
-                                                                <p style={{ color: colors.black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font, backgroundColor: colors.cardBg }}>{date}</p>
+                                                            <td bgcolor="#f9f9f9" style={{ backgroundColor: cardBg }}>
+                                                                <p style={{ color: gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font }}>Order Date</p>
+                                                                <p style={{ color: black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font }}>{date}</p>
                                                             </td>
-                                                            <td align="right" style={{ backgroundColor: colors.cardBg }}>
-                                                                <p style={{ color: colors.gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font, backgroundColor: colors.cardBg }}>Total Items</p>
-                                                                <p style={{ color: colors.black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font, backgroundColor: colors.cardBg }}>
+                                                            <td align="right" bgcolor="#f9f9f9" style={{ backgroundColor: cardBg }}>
+                                                                <p style={{ color: gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font }}>Total Items</p>
+                                                                <p style={{ color: black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font }}>
                                                                     {flyersToShow.length} Flyer{flyersToShow.length > 1 ? 's' : ''}
                                                                 </p>
                                                             </td>
@@ -164,7 +164,7 @@ export const OrderConfirmationEmail = ({
                                             </tr>
                                         </table>
 
-                                        {/* EACH FLYER CARD */}
+                                        {/* EACH FLYER */}
                                         {flyersToShow.map((flyer) => (
                                             <table
                                                 key={flyer.orderId}
@@ -173,25 +173,22 @@ export const OrderConfirmationEmail = ({
                                                 cellSpacing="0"
                                                 role="presentation"
                                                 style={{
-                                                    backgroundColor: colors.cardBg,
-                                                    borderRadius: '8px',
-                                                    border: `1px solid ${colors.border}`,
+                                                    backgroundColor: cardBg,
+                                                    border: `1px solid ${border}`,
                                                     marginBottom: '12px',
                                                 }}
                                             >
                                                 <tr>
-                                                    <td style={{ padding: '16px 20px', backgroundColor: colors.cardBg, borderRadius: '8px' }}>
-
-                                                        {/* Order ID + Price */}
+                                                    <td bgcolor="#f9f9f9" style={{ padding: '16px 20px', backgroundColor: cardBg }}>
                                                         <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
                                                             <tr>
-                                                                <td style={{ backgroundColor: colors.cardBg }}>
-                                                                    <p style={{ color: colors.gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font, backgroundColor: colors.cardBg }}>Order ID</p>
-                                                                    <p style={{ color: colors.black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font, backgroundColor: colors.cardBg }}>#{flyer.orderId}</p>
+                                                                <td bgcolor="#f9f9f9" style={{ backgroundColor: cardBg }}>
+                                                                    <p style={{ color: gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font }}>Order ID</p>
+                                                                    <p style={{ color: black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font }}>#{flyer.orderId}</p>
                                                                 </td>
-                                                                <td align="right" style={{ backgroundColor: colors.cardBg }}>
-                                                                    <p style={{ color: colors.gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font, backgroundColor: colors.cardBg }}>Price</p>
-                                                                    <p style={{ color: colors.black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font, backgroundColor: colors.cardBg }}>${parseFloat(flyer.total).toFixed(2)}</p>
+                                                                <td align="right" bgcolor="#f9f9f9" style={{ backgroundColor: cardBg }}>
+                                                                    <p style={{ color: gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font }}>Price</p>
+                                                                    <p style={{ color: black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font }}>${parseFloat(flyer.total).toFixed(2)}</p>
                                                                 </td>
                                                             </tr>
                                                         </table>
@@ -199,34 +196,26 @@ export const OrderConfirmationEmail = ({
                                                         {/* Divider */}
                                                         <table width="100%" cellPadding="0" cellSpacing="0" role="presentation" style={{ margin: '12px 0' }}>
                                                             <tr>
-                                                                <td style={{ borderTop: `1px solid ${colors.border}`, fontSize: '0', lineHeight: '0', backgroundColor: colors.cardBg }}>&nbsp;</td>
+                                                                <td style={{ borderTop: `1px solid ${border}`, fontSize: '0', lineHeight: '0' }}>&nbsp;</td>
                                                             </tr>
                                                         </table>
 
-                                                        {/* Flyer Name */}
-                                                        <p style={{ color: colors.black, fontSize: '15px', fontWeight: '600', margin: '0 0 12px 0', fontFamily: font, backgroundColor: colors.cardBg }}>
+                                                        <p style={{ color: black, fontSize: '15px', fontWeight: '600', margin: '0 0 12px 0', fontFamily: font }}>
                                                             {flyer.flyerName}
                                                         </p>
 
-                                                        {/* Flyer Image */}
                                                         {flyer.imageUrl && (
-                                                            <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
-                                                                <tr>
-                                                                    <td style={{ backgroundColor: colors.cardBg }}>
-                                                                        <Img
-                                                                            src={flyer.imageUrl}
-                                                                            width="100%"
-                                                                            alt={flyer.flyerName}
-                                                                            style={{
-                                                                                width: '100%',
-                                                                                maxWidth: '100%',
-                                                                                borderRadius: '8px',
-                                                                                display: 'block',
-                                                                            }}
-                                                                        />
-                                                                    </td>
-                                                                </tr>
-                                                            </table>
+                                                            <img
+                                                                src={flyer.imageUrl}
+                                                                width="100%"
+                                                                alt={flyer.flyerName}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    maxWidth: '100%',
+                                                                    display: 'block',
+                                                                    border: '0',
+                                                                }}
+                                                            />
                                                         )}
                                                     </td>
                                                 </tr>
@@ -236,16 +225,16 @@ export const OrderConfirmationEmail = ({
                                         {/* GRAND TOTAL */}
                                         {flyersToShow.length > 1 && (
                                             <table width="100%" cellPadding="0" cellSpacing="0" role="presentation"
-                                                style={{ backgroundColor: '#111111', borderRadius: '8px', marginBottom: '16px' }}>
+                                                style={{ marginBottom: '16px' }}>
                                                 <tr>
-                                                    <td bgcolor="#111111" style={{ padding: '16px 20px', backgroundColor: '#111111', borderRadius: '8px' }}>
+                                                    <td bgcolor="#111111" style={{ padding: '16px 20px', backgroundColor: '#111111' }}>
                                                         <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
                                                             <tr>
-                                                                <td style={{ backgroundColor: '#111111' }}>
-                                                                    <p style={{ color: '#ffffff', fontSize: '16px', fontWeight: 'bold', margin: '0', fontFamily: font, backgroundColor: '#111111' }}>Grand Total</p>
+                                                                <td bgcolor="#111111" style={{ backgroundColor: '#111111' }}>
+                                                                    <p style={{ color: '#ffffff', fontSize: '16px', fontWeight: 'bold', margin: '0', fontFamily: font }}>Grand Total</p>
                                                                 </td>
-                                                                <td align="right" style={{ backgroundColor: '#111111' }}>
-                                                                    <p style={{ color: '#ffffff', fontSize: '16px', fontWeight: 'bold', margin: '0', fontFamily: font, backgroundColor: '#111111' }}>${grandTotal}</p>
+                                                                <td align="right" bgcolor="#111111" style={{ backgroundColor: '#111111' }}>
+                                                                    <p style={{ color: '#ffffff', fontSize: '16px', fontWeight: 'bold', margin: '0', fontFamily: font }}>${grandTotal}</p>
                                                                 </td>
                                                             </tr>
                                                         </table>
@@ -258,11 +247,10 @@ export const OrderConfirmationEmail = ({
                                         <table width="100%" cellPadding="0" cellSpacing="0" role="presentation"
                                             style={{ marginTop: '28px', marginBottom: '28px' }}>
                                             <tr>
-                                                <td align="center" style={{ backgroundColor: colors.containerBg }}>
+                                                <td align="center" bgcolor="#ffffff" style={{ backgroundColor: containerBg }}>
                                                     <a href="https://grodify.com/orders"
                                                         style={{
                                                             backgroundColor: '#111111',
-                                                            borderRadius: '8px',
                                                             color: '#ffffff',
                                                             fontSize: '14px',
                                                             fontWeight: '600',
@@ -280,25 +268,26 @@ export const OrderConfirmationEmail = ({
                                         {/* DIVIDER */}
                                         <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
                                             <tr>
-                                                <td style={{ borderTop: `1px solid ${colors.border}`, fontSize: '0', lineHeight: '0', backgroundColor: colors.containerBg }}>&nbsp;</td>
+                                                <td style={{ borderTop: `1px solid ${border}`, fontSize: '0', lineHeight: '0' }}>&nbsp;</td>
                                             </tr>
                                         </table>
 
                                         {/* FOOTER */}
-                                        <p style={{ color: colors.gray, fontSize: '12px', lineHeight: '22px', margin: '20px 0 0 0', fontFamily: font, backgroundColor: colors.containerBg }}>
+                                        <p style={{ color: gray, fontSize: '12px', lineHeight: '22px', margin: '20px 0 0 0', fontFamily: font }}>
                                             If you have any questions, feel free to reply to this email or contact us at{' '}
-                                            <a href="mailto:admin@grodify.com" style={{ color: colors.blue, textDecoration: 'none' }}>
+                                            <a href="mailto:admin@grodify.com" style={{ color: blue, textDecoration: 'none' }}>
                                                 admin@grodify.com
                                             </a>.
                                         </p>
 
-                                        <p style={{ color: colors.lightGray, fontSize: '11px', textAlign: 'center', margin: '20px 0 0 0', fontFamily: font, backgroundColor: colors.containerBg }}>
+                                        <p style={{ color: lightGray, fontSize: '11px', textAlign: 'center', margin: '20px 0 0 0', fontFamily: font }}>
                                             © 2024 Grodify. All rights reserved.
                                         </p>
 
                                     </td>
                                 </tr>
                             </table>
+                            {/* end main container */}
 
                         </td>
                     </tr>
