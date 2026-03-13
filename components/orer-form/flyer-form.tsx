@@ -996,7 +996,7 @@ host_url_1: hostsWithUrls[1]?.image_url || '',
 
 
         {/* Right Side - Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form className="space-y-5">
           {/* Event Details Section */}
           <EventDetails />
 
