@@ -1,18 +1,9 @@
 import {
     Body,
-    Container,
-    Column,
     Head,
-    Heading,
-    Hr,
     Html,
     Img,
-    Link,
     Preview,
-    Row,
-    Section,
-    Text,
-    Tailwind,
 } from "@react-email/components";
 import * as React from "react";
 
@@ -30,7 +21,6 @@ interface OrderConfirmationEmailProps {
     total: string;
     date: string;
     imageUrl?: string;
-    // Multiple flyers support
     allFlyers?: FlyerItem[];
 }
 
@@ -44,128 +34,277 @@ export const OrderConfirmationEmail = ({
     allFlyers,
 }: OrderConfirmationEmailProps) => {
     const previewText = `Your Grodify order #${orderId} has been confirmed!`;
-    
-    // Agar allFlyers array hai toh use karo, warna single flyer
+
     const flyersToShow: FlyerItem[] = allFlyers && allFlyers.length > 0
         ? allFlyers
         : [{ orderId, flyerName, total, imageUrl }];
 
     const grandTotal = allFlyers && allFlyers.length > 0
-        ? allFlyers.reduce((sum, f) => sum + parseFloat(f.total || '0'), 0).toFixed(2)
+        ? allFlyers.reduce((sum, f) => sum + parseFloat(f.total || "0"), 0).toFixed(2)
         : total;
+
+    const colors = {
+        pageBg: '#f4f4f4',
+        containerBg: '#ffffff',
+        cardBg: '#f9f9f9',
+        border: '#e0e0e0',
+        black: '#111111',
+        darkGray: '#444444',
+        gray: '#888888',
+        lightGray: '#aaaaaa',
+        blue: '#1a73e8',
+    };
+
+    const font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
     return (
         <Html>
             <Head />
             <Preview>{previewText}</Preview>
-            <Tailwind>
-                <Body className="bg-black my-auto mx-auto font-sans">
-                    <Container className="border border-solid border-[#333333] rounded my-[40px] mx-auto p-[20px] w-[465px] bg-[#111111]">
-                        <Section className="mt-[32px]">
-                            <Img
-                                src="https://grodify.com/logo.png"
-                                width="120"
-                                height="40"
-                                alt="Grodify"
-                                className="mx-auto my-0"
-                            />
-                        </Section>
 
-                        <Heading className="text-white text-[24px] font-normal text-center p-0 my-[30px] mx-0">
-                            Order Confirmed!
-                        </Heading>
+            <Body style={{ margin: '0', padding: '0', backgroundColor: colors.pageBg, fontFamily: font }}>
 
-                        <Text className="text-white text-[14px] leading-[24px]">
-                            Hello {name},
-                        </Text>
-                        <Text className="text-white text-[14px] leading-[24px]">
-                            Thank you for choosing <strong>Grodify</strong> for your flyer needs. We've received your order and our designers are getting started.
-                        </Text>
+                <table width="100%" cellPadding="0" cellSpacing="0" role="presentation"
+                    style={{ backgroundColor: colors.pageBg }}>
+                    <tr>
+                        <td align="center" style={{ padding: '40px 20px', backgroundColor: colors.pageBg }}>
 
-                        {/* Order Summary Header */}
-                        <Section className="bg-[#1a1a1a] rounded-lg p-[20px] my-[24px]">
-                            <Row>
-                                <Column>
-                                    <Text className="text-[#666666] text-[12px] uppercase mb-1">Order Date</Text>
-                                    <Text className="font-bold text-[14px] m-0 text-white">{date}</Text>
-                                </Column>
-                                <Column align="right">
-                                    <Text className="text-[#666666] text-[12px] uppercase mb-1">Total Items</Text>
-                                    <Text className="font-bold text-[14px] m-0 text-white">{flyersToShow.length} Flyer{flyersToShow.length > 1 ? 's' : ''}</Text>
-                                </Column>
-                            </Row>
-                        </Section>
+                            {/* MAIN CONTAINER */}
+                            <table width="500" cellPadding="0" cellSpacing="0" role="presentation"
+                                style={{
+                                    maxWidth: '500px',
+                                    width: '100%',
+                                    backgroundColor: colors.containerBg,
+                                    borderRadius: '12px',
+                                    border: `1px solid ${colors.border}`,
+                                    overflow: 'hidden',
+                                }}>
 
-                        {/* Each Flyer */}
-                        {flyersToShow.map((flyer, index) => (
-                            <Section key={flyer.orderId} className="bg-[#1a1a1a] rounded-lg p-[20px] my-[12px]">
-                                <Row>
-                                    <Column>
-                                        <Text className="text-[#666666] text-[12px] uppercase mb-1">Order ID</Text>
-                                        <Text className="font-bold text-[14px] m-0 text-white">#{flyer.orderId}</Text>
-                                    </Column>
-                                    <Column align="right">
-                                        <Text className="text-[#666666] text-[12px] uppercase mb-1">Price</Text>
-                                        <Text className="font-bold text-[14px] m-0 text-white">${flyer.total}</Text>
-                                    </Column>
-                                </Row>
-                                <Hr className="border border-solid border-[#333333] my-[12px]" />
-                                <Row>
-                                    <Column>
-                                        <Text className="text-white text-[14px] font-semibold m-0">{flyer.flyerName}</Text>
-                                    </Column>
-                                </Row>
-                                {flyer.imageUrl && (
-                                    <Section className="mt-[12px]">
+                                {/* ✅ BLACK LOGO HEADER - fixed */}
+                                <tr>
+                                    <td align="center"
+                                        bgcolor="#000000"
+                                        style={{
+                                            backgroundColor: '#000000',
+                                            padding: '28px 32px',
+                                            textAlign: 'center',
+                                            lineHeight: '0',
+                                        }}>
                                         <Img
-                                            src={flyer.imageUrl}
-                                            width="100%"
-                                            className="rounded-lg object-cover"
-                                            alt={flyer.flyerName}
+                                            src="https://grodify.com/logo-email-banner.png"
+                                               width="300"
+                                               height="80"
+                                            alt="Grodify"
+                                            style={{
+                                                display: 'block',
+                                                margin: '0 auto',
+                                                width: '140px',
+                                                height: '46px',
+                                                border: '0',
+                                                outline: 'none',
+                                                backgroundColor: '#000000',
+                                            }}
                                         />
-                                    </Section>
-                                )}
-                            </Section>
-                        ))}
+                                    </td>
+                                </tr>
 
-                        {/* Grand Total — sirf multiple flyers ke liye */}
-                        {flyersToShow.length > 1 && (
-                            <Section className="bg-[#222222] rounded-lg p-[16px] my-[12px]">
-                                <Row>
-                                    <Column>
-                                        <Text className="text-white text-[16px] font-bold m-0">Grand Total</Text>
-                                    </Column>
-                                    <Column align="right">
-                                        <Text className="text-white text-[16px] font-bold m-0">${grandTotal}</Text>
-                                    </Column>
-                                </Row>
-                            </Section>
-                        )}
+                                {/* GREEN SUCCESS BANNER */}
+                                <tr>
+                                    <td bgcolor="#22c55e"
+                                        style={{
+                                            backgroundColor: '#22c55e',
+                                            padding: '14px 16px',
+                                            textAlign: 'center',
+                                        }}>
+                                        <p style={{
+                                            color: '#ffffff',
+                                            fontSize: '15px',
+                                            fontWeight: '700',
+                                            margin: '0',
+                                            fontFamily: font,
+                                            backgroundColor: '#22c55e',
+                                        }}>
+                                            ✓ &nbsp; Order Confirmed!
+                                        </p>
+                                    </td>
+                                </tr>
 
-                        <Section className="text-center mt-[32px] mb-[32px]">
-                            <Link
-                                href="https://grodify.com/orders"
-                                className="bg-[#000000] rounded-full text-white text-[12px] font-semibold no-underline text-center px-8 py-3"
-                            >
-                                View Order Status
-                            </Link>
-                        </Section>
+                                {/* BODY */}
+                                <tr>
+                                    <td style={{ padding: '32px', backgroundColor: colors.containerBg }}>
 
-                        <Hr className="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
+                                        {/* Greeting */}
+                                        <p style={{ color: colors.black, fontSize: '16px', lineHeight: '26px', margin: '0 0 8px 0', fontFamily: font, backgroundColor: colors.containerBg }}>
+                                            Hello <strong style={{ color: colors.black }}>{name}</strong>,
+                                        </p>
+                                        <p style={{ color: colors.darkGray, fontSize: '14px', lineHeight: '24px', margin: '0 0 28px 0', fontFamily: font, backgroundColor: colors.containerBg }}>
+                                            Thank you for choosing <strong style={{ color: colors.black }}>Grodify</strong> for your flyer needs. We've received your order and our designers are getting started.
+                                        </p>
 
-                        <Text className="text-[#666666] text-[12px] leading-[24px]">
-                            If you have any questions, feel free to reply to this email or contact us at{' '}
-                            <Link href="mailto:admin@grodify.com" className="text-blue-600 no-underline">
-                                admin@grodify.com
-                            </Link>.
-                        </Text>
+                                        {/* ORDER SUMMARY CARD */}
+                                        <table width="100%" cellPadding="0" cellSpacing="0" role="presentation"
+                                            style={{ backgroundColor: colors.cardBg, borderRadius: '8px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+                                            <tr>
+                                                <td style={{ padding: '16px 20px', backgroundColor: colors.cardBg, borderRadius: '8px' }}>
+                                                    <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
+                                                        <tr>
+                                                            <td style={{ backgroundColor: colors.cardBg }}>
+                                                                <p style={{ color: colors.gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font, backgroundColor: colors.cardBg }}>Order Date</p>
+                                                                <p style={{ color: colors.black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font, backgroundColor: colors.cardBg }}>{date}</p>
+                                                            </td>
+                                                            <td align="right" style={{ backgroundColor: colors.cardBg }}>
+                                                                <p style={{ color: colors.gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font, backgroundColor: colors.cardBg }}>Total Items</p>
+                                                                <p style={{ color: colors.black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font, backgroundColor: colors.cardBg }}>
+                                                                    {flyersToShow.length} Flyer{flyersToShow.length > 1 ? 's' : ''}
+                                                                </p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
 
-                        <Text className="text-[#999999] text-[10px] text-center mt-[24px]">
-                            © 2024 Grodify. All rights reserved.
-                        </Text>
-                    </Container>
-                </Body>
-            </Tailwind>
+                                        {/* EACH FLYER CARD */}
+                                        {flyersToShow.map((flyer) => (
+                                            <table
+                                                key={flyer.orderId}
+                                                width="100%"
+                                                cellPadding="0"
+                                                cellSpacing="0"
+                                                role="presentation"
+                                                style={{
+                                                    backgroundColor: colors.cardBg,
+                                                    borderRadius: '8px',
+                                                    border: `1px solid ${colors.border}`,
+                                                    marginBottom: '12px',
+                                                }}
+                                            >
+                                                <tr>
+                                                    <td style={{ padding: '16px 20px', backgroundColor: colors.cardBg, borderRadius: '8px' }}>
+
+                                                        {/* Order ID + Price */}
+                                                        <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
+                                                            <tr>
+                                                                <td style={{ backgroundColor: colors.cardBg }}>
+                                                                    <p style={{ color: colors.gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font, backgroundColor: colors.cardBg }}>Order ID</p>
+                                                                    <p style={{ color: colors.black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font, backgroundColor: colors.cardBg }}>#{flyer.orderId}</p>
+                                                                </td>
+                                                                <td align="right" style={{ backgroundColor: colors.cardBg }}>
+                                                                    <p style={{ color: colors.gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font, backgroundColor: colors.cardBg }}>Price</p>
+                                                                    <p style={{ color: colors.black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font, backgroundColor: colors.cardBg }}>${parseFloat(flyer.total).toFixed(2)}</p>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+
+                                                        {/* Divider */}
+                                                        <table width="100%" cellPadding="0" cellSpacing="0" role="presentation" style={{ margin: '12px 0' }}>
+                                                            <tr>
+                                                                <td style={{ borderTop: `1px solid ${colors.border}`, fontSize: '0', lineHeight: '0', backgroundColor: colors.cardBg }}>&nbsp;</td>
+                                                            </tr>
+                                                        </table>
+
+                                                        {/* Flyer Name */}
+                                                        <p style={{ color: colors.black, fontSize: '15px', fontWeight: '600', margin: '0 0 12px 0', fontFamily: font, backgroundColor: colors.cardBg }}>
+                                                            {flyer.flyerName}
+                                                        </p>
+
+                                                        {/* Flyer Image */}
+                                                        {flyer.imageUrl && (
+                                                            <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
+                                                                <tr>
+                                                                    <td style={{ backgroundColor: colors.cardBg }}>
+                                                                        <Img
+                                                                            src={flyer.imageUrl}
+                                                                            width="100%"
+                                                                            alt={flyer.flyerName}
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                maxWidth: '100%',
+                                                                                borderRadius: '8px',
+                                                                                display: 'block',
+                                                                            }}
+                                                                        />
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        ))}
+
+                                        {/* GRAND TOTAL */}
+                                        {flyersToShow.length > 1 && (
+                                            <table width="100%" cellPadding="0" cellSpacing="0" role="presentation"
+                                                style={{ backgroundColor: '#111111', borderRadius: '8px', marginBottom: '16px' }}>
+                                                <tr>
+                                                    <td bgcolor="#111111" style={{ padding: '16px 20px', backgroundColor: '#111111', borderRadius: '8px' }}>
+                                                        <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
+                                                            <tr>
+                                                                <td style={{ backgroundColor: '#111111' }}>
+                                                                    <p style={{ color: '#ffffff', fontSize: '16px', fontWeight: 'bold', margin: '0', fontFamily: font, backgroundColor: '#111111' }}>Grand Total</p>
+                                                                </td>
+                                                                <td align="right" style={{ backgroundColor: '#111111' }}>
+                                                                    <p style={{ color: '#ffffff', fontSize: '16px', fontWeight: 'bold', margin: '0', fontFamily: font, backgroundColor: '#111111' }}>${grandTotal}</p>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        )}
+
+                                        {/* BUTTON */}
+                                        <table width="100%" cellPadding="0" cellSpacing="0" role="presentation"
+                                            style={{ marginTop: '28px', marginBottom: '28px' }}>
+                                            <tr>
+                                                <td align="center" style={{ backgroundColor: colors.containerBg }}>
+                                                    <a href="https://grodify.com/orders"
+                                                        style={{
+                                                            backgroundColor: '#111111',
+                                                            borderRadius: '8px',
+                                                            color: '#ffffff',
+                                                            fontSize: '14px',
+                                                            fontWeight: '600',
+                                                            textDecoration: 'none',
+                                                            padding: '14px 40px',
+                                                            display: 'inline-block',
+                                                            fontFamily: font,
+                                                        }}>
+                                                        View Order Status →
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        {/* DIVIDER */}
+                                        <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
+                                            <tr>
+                                                <td style={{ borderTop: `1px solid ${colors.border}`, fontSize: '0', lineHeight: '0', backgroundColor: colors.containerBg }}>&nbsp;</td>
+                                            </tr>
+                                        </table>
+
+                                        {/* FOOTER */}
+                                        <p style={{ color: colors.gray, fontSize: '12px', lineHeight: '22px', margin: '20px 0 0 0', fontFamily: font, backgroundColor: colors.containerBg }}>
+                                            If you have any questions, feel free to reply to this email or contact us at{' '}
+                                            <a href="mailto:admin@grodify.com" style={{ color: colors.blue, textDecoration: 'none' }}>
+                                                admin@grodify.com
+                                            </a>.
+                                        </p>
+
+                                        <p style={{ color: colors.lightGray, fontSize: '11px', textAlign: 'center', margin: '20px 0 0 0', fontFamily: font, backgroundColor: colors.containerBg }}>
+                                            © 2024 Grodify. All rights reserved.
+                                        </p>
+
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </td>
+                    </tr>
+                </table>
+
+            </Body>
         </Html>
     );
 };
