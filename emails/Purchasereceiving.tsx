@@ -1,18 +1,9 @@
 import {
     Body,
-    Container,
-    Column,
     Head,
-    Heading,
-    Hr,
     Html,
     Img,
-    Link,
     Preview,
-    Row,
-    Section,
-    Text,
-    Tailwind,
 } from "@react-email/components";
 import * as React from "react";
 
@@ -35,93 +26,215 @@ export const PurchaseReceivingEmail = ({
 }: PurchaseReceivingEmailProps) => {
     const previewText = `Your Grodify purchase #${orderId} has been received!`;
 
+    const font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+    const pageBg = '#f4f4f4';
+    const containerBg = '#ffffff';
+    const cardBg = '#f9f9f9';
+    const border = '#e0e0e0';
+    const black = '#111111';
+    const darkGray = '#444444';
+    const gray = '#888888';
+    const lightGray = '#aaaaaa';
+    const blue = '#1a73e8';
+
     return (
         <Html>
             <Head />
             <Preview>{previewText}</Preview>
-            <Tailwind>
-                <Body className="bg-black my-auto mx-auto font-sans">
-                    <Container className="border border-solid border-[#333333] rounded my-[40px] mx-auto p-[20px] w-[465px] bg-[#111111]">
-                        <Section className="mt-[32px]">
-                            <Img
-                                src="https://grodify.com/logo.png"
-                                width="120"
-                                height="40"
-                                alt="Grodify"
-                                className="mx-auto my-0"
-                            />
-                        </Section>
 
-                        <Heading className="text-white text-[24px] font-normal text-center p-0 my-[30px] mx-0">
-                            📦 Purchase Received!
-                        </Heading>
+            <Body style={{ margin: '0', padding: '0', backgroundColor: pageBg, fontFamily: font }}>
 
-                        <Text className="text-white text-[14px] leading-[24px]">
-                            Hello {name},
-                        </Text>
-                        <Text className="text-white text-[14px] leading-[24px]">
-                            We have successfully received your purchase. Our team will start working on your order shortly and you will be notified once it is ready.
-                        </Text>
+                {/* PAGE WRAPPER */}
+                <table width="100%" cellPadding="0" cellSpacing="0" role="presentation"
+                    style={{ backgroundColor: pageBg }}>
+                    <tr>
+                        <td align="center" bgcolor="#f4f4f4" style={{ padding: '40px 0', backgroundColor: pageBg }}>
 
-                        <Section className="bg-[#1a1a1a] rounded-lg p-[20px] my-[24px]">
-                            <Row>
-                                <Column>
-                                    <Text className="text-[#666666] text-[12px] uppercase mb-1">Order ID</Text>
-                                    <Text className="font-bold text-[14px] m-0 text-white">#{orderId}</Text>
-                                </Column>
-                                <Column>
-                                    <Text className="text-[#666666] text-[12px] uppercase mb-1">Date</Text>
-                                    <Text className="font-bold text-[14px] m-0 text-white">{date}</Text>
-                                </Column>
-                            </Row>
-                            <Hr className="border border-solid border-[#eaeaea] my-[16px]" />
-                            <Row>
-                                <Column>
-                                    <Text className="text-white text-[14px] font-semibold">{flyerName}</Text>
-                                </Column>
-                                <Column align="right">
-                                    <Text className="text-white text-[14px] font-bold">₹{total}</Text>
-                                </Column>
-                            </Row>
-                            <Hr className="border border-solid border-[#eaeaea] my-[16px]" />
-                            <Row>
-                                <Column>
-                                    <Text className="text-[#666666] text-[12px] uppercase mb-1">Status</Text>
-                                    <Text className="font-bold text-[14px] m-0 text-green-400">✓ Received</Text>
-                                </Column>
-                            </Row>
-                        </Section>
+                            {/* MAIN CONTAINER */}
+                            <table width="500" cellPadding="0" cellSpacing="0" role="presentation"
+                                style={{
+                                    maxWidth: '500px',
+                                    width: '100%',
+                                    backgroundColor: containerBg,
+                                }}>
 
-                        <Section className="text-center mt-[32px] mb-[32px]">
-<Text className="text-[#666666] text-[12px] text-center">
-    Please login to your account to view your order details.
-</Text>
+                                {/* BLACK LOGO HEADER */}
+                                <tr>
+                                    <td align="center" bgcolor="#000000"
+                                        style={{
+                                            backgroundColor: '#000000',
+                                            padding: '20px 0',
+                                            textAlign: 'center',
+                                            lineHeight: '0',
+                                        }}>
+                                        <img
+                                         src="https://grodify.com/logo-email-banner.png"
+                                            width="300"
+                                            height="80"
+                                            alt="Grodify"
+                                            style={{
+                                                display: 'block',
+                                                margin: '0 auto',
+                                                width: '300px',
+                                                height: '80px',
+                                                border: '0',
+                                                outline: 'none',
+                                                backgroundColor: '#000000',
+                                            }}
+                                        />
+                                    </td>
+                                </tr>
 
-                            <Link
+                                {/* ORANGE PURCHASE BANNER */}
+                                <tr>
+                                    <td align="center" bgcolor="#22c55e"
+                                        style={{
+                                            backgroundColor: '#22c55e',
+                                            padding: '14px 16px',
+                                            textAlign: 'center',
+                                        }}>
+                                        <p style={{
+                                            color: '#ffffff',
+                                            fontSize: '15px',
+                                            fontWeight: '700',
+                                            margin: '0',
+                                            fontFamily: font,
+                                           
+                                            backgroundColor: '#22c55e',
+                                        }}>
+                                             &nbsp; Purchase Received!
+                                        </p>
+                                    </td>
+                                </tr>
 
-                            
-                         href={downloadUrl || `https://grodify.com/orders?redirect=true`}
-                                className="bg-[#000000] rounded-full text-white text-[12px] font-semibold no-underline text-center px-8 py-3"
-                            >
-                                View Your Order
-                            </Link>
-                        </Section>
+                                {/* BODY */}
+                                <tr>
+                                    <td bgcolor="#ffffff" style={{ padding: '32px', backgroundColor: containerBg }}>
 
-                        <Hr className="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
+                                        {/* Greeting */}
+                                        <p style={{ color: black, fontSize: '16px', lineHeight: '26px', margin: '0 0 8px 0', fontFamily: font }}>
+                                            Hello <strong>{name}</strong>,
+                                        </p>
+                                        <p style={{ color: darkGray, fontSize: '14px', lineHeight: '24px', margin: '0 0 28px 0', fontFamily: font }}>
+                                            We have successfully received your purchase. Our team will start working on your order shortly and you will be notified once it is ready.
+                                        </p>
 
-                        <Text className="text-[#666666] text-[12px] leading-[24px]">
-                            If you have any questions, feel free to reply to this email or contact us at{" "}
-                            <Link href="mailto:admin@grodify.com" className="text-blue-600 no-underline">
-                                admin@grodify.com
-                            </Link>.
-                        </Text>
+                                        {/* ORDER DETAIL CARD */}
+                                        <table width="100%" cellPadding="0" cellSpacing="0" role="presentation"
+                                            style={{ backgroundColor: cardBg, border: `1px solid ${border}`, marginBottom: '16px' }}>
+                                            <tr>
+                                                <td bgcolor="#f9f9f9" style={{ padding: '16px 20px', backgroundColor: cardBg }}>
 
-                        <Text className="text-[#999999] text-[10px] text-center mt-[24px]">
-                            © 2024 Grodify. All rights reserved.
-                        </Text>
-                    </Container>
-                </Body>
-            </Tailwind>
+                                                    {/* Order ID + Date Row */}
+                                                    <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
+                                                        <tr>
+                                                            <td bgcolor="#f9f9f9" style={{ backgroundColor: cardBg }}>
+                                                                <p style={{ color: gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font }}>Order ID</p>
+                                                                <p style={{ color: black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font }}>#{orderId}</p>
+                                                            </td>
+                                                            <td align="right" bgcolor="#f9f9f9" style={{ backgroundColor: cardBg }}>
+                                                                <p style={{ color: gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font }}>Date</p>
+                                                                <p style={{ color: black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font }}>{date}</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+
+                                                    {/* Divider */}
+                                                    <table width="100%" cellPadding="0" cellSpacing="0" role="presentation" style={{ margin: '12px 0' }}>
+                                                        <tr>
+                                                            <td style={{ borderTop: `1px solid ${border}`, fontSize: '0', lineHeight: '0' }}>&nbsp;</td>
+                                                        </tr>
+                                                    </table>
+
+                                                    {/* Flyer Name + Price */}
+                                                    <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
+                                                        <tr>
+                                                            <td bgcolor="#f9f9f9" style={{ backgroundColor: cardBg }}>
+                                                                <p style={{ color: black, fontSize: '14px', fontWeight: '600', margin: '0', fontFamily: font }}>{flyerName}</p>
+                                                            </td>
+                                                            <td align="right" bgcolor="#f9f9f9" style={{ backgroundColor: cardBg }}>
+                                                                <p style={{ color: black, fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font }}>₹{total}</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+
+                                                    {/* Divider */}
+                                                    <table width="100%" cellPadding="0" cellSpacing="0" role="presentation" style={{ margin: '12px 0' }}>
+                                                        <tr>
+                                                            <td style={{ borderTop: `1px solid ${border}`, fontSize: '0', lineHeight: '0' }}>&nbsp;</td>
+                                                        </tr>
+                                                    </table>
+
+                                                    {/* Status */}
+                                                    <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
+                                                        <tr>
+                                                            <td bgcolor="#f9f9f9" style={{ backgroundColor: cardBg }}>
+                                                                <p style={{ color: gray, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px 0', fontFamily: font }}>Status</p>
+                                                                <p style={{ color: '#16a34a', fontSize: '14px', fontWeight: '700', margin: '0', fontFamily: font }}>✓ Received</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        {/* INFO TEXT */}
+                                        <p style={{ color: gray, fontSize: '12px', textAlign: 'center', margin: '0 0 16px 0', fontFamily: font }}>
+                                            Please login to your account to view your order details.
+                                        </p>
+
+                                        {/* BUTTON */}
+                                        <table width="100%" cellPadding="0" cellSpacing="0" role="presentation"
+                                            style={{ marginBottom: '28px' }}>
+                                            <tr>
+                                                <td align="center" bgcolor="#ffffff" style={{ backgroundColor: containerBg }}>
+                                                    <a href={downloadUrl || 'https://grodify.com/orders?redirect=true'}
+                                                        style={{
+                                                            backgroundColor: '#111111',
+                                                            color: '#ffffff',
+                                                            fontSize: '14px',
+                                                            fontWeight: '600',
+                                                            textDecoration: 'none',
+                                                            padding: '14px 40px',
+                                                            display: 'inline-block',
+                                                            fontFamily: font,
+                                                        }}>
+                                                        View Your Order →
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        {/* DIVIDER */}
+                                        <table width="100%" cellPadding="0" cellSpacing="0" role="presentation">
+                                            <tr>
+                                                <td style={{ borderTop: `1px solid ${border}`, fontSize: '0', lineHeight: '0' }}>&nbsp;</td>
+                                            </tr>
+                                        </table>
+
+                                        {/* FOOTER */}
+                                        <p style={{ color: gray, fontSize: '12px', lineHeight: '22px', margin: '20px 0 0 0', fontFamily: font }}>
+                                            If you have any questions, feel free to reply to this email or contact us at{' '}
+                                            <a href="mailto:admin@grodify.com" style={{ color: blue, textDecoration: 'none' }}>
+                                                admin@grodify.com
+                                            </a>.
+                                        </p>
+
+                                        <p style={{ color: lightGray, fontSize: '11px', textAlign: 'center', margin: '20px 0 0 0', fontFamily: font }}>
+                                            © 2024 Grodify. All rights reserved.
+                                        </p>
+
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </td>
+                    </tr>
+                </table>
+
+            </Body>
         </Html>
     );
 };
